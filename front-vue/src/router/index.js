@@ -10,7 +10,7 @@ const routes = [
     name: "HOME",
     component: HomeView,
     meta: {
-      title: "FICHAS MAIN",
+      title: "DIMON APP",
     },
   },
   {
