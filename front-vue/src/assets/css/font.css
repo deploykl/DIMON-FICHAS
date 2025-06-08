@@ -1,0 +1,14 @@
+@font-face {
+    font-family: 'Aptos';
+    src: 
+        url('../fonts/aptos.ttf') format('truetype'),
+        url('../fonts/aptos-bold.ttf') format('truetype'),
+        url('../fonts/aptos-italic.ttf') format('truetype'),
+        url('../fonts/aptos-light.ttf') format('truetype');
+}
+@font-face {
+    font-family: 'Montserrat';
+    src: 
+        url('../fonts/Montserrat-Regular.ttf') format('truetype'),
+        url('../fonts/Montserrat-Bold.ttf') format('truetype');
+}

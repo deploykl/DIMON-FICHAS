@@ -1,0 +1,8 @@
+PARA NPM
+
+/npm install bootstrap bootstrap-icons sweetalert2
+
+
+solucion migracion
+
+python manage.py migrate --fake token_blacklist 0008

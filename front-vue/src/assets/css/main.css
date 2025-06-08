@@ -1,0 +1,132 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Aptos", sans-serif;
+}
+a {
+  color: #4154f1;
+  text-decoration: none;
+}
+/* ==============BUTTONS ======================= */
+button[type="submit"] {
+  background-color: #6f42c1 !important;
+  border-color: #6f42c1 !important;
+  color: white !important;
+  padding: 10px 20px;
+  font-size: 16px;
+  transition: background-color 0.3s, transform 0.3s;
+}
+
+button[type="submit"]:hover {
+  background-color: #5a2d9e; /* Opcional: Color de fondo al pasar el cursor */
+  border-color: #5a2d9e; /* Opcional: Color del borde al pasar el cursor */
+  transform: scale(1.05);
+}
+
+.table thead{
+  vertical-align: middle;
+}
+.table td {
+  vertical-align: middle; /* Alineación vertical de los datos de la tabla */
+}
+
+/* Estilos para alertas de éxito (fondo verde) */
+.swal2-custom-success .swal2-popup {
+  background-color: #28a745 !important; /* Fondo verde */
+}
+.swal2-custom-success .swal2-title,
+.swal2-custom-success .swal2-html-container {
+  color: white !important; /* Texto blanco */
+}
+.swal2-custom-success .swal2-confirm {
+  background-color: #155724 !important; /* Botón de confirmar verde oscuro */
+  color: white !important; /* Texto del botón en blanco */
+}
+
+/* Estilos para alertas de actualización (fondo morado) */
+.swal2-custom-update .swal2-popup {
+  background-color: #6f42c1 !important; /* Fondo morado */
+}
+.swal2-custom-update .swal2-title,
+.swal2-custom-update .swal2-html-container {
+  color: white !important; /* Texto blanco */
+}
+.swal2-custom-update .swal2-confirm {
+  background-color: #5a2a9b !important; /* Botón de confirmar morado oscuro */
+  color: white !important; /* Texto del botón en blanco */
+}
+
+/* Estilos para alertas de eliminación (fondo rojo) */
+.swal2-custom-delete .swal2-popup {
+  background-color: #7e1414 !important; /* Fondo rojo */
+}
+.swal2-custom-delete .swal2-title,
+.swal2-custom-delete .swal2-html-container {
+  color: white !important; /* Texto blanco */
+}
+.swal2-custom-delete .swal2-confirm {
+  background-color: #c42e2e !important; /* Botón de confirmar rojo */
+  color: white !important; /* Texto del botón en blanco */
+}
+.swal2-custom-delete .swal2-cancel {
+  background-color: #b02a2a !important; /* Botón de cancelar en rojo oscuro */
+  color: white !important; /* Texto del botón en blanco */
+}
+/* ================ EFECTO MODAL */
+/* Animación de apertura del modal */
+@keyframes fadeInUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Animación de cierre del modal */
+@keyframes fadeOutDown {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+}
+
+.modal-dialog {
+  animation: fadeInUp 0.5s ease-out; /* Animación al abrir */
+}
+
+.modal.fade .modal-dialog {
+  animation: none; /* Anula la animación predeterminada de Bootstrap */
+}
+
+.modal.fade.show .modal-dialog {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+.modal.fade .modal-dialog.modal-hidden {
+  animation: fadeOutDown 0.5s ease-out; /* Animación al cerrar */
+}
+
+.bg-rosado {
+  background-color: #ec59a3; 
+  color: white; 
+  border-radius: 8px;
+  padding: 3px;
+  font-size: 13px;
+}
+h2 {
+  font-size: 1.5rem; /* Tamaño del texto */
+  color: #164c81; /* Color del texto */
+  margin-bottom: 1rem; /* Espaciado inferior */
+}
+.text-rosado{
+  color: #ec59a3 !important; /* Color del texto */
+
+}
