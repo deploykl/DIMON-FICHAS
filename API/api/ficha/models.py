@@ -8,3 +8,18 @@ class Categoria(models.Model):
     def __str__(self):
         return f"{self.name} - {self.tipo}"
     
+class Proceso(models.Model):
+    categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='procesos')
+    nombre = models.CharField(max_length=200)
+    nombre_proceso = models.CharField(max_length=200)
+    dueño_proceso = models.CharField(max_length=200)
+    objetivo = models.TextField()
+    objetivo_estrategico = models.TextField()
+    prov_entrada = models.TextField()
+    elemento_entrada = models.TextField()
+    actividad_proceso = models.TextField()
+    riesgos = models.TextField()
+    registros = models.TextField()
+    
+    def __str__(self):
+        return f"{self.categoria} - {self.nombre}"
