@@ -16,7 +16,7 @@ class Institucion(models.Model):
     nombre = models.CharField(max_length=200)
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
     codigo = models.CharField(max_length=20, unique=True)
-    Categoria = models.CharField(max_length=200)
+    categoria = models.CharField(max_length=200)
 
     def __str__(self):
         return f"{self.get_tipo_display()} - {self.nombre}"
@@ -62,7 +62,7 @@ class Subproceso(models.Model):
     def __str__(self):
         return f"{self.proceso} - {self.nombre }"
     
-class Verificador(models.Model):
+class Verificador(models.Model):    
     subproceso = models.ForeignKey(Subproceso, on_delete=models.CASCADE, related_name='verificadores')
     descripcion = models.TextField()
     orden = models.PositiveIntegerField(default=0)
@@ -74,36 +74,3 @@ class Verificador(models.Model):
     def __str__(self):
         return f"{self.subproceso.nombre} - {self.descripcion[:50]}..."
 
-class FichaVerificacion(models.Model):
-    institucion = models.ForeignKey(Institucion, on_delete=models.CASCADE)
-    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE)
-    fecha = models.DateField()
-    creado_por = models.ForeignKey(User, on_delete=models.PROTECT)
-    creado_en = models.DateTimeField(auto_now_add=True)
-    
-    class Meta:
-        verbose_name = "Ficha Técnica de Monitoreo"
-        verbose_name_plural = "Fichas Técnicas de Monitoreo"
-    
-    def __str__(self):
-        return f"FT01-{self.id} - {self.institucion} - {self.proceso}"
-
-class ResultadoVerificacion(models.Model):
-    ESTADO_CHOICES = [
-        ('SI', 'SI CUMPLE'),
-        ('NO', 'NO CUMPLE'),
-        ('NA', 'NO APLICA'),
-    ]
-    
-    ficha = models.ForeignKey(FichaVerificacion, on_delete=models.CASCADE, related_name='resultados')
-    verificador = models.ForeignKey(Verificador, on_delete=models.CASCADE)
-    estado = models.CharField(max_length=2, choices=ESTADO_CHOICES, blank=True, null=True)
-    observaciones = models.TextField(blank=True, null=True)
-    
-    class Meta:
-        unique_together = ('ficha', 'verificador')
-        verbose_name = "Resultado de Verificación"
-        verbose_name_plural = "Resultados de Verificación"
-    
-    def __str__(self):
-        return f"{self.ficha} - {self.verificador} - {self.get_estado_display()}"
