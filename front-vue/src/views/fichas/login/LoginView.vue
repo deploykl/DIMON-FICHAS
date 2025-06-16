@@ -111,7 +111,7 @@ const handleSubmit = async () => {
     localStorage.setItem('is_superuser', is_superuser ? 'true' : 'false');
     localStorage.setItem('is_staff', is_staff ? 'true' : 'false');
 
-    router.push('/about');
+    router.push('/fichas');
     
   } catch (error) {
     if (error.response?.data?.detail) {
