@@ -15,14 +15,6 @@ from rest_framework.filters import OrderingFilter
 from api.ficha.serializers import *
 
 
-class InstitucionViewSet(viewsets.ModelViewSet):
-    queryset = Institucion.objects.all()
-    serializer_class = InstitucionSerializer
-    permission_classes = [IsAuthenticated]
-    ordering = ["id"]
-    ordering_fields = "__all__"
-    filter_backends = (DjangoFilterBackend, OrderingFilter)
-    
     
 class ProcesoViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()

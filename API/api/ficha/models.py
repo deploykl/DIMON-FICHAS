@@ -5,22 +5,6 @@ from django.contrib.auth import get_user_model
 User = get_user_model()  # Esto usará el modelo definido en AUTH_USER_MODEL
 
 
-class Institucion(models.Model):
-    TIPO_CHOICES = [
-        ('EESS', 'Establecimiento de Salud'),
-        ('DIRIS', 'Dirección de Red Integrada de Salud'),
-        ('DIRESA', 'Dirección Regional de Salud'),
-        ('GERESA', 'Gerencia Regional de Salud'),
-    ]
-    
-    nombre = models.CharField(max_length=200)
-    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES)
-    codigo = models.CharField(max_length=20, unique=True)
-    categoria = models.CharField(max_length=200)
-
-    def __str__(self):
-        return f"{self.get_tipo_display()} - {self.nombre}"
-
 # Create your models here.
 class Categoria(models.Model):
     name = models.CharField(max_length=500, verbose_name="Nombre")
@@ -51,7 +35,6 @@ class Subproceso(models.Model):
         ('2', 'Nivel 2'),
         ('3', 'Nivel 3'),
     ]
-    
     proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='subprocesos')
     nivel = models.CharField(max_length=1, choices=NIVEL_CHOICES, default='1')
     nombre  = models.TextField(blank=True, null=True)
@@ -74,3 +57,34 @@ class Verificador(models.Model):
     def __str__(self):
         return f"{self.subproceso.nombre} - {self.descripcion[:50]}..."
 
+class EvaluacionVerificador(models.Model):
+    ESTADO_CHOICES = [
+        ('C', 'Cumple'),
+        ('NC', 'No Cumple'),
+        ('NA', 'No Aplica'),
+    ]
+    TIPO_CHOICES = [
+        ('EESS', 'Establecimiento de Salud'),
+        ('DIRIS', 'Dirección de Red Integrada de Salud'),
+        ('DIRESA', 'Dirección Regional de Salud'),
+        ('GERESA', 'Gerencia Regional de Salud'),
+    ]   
+ # Campos del verificador
+    verificador = models.ForeignKey('Verificador', on_delete=models.CASCADE, related_name='evaluaciones')
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    estado = models.CharField(max_length=2, choices=ESTADO_CHOICES)
+    observaciones = models.TextField(blank=True, null=True)
+    fecha_evaluacion = models.DateTimeField(auto_now_add=True)
+    
+    # Campos de la IPRESS (se capturan en la evaluación)
+    establecimiento = models.CharField(max_length=200, verbose_name="Nombre de la IPRESS")
+    tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, verbose_name="Tipo de IPRESS")
+    codigo = models.CharField(max_length=20, verbose_name="Código de la IPRESS")
+    categoria = models.CharField(max_length=100, verbose_name="Categoría")
+    
+    class Meta:
+        ordering = ['-fecha_evaluacion']
+        verbose_name_plural = "Evaluaciones"
+
+    def __str__(self):
+        return f"{self.verificador} - {self.establecimiento} ({self.get_estado_display()})"

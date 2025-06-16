@@ -1,21 +1,11 @@
 from rest_framework import serializers
 from .models import (
-    Institucion, 
     Categoria, 
     Proceso, 
     Subproceso, 
     Verificador
 )
 
-class InstitucionSerializer(serializers.ModelSerializer):
-    #tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
-    
-    class Meta:
-        model = Institucion
-        fields = '__all__'
-        extra_kwargs = {
-            'codigo': {'validators': []},  # Para updates sin validar unicidad
-        }
 
 class CategoriaSerializer(serializers.ModelSerializer):
     class Meta:
