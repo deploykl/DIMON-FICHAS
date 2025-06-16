@@ -13,7 +13,7 @@ class CategoriaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProcesoSerializer(serializers.ModelSerializer):
-    #categoria_nombre = serializers.CharField(source='categoria.name', read_only=True)
+    categoria_name = serializers.CharField(source='categoria.name')  # Cambia 'nombre' a 'name'
     
     class Meta:
         model = Proceso

@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
-import AboutView from "../views/AboutView.vue";
+import FichasView from "../views/FichasView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import LoginView from "../views/fichas/login/LoginView.vue";
 
@@ -14,9 +14,9 @@ const routes = [
     },
   },
   {
-    path: "/about",
+    path: "/fichas",
     name: "FICHAS",
-    component: AboutView,
+    component: FichasView,
     meta: {
       title: "FICHAS",
       requiresAuth: true,

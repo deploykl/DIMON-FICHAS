@@ -14,10 +14,16 @@ from django_filters.rest_framework import DjangoFilterBackend  # type: ignore
 from rest_framework.filters import OrderingFilter
 from api.ficha.serializers import *
 
-
+class CategoriaViewSet(viewsets.ModelViewSet):
+    queryset = Categoria.objects.all()
+    serializer_class = CategoriaSerializer
+    permission_classes = [IsAuthenticated]
+    ordering = ["id"]
+    ordering_fields = "__all__"
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
     
 class ProcesoViewSet(viewsets.ModelViewSet):
-    queryset = Categoria.objects.all()
+    queryset = Proceso.objects.all()
     serializer_class = ProcesoSerializer
     permission_classes = [IsAuthenticated]
     ordering = ["id"]
@@ -26,7 +32,7 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     
 class SubprocesoViewSet(viewsets.ModelViewSet):
     queryset = Subproceso.objects.all()
-    serializer_class = InstitucionSerializer
+    serializer_class = SubprocesoSerializer
     permission_classes = [IsAuthenticated]
     ordering = ["id"]
     ordering_fields = "__all__"

@@ -15,6 +15,7 @@ urlpatterns = [
     #path('personal/', include('api.personal.urls')),  
     path('', include(router.urls)),
     path('user/', include('api.user.urls')),  
+    path('ficha/', include('api.ficha.urls')),  
 
 ]
 
