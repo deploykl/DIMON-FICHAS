@@ -62,7 +62,7 @@
 
         <!-- Footer -->
         <div class="login-footer">
-          <span>Gestión Administrativa V.2</span>
+          <span>OBS Salud V.1</span>
           <div class="footer-decoration"></div>
         </div>
       </div>
