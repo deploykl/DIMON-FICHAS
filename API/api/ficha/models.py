@@ -4,7 +4,6 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 User = get_user_model()  # Esto usará el modelo definido en AUTH_USER_MODEL
 
-
 # Create your models here.
 class Categoria(models.Model):
     name = models.CharField(max_length=500, verbose_name="Nombre")
@@ -14,6 +13,7 @@ class Categoria(models.Model):
         return f"{self.name} - {self.tipo}"
     
 class Proceso(models.Model):
+    titulo = models.TextField()
     categoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, related_name='procesos')
     nombre = models.CharField(max_length=200)
     nombre_proceso = models.CharField(max_length=200)
@@ -73,7 +73,6 @@ class EvaluacionVerificador(models.Model):
     verificador = models.ForeignKey('Verificador', on_delete=models.CASCADE, related_name='evaluaciones')
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     estado = models.CharField(max_length=2, choices=ESTADO_CHOICES)
-    observaciones = models.TextField(blank=True, null=True)
     fecha_evaluacion = models.DateTimeField(auto_now_add=True)
     
     # Campos de la IPRESS (se capturan en la evaluación)

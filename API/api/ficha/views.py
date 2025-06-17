@@ -29,7 +29,13 @@ class ProcesoViewSet(viewsets.ModelViewSet):
     ordering = ["id"]
     ordering_fields = "__all__"
     filter_backends = (DjangoFilterBackend, OrderingFilter)
-    
+ 
+    def get_queryset(self):
+        categoria_id = self.request.query_params.get('categoria_id')
+        if categoria_id:
+            return Proceso.objects.filter(categoria_id=categoria_id)
+        return Proceso.objects.all()
+       
 class SubprocesoViewSet(viewsets.ModelViewSet):
     queryset = Subproceso.objects.all()
     serializer_class = SubprocesoSerializer

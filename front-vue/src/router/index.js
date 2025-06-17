@@ -3,6 +3,8 @@ import HomeView from "../views/HomeView.vue";
 import FichasView from "../views/FichasView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import LoginView from "../views/fichas/login/LoginView.vue";
+import SeleccionFicha from "../views/SeleccionFicha.vue";
+import EvaluarFicha from "../views/EvaluarFicha.vue";
 
 const routes = [
   {
@@ -20,7 +22,28 @@ const routes = [
     meta: {
       title: "FICHAS",
       requiresAuth: true,
-      requiresStaff: true, // Solo personal autorizado
+      requiresStaff: true,
+    },
+  },
+  {
+    path: "/fichas/seleccion",
+    name: "seleccion-ficha",
+    component: SeleccionFicha,
+    meta: {
+      title: "Seleccionar Ficha",
+      requiresAuth: true,
+      requiresStaff: true,
+    },
+  },
+  {
+    path: "/fichas/evaluar/:id",
+    name: "evaluar-ficha",
+    component: EvaluarFicha,
+    props: true,
+    meta: {
+      title: "Evaluar Ficha",
+      requiresAuth: true,
+      requiresStaff: true,
     },
   },
   {
@@ -29,7 +52,7 @@ const routes = [
     component: LoginView,
     meta: {
       title: "Login",
-      requiresUnauth: true, // Nueva propiedad meta para rutas que requieren NO estar autenticado
+      requiresUnauth: true,
     },
   },
   {
@@ -49,32 +72,28 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem("auth_token");
-  const isAdmin =
-    localStorage.getItem("is_superuser") === "true" ||
-    localStorage.getItem("is_staff") === "true";
+  const isStaff = localStorage.getItem("is_staff") === "true";
 
-  // Document title
-  document.title = to.meta.title || "Fichas App";
+  // Actualizar título del documento
+  document.title = to.meta.title || "DIMON APP";
 
-  // Si la ruta requiere NO estar autenticado pero el usuario sí lo está
+  // Redirecciones según autenticación
   if (to.meta.requiresUnauth && isAuthenticated) {
-    next({ name: "FICHAS" }); // Redirigir al home
+    next({ name: "FICHAS" });
     return;
   }
 
-  // Si la ruta requiere autenticación y el usuario no está autenticado
   if (to.meta.requiresAuth && !isAuthenticated) {
     next({ name: "login" });
     return;
   }
 
-  // Si la ruta requiere admin y el usuario no es admin
-  if (to.meta.isAdmin && !isAdmin) {
+  // Verificación de staff
+  if (to.meta.requiresStaff && !isStaff) {
     next({ name: "HOME" });
     return;
   }
 
-  // En cualquier otro caso, permitir acceso
   next();
 });
 
