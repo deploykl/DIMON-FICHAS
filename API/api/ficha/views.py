@@ -46,3 +46,27 @@ class VerificadorViewSet(viewsets.ModelViewSet):
     ordering_fields = "__all__"
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     
+class EvaluacionVerificadorViewSet(viewsets.ModelViewSet):
+    queryset = EvaluacionVerificador.objects.all()
+    serializer_class = EvaluacionVerificadorSerializer
+    permission_classes = [IsAuthenticated]
+    ordering = ["-fecha_evaluacion"]
+    ordering_fields = "__all__"
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    
+    def perform_create(self, serializer):
+        # Asigna automáticamente el usuario actual al crear una evaluación
+        serializer.save(usuario=self.request.user)
+    
+    @action(detail=False, methods=['get'])
+    def por_verificador(self, request):
+        verificador_id = request.query_params.get('verificador_id')
+        if not verificador_id:
+            return Response(
+                {"error": "Se requiere el parámetro verificador_id"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        evaluaciones = self.get_queryset().filter(verificador_id=verificador_id)
+        serializer = self.get_serializer(evaluaciones, many=True)
+        return Response(serializer.data)

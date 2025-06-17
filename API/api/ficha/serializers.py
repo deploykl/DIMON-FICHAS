@@ -3,7 +3,8 @@ from .models import (
     Categoria, 
     Proceso, 
     Subproceso, 
-    Verificador
+    Verificador,
+    EvaluacionVerificador
 )
 
 
@@ -35,4 +36,18 @@ class VerificadorSerializer(serializers.ModelSerializer):
         fields = '__all__'
         extra_kwargs = {
             'orden': {'required': False}
+        }
+
+class EvaluacionVerificadorSerializer(serializers.ModelSerializer):
+    estado_display = serializers.CharField(source='get_estado_display', read_only=True)
+    tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
+    verificador_nombre = serializers.CharField(source='verificador.descripcion', read_only=True)
+    usuario_nombre = serializers.CharField(source='usuario.get_full_name', read_only=True)
+    
+    class Meta:
+        model = EvaluacionVerificador
+        fields = '__all__'
+        extra_kwargs = {
+            'usuario': {'read_only': True},
+            'fecha_evaluacion': {'read_only': True}
         }

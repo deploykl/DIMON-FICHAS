@@ -8,6 +8,7 @@ router.register(r'categoria', CategoriaViewSet)
 router.register(r'proceso', ProcesoViewSet)
 router.register(r'subproceso', SubprocesoViewSet)
 router.register(r'verificador', VerificadorViewSet)
+router.register(r'evaluaciones', EvaluacionVerificadorViewSet)  # Añade esta línea
 
 
 urlpatterns = router.urls
