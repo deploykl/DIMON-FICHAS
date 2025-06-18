@@ -3,14 +3,23 @@ import HomeView from "../views/HomeView.vue";
 import FichasView from "../views/FichasView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import LoginView from "../views/fichas/login/LoginView.vue";
-import SeleccionFicha from "../views/SeleccionFicha.vue";
-import EvaluarFicha from "../views/EvaluarFicha.vue";
+import SeleccionFichaView from "../views/SeleccionFichaView.vue";
+import EvaluarFichaView from "../views/EvaluarFichaView.vue";
+import TestLineView from "../views/TestLineView.vue";
 
 const routes = [
   {
     path: "/",
     name: "HOME",
     component: HomeView,
+    meta: {
+      title: "DIMON APP",
+    },
+  },
+    {
+    path: "/test",
+    name: "test",
+    component: TestLineView,
     meta: {
       title: "DIMON APP",
     },
@@ -28,7 +37,7 @@ const routes = [
   {
     path: "/fichas/seleccion",
     name: "seleccion-ficha",
-    component: SeleccionFicha,
+    component: SeleccionFichaView,
     meta: {
       title: "Seleccionar Ficha",
       requiresAuth: true,
@@ -38,7 +47,7 @@ const routes = [
   {
     path: "/fichas/evaluar/:id",
     name: "evaluar-ficha",
-    component: EvaluarFicha,
+    component: EvaluarFichaView,
     props: true,
     meta: {
       title: "Evaluar Ficha",

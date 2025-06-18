@@ -76,3 +76,4 @@ class EvaluacionVerificadorViewSet(viewsets.ModelViewSet):
         evaluaciones = self.get_queryset().filter(verificador_id=verificador_id)
         serializer = self.get_serializer(evaluaciones, many=True)
         return Response(serializer.data)
+    
