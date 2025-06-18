@@ -87,3 +87,26 @@ class EvaluacionVerificador(models.Model):
 
     def __str__(self):
         return f"{self.verificador} - {self.establecimiento} ({self.get_estado_display()})"
+    
+#MATRIZ DE COMPROMISO
+class MatrizCompromiso(models.Model):
+    evaluacion = models.ForeignKey(EvaluacionVerificador, on_delete=models.CASCADE, related_name='matrices')
+    descripcion_situacional = models.TextField(verbose_name="Descripción del estado situacional")
+    semaforo = models.CharField(max_length=50, verbose_name="Semáforo")
+    riesgo_identificado = models.TextField(verbose_name="Identificación del Riesgo")
+    medidas_correctivas = models.TextField(verbose_name="Medidas correctivas/Compromisos")
+    hito_esperado = models.TextField(verbose_name="Hito esperado")
+    responsable_directo = models.CharField(max_length=200, verbose_name="Responsable directo (A)")
+    plazo_inicio = models.DateField()
+    plazo_fin = models.DateField()
+    funcionario_depen_directo = models.CharField(max_length=200, verbose_name="Funcionario (B)")
+    funcionario_depen_indirecto = models.CharField(max_length=200, verbose_name="Funcionario (C)")
+    firmas_adicionales = models.TextField(verbose_name="Firmas adicionales (máx. 5)", blank=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Matriz de Compromiso"
+        verbose_name_plural = "Matrices de Compromiso"
+
+    def __str__(self):
+        return f"Matriz para {self.evaluacion.verificador}"

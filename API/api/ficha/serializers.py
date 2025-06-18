@@ -1,11 +1,5 @@
 from rest_framework import serializers
-from .models import (
-    Categoria, 
-    Proceso, 
-    Subproceso, 
-    Verificador,
-    EvaluacionVerificador
-)
+from .models import *
 
 
 class CategoriaSerializer(serializers.ModelSerializer):
@@ -50,4 +44,27 @@ class EvaluacionVerificadorSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'usuario': {'read_only': True},
             'fecha_evaluacion': {'read_only': True}
+        }
+        
+class MatrizCompromisoSerializer(serializers.ModelSerializer):
+    evaluacion_data = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = MatrizCompromiso
+        fields = '__all__'
+        read_only_fields = ('fecha_creacion',)
+    
+    def get_evaluacion_data(self, obj):
+        evaluacion = obj.evaluacion
+        return {
+            'tipo': evaluacion.get_tipo_display(),
+            'establecimiento': evaluacion.establecimiento,
+            'proceso_nombre': evaluacion.verificador.subproceso.proceso.nombre_proceso,
+            'categoria': evaluacion.verificador.subproceso.proceso.categoria.name,
+            'fecha_monitoreo': evaluacion.fecha_evaluacion,
+            'dueño_proceso': evaluacion.verificador.subproceso.proceso.dueño_proceso,
+            'subproceso_nombre': evaluacion.verificador.subproceso.nombre,
+            'verificador_descripcion': evaluacion.verificador.descripcion,
+            'estado': evaluacion.get_estado_display(),
+            'usuario': evaluacion.usuario.get_full_name() or evaluacion.usuario.username
         }

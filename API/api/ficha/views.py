@@ -77,3 +77,56 @@ class EvaluacionVerificadorViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(evaluaciones, many=True)
         return Response(serializer.data)
     
+class MatrizCompromisoViewSet(viewsets.ModelViewSet):
+    queryset = MatrizCompromiso.objects.all()
+    serializer_class = MatrizCompromisoSerializer
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        evaluacion_id = self.request.query_params.get('evaluacion_id')
+        if evaluacion_id:
+            queryset = queryset.filter(evaluacion_id=evaluacion_id)
+        return queryset
+    
+    @action(detail=False, methods=['get'])
+    def por_evaluacion(self, request):
+        evaluacion_id = request.query_params.get('evaluacion_id')
+        if not evaluacion_id:
+            return Response(
+                {'error': 'Se requiere el parámetro evaluacion_id'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            evaluacion = EvaluacionVerificador.objects.get(id=evaluacion_id)
+            if evaluacion.estado != 'NC':
+                return Response(
+                    {'error': 'Solo se puede crear matriz para evaluaciones que no cumplen'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+                
+            matriz, created = MatrizCompromiso.objects.get_or_create(
+                evaluacion=evaluacion,
+                defaults={
+                    'descripcion_situacional': '',
+                    'semaforo': 'Rojo',  # Valor por defecto
+                    'riesgo_identificado': '',
+                    'medidas_correctivas': '',
+                    'hito_esperado': '',
+                    'responsable_directo': '',
+                    'plazo_inicio': None,
+                    'plazo_fin': None,
+                    'funcionario_depen_directo': '',
+                    'funcionario_depen_indirecto': '',
+                    'firmas_adicionales': ''
+                }
+            )
+            
+            serializer = self.get_serializer(matriz)
+            return Response(serializer.data)
+            
+        except EvaluacionVerificador.DoesNotExist:
+            return Response(
+                {'error': 'Evaluación no encontrada'},
+                status=status.HTTP_404_NOT_FOUND
+            )
