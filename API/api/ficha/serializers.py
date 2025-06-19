@@ -8,8 +8,9 @@ class CategoriaSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ProcesoSerializer(serializers.ModelSerializer):
-    categoria_name = serializers.CharField(source='categoria.name')  # Cambia 'nombre' a 'name'
-    
+    categoria_name = serializers.CharField(source='categoria.name')
+    categoria_tipo = serializers.CharField(source='categoria.tipo')  # Nuevo campo
+        
     class Meta:
         model = Proceso
         fields = '__all__'
@@ -54,11 +55,18 @@ class EvaluacionVerificadorSerializer(serializers.ModelSerializer):
 class MatrizCompromisoSerializer(serializers.ModelSerializer):
     evaluacion_data = serializers.SerializerMethodField()
     evaluaciones_nc = EvaluacionVerificadorSerializer(many=True, read_only=True)
-    
+    monitor_nombre = serializers.SerializerMethodField()  # Nuevo campo
+ 
     class Meta:
         model = MatrizCompromiso
         fields = '__all__'
-    
+        
+    def get_monitor_nombre(self, obj):
+        # Obtener el nombre del usuario que creó la evaluación
+        if obj.evaluacion and obj.evaluacion.usuario:
+            return f"{obj.evaluacion.usuario.first_name} {obj.evaluacion.usuario.last_name}"
+        return ""   
+     
     def get_evaluacion_data(self, obj):
         evaluacion = obj.evaluacion
         return {
@@ -66,9 +74,10 @@ class MatrizCompromisoSerializer(serializers.ModelSerializer):
             'establecimiento': evaluacion.establecimiento,
             'fecha_monitoreo': evaluacion.fecha_evaluacion,
             'proceso_nombre': evaluacion.verificador.subproceso.proceso.nombre_proceso,
-            'categoria': evaluacion.verificador.subproceso.proceso.categoria.name,
+            'categoria': evaluacion.verificador.subproceso.proceso.categoria.tipo,
             'dueño_proceso': evaluacion.verificador.subproceso.proceso.dueño_proceso,
             'estado': evaluacion.get_estado_display(),
+            'monitor_nombre': self.get_monitor_nombre(obj) ,
             'subproceso_nombre': evaluacion.verificador.subproceso.nombre,
             'verificador_descripcion': evaluacion.verificador.descripcion,
             'total_nc': obj.evaluaciones_nc.count(),

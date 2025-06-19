@@ -86,6 +86,10 @@
                       <p>{{ matriz.evaluacion_data.dueño_proceso }}</p>
                     </div>
                     <div class="col-md-6">
+                      <label class="form-label fw-bold">Monitor que generó la ficha:</label>
+                      <p>{{ matriz.evaluacion_data.monitor_nombre }}</p>
+                    </div>
+                    <div class="col-md-6">
                       <label class="form-label fw-bold">Estado:</label>
                       <p>{{ matriz.evaluacion_data.estado }}</p>
                     </div>
@@ -154,6 +158,8 @@
                     <div class="col-md-4">
                       <label class="form-label">Responsable directo (A)</label>
                       <input v-model="matriz.responsable_directo" type="text" class="form-control" required>
+                                          <small class="text-muted">Monitor que generó la ficha: {{ matriz.evaluacion_data.monitor_nombre }}</small>
+
                     </div>
                     <div class="col-md-4">
                       <label class="form-label">Plazo inicio</label>

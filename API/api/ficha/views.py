@@ -22,7 +22,8 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     ordering_fields = "__all__"
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     
-class ProcesoViewSet(viewsets.ModelViewSet):
+class ProcesoViewSet(viewsets.ModelViewSet): 
+
     queryset = Proceso.objects.all()
     serializer_class = ProcesoSerializer
     permission_classes = [IsAuthenticated]
@@ -166,7 +167,7 @@ class MatrizCompromisoViewSet(viewsets.ModelViewSet):
                 riesgo_identificado='Riesgos identificados en los verificadores evaluados',
                 medidas_correctivas='Plan de acción integral',
                 hito_esperado='Cumplimiento de los verificadores',
-                responsable_directo=primera_eval.usuario.get_full_name(),
+                responsable_directo='',  # Ahora vacío por defecto
                 plazo_inicio=datetime.now().date(),
                 plazo_fin=datetime.now().date() + timedelta(days=30),
                 funcionario_depen_directo='Por definir',
