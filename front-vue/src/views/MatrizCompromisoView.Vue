@@ -31,24 +31,28 @@
                 <div v-if="matriz.evaluaciones_nc && matriz.evaluaciones_nc.length > 0" class="mb-4">
                   <h5 class="card-title">Verificadores No Conformes</h5>
                   <div class="alert alert-warning">
-                    Se han identificado <strong>{{ matriz.evaluaciones_nc.length }}</strong> verificadores que no cumplen
-                    en <strong>{{ new Set(matriz.evaluaciones_nc.map(nc => nc.subproceso_nombre)).size }}</strong> subprocesos.
+                    Se han identificado <strong>{{ matriz.evaluaciones_nc.length }}</strong> verificadores que no
+                    cumplen
+                    en <strong>{{new Set(matriz.evaluaciones_nc.map(nc => nc.subproceso_nombre)).size}}</strong>
+                    subprocesos.
                   </div>
 
                   <div class="accordion" id="accordionNC">
-                    <template v-for="(grupo, subproceso) in agruparPorSubproceso(matriz.evaluaciones_nc)" :key="subproceso">
+                    <template v-for="(grupo, subproceso) in agruparPorSubproceso(matriz.evaluaciones_nc)"
+                      :key="subproceso">
                       <div class="accordion-item mb-2 border">
                         <h2 class="accordion-header">
-                          <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" 
-                                  :data-bs-target="'#collapse'+slugify(subproceso)" aria-expanded="false">
+                          <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse"
+                            :data-bs-target="'#collapse' + slugify(subproceso)" aria-expanded="false">
                             <strong class="me-2">Subproceso:</strong> {{ subproceso }}
                           </button>
                         </h2>
-                        <div :id="'collapse'+slugify(subproceso)" class="accordion-collapse collapse" 
-                             data-bs-parent="#accordionNC">
+                        <div :id="'collapse' + slugify(subproceso)" class="accordion-collapse collapse"
+                          data-bs-parent="#accordionNC">
                           <div class="accordion-body p-2">
                             <div v-for="(nc, index) in grupo" :key="nc.id" class="mb-2 p-2 border-bottom">
-                              <p class="mb-1"><strong>Verificador #{{ index + 1 }}:</strong> {{ nc.verificador_nombre }}</p>
+                              <p class="mb-1"><strong>Verificador #{{ index + 1 }}:</strong> {{ nc.verificador_nombre }}
+                              </p>
                               <span class="badge bg-danger">No Cumple</span>
                             </div>
                           </div>
@@ -112,9 +116,10 @@
                     <div class="col-md-12">
                       <label class="form-label">Descripción del estado situacional del proceso</label>
                       <div class="input-group">
-                        <textarea v-model="matriz.descripcion_situacional" class="form-control" rows="5" required></textarea>
-                        <button @click.prevent="generarDescripcion" class="btn btn-outline-primary" type="button" 
-                                :disabled="generandoDescripcion">
+                        <textarea v-model="matriz.descripcion_situacional" class="form-control" rows="5"
+                          required></textarea>
+                        <button @click.prevent="generarDescripcion" class="btn btn-outline-primary" type="button"
+                          :disabled="generandoDescripcion">
                           <template v-if="generandoDescripcion">
                             <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                             Generando...
@@ -155,37 +160,82 @@
                   </div>
 
                   <div class="row mb-3">
-                    <div class="col-md-4">
-                      <label class="form-label">Responsable directo (A)</label>
-                      <input v-model="matriz.responsable_directo" type="text" class="form-control" required>
-                                          <small class="text-muted">Monitor que generó la ficha: {{ matriz.evaluacion_data.monitor_nombre }}</small>
 
-                    </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                       <label class="form-label">Plazo inicio</label>
                       <input v-model="matriz.plazo_inicio" type="date" class="form-control" required>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                       <label class="form-label">Plazo fin</label>
                       <input v-model="matriz.plazo_fin" type="date" class="form-control" required>
                     </div>
                   </div>
 
                   <div class="row mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                      <label class="form-label">Responsable directo (A)</label>
+                      <input v-model="matriz.responsable_directo" type="text" class="form-control" required>
+                      <small class="text-muted">Monitor que generó la ficha: {{ matriz.evaluacion_data.monitor_nombre
+                      }}</small>
+                    </div>
+                    <div class="col-md-4">
                       <label class="form-label">Funcionario del que depende directamente (B)</label>
                       <input v-model="matriz.funcionario_depen_directo" type="text" class="form-control" required>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                       <label class="form-label">Funcionario del que depende indirectamente (C)</label>
                       <input v-model="matriz.funcionario_depen_indirecto" type="text" class="form-control" required>
                     </div>
                   </div>
 
+                  <!-- En la sección de firmas, después del campo de firmas adicionales -->
                   <div class="row mb-3">
                     <div class="col-md-12">
                       <label class="form-label">Firmas adicionales (máx. 5)</label>
-                      <textarea v-model="matriz.firmas_adicionales" class="form-control" rows="2" placeholder="Ingrese nombres completos separados por comas"></textarea>
+                      <textarea v-model="matriz.firmas_adicionales" class="form-control" rows="2"
+                        placeholder="Ingrese nombres completos separados por comas"></textarea>
+
+                      <!-- Botón para agregar firmas adicionales -->
+                      <button v-if="!showFuncionarioD" @click="showFuncionarioD = true" type="button"
+                        class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="fas fa-plus me-1"></i> Agregar Funcionario D
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Campos para Funcionario D (aparece dinámicamente) -->
+                  <div v-if="showFuncionarioD" class="row mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Funcionario (D)</label>
+                      <input v-model="matriz.funcionario_d" type="text" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                      <h6>Firma Funcionario (D)</h6>
+                      <signature-pad @save="setFirmaD" />
+                      <button v-if="firmaD" @click="limpiarFirma('D')" class="btn btn-sm btn-outline-danger mt-2">
+                        Limpiar Firma
+                      </button>
+
+                      <!-- Botón para agregar Funcionario E -->
+                      <button v-if="!showFuncionarioE" @click="showFuncionarioE = true" type="button"
+                        class="btn btn-sm btn-outline-primary mt-2">
+                        <i class="fas fa-plus me-1"></i> Agregar Funcionario E
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Campos para Funcionario E (aparece dinámicamente) -->
+                  <div v-if="showFuncionarioE" class="row mb-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Funcionario (E)</label>
+                      <input v-model="matriz.funcionario_e" type="text" class="form-control">
+                    </div>
+                    <div class="col-md-6">
+                      <h6>Firma Funcionario (E)</h6>
+                      <signature-pad @save="setFirmaE" />
+                      <button v-if="firmaE" @click="limpiarFirma('E')" class="btn btn-sm btn-outline-danger mt-2">
+                        Limpiar Firma
+                      </button>
                     </div>
                   </div>
 
@@ -270,8 +320,12 @@ const matriz = ref(null)
 const firmaA = ref(null)
 const firmaB = ref(null)
 const firmaC = ref(null)
+const firmaD = ref(null)
+const firmaE = ref(null)
+const showFuncionarioD = ref(false)
+const showFuncionarioE = ref(false)
 
-// Métodos adicionales
+// Métodos auxiliares
 const agruparPorSubproceso = (evaluaciones) => {
   return evaluaciones.reduce((acc, nc) => {
     const subproceso = nc.subproceso_nombre;
@@ -292,14 +346,32 @@ const slugify = (text) => {
     .replace(/-+$/, '');            // Trim - from end of text
 }
 
+const formatDate = (dateString) => {
+  const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }
+  return new Date(dateString).toLocaleDateString('es-ES', options)
+}
+
+// Función para convertir data URL a Blob
+const dataURLtoBlob = (dataURL) => {
+  const arr = dataURL.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  
+  return new Blob([u8arr], { type: mime });
+};
+
+// Métodos principales
 const generarDescripcion = async () => {
   try {
     generandoDescripcion.value = true;
-    
-    // 1. Verificar si hay texto existente para mejorar
     const textoExistente = matriz.value.descripcion_situacional || '';
-    
-    // 2. Construir el prompt dinámico
+
     const prompt = `Como experto en redacción técnica profesional, toma la siguiente descripción y conviértela en un texto formal, estructurado y técnicamente preciso, adecuado para un documento oficial de gestión de procesos. 
     Mantén la esencia pero mejora la redacción, estructura y terminología técnica. Si el texto está vacío, genera una descripción técnica estándar basada en los verificadores no conformes.
     
@@ -310,27 +382,18 @@ const generarDescripcion = async () => {
     Proceso: ${matriz.value.evaluacion_data?.proceso_nombre || 'No especificado'}
     
     Devuelve SOLO el texto mejorado, sin comentarios adicionales.`;
-    
-    // 3. Llamar a la API de Gemini
+
     const descripcionGenerada = await generateText(prompt);
-    
-    // 4. Asignar el resultado (limpiando posibles caracteres extraños)
     matriz.value.descripcion_situacional = descripcionGenerada.trim()
-      .replace(/^"+|"+$/g, '') // Eliminar comillas al inicio/final si las hubiera
-      .replace(/\\n/g, '\n');  // Convertir saltos de línea codificados
-    
+      .replace(/^"+|"+$/g, '')
+      .replace(/\\n/g, '\n');
+
     $toast.success('Descripción técnica generada con éxito');
-    
   } catch (error) {
     console.error('Error al generar descripción técnica:', error);
-    
     let errorMsg = 'Error al generar la descripción técnica';
-    if (error.message.includes('model')) {
-      errorMsg = 'Error: Modelo no disponible. Intente con "gemini-1.5-pro"';
-    } else if (error.message.includes('API_KEY')) {
-      errorMsg = 'Error de configuración con la API de Gemini';
-    }
-    
+    if (error.message.includes('model')) errorMsg = 'Error: Modelo no disponible. Intente con "gemini-1.5-pro"';
+    else if (error.message.includes('API_KEY')) errorMsg = 'Error de configuración con la API de Gemini';
     $toast.error(errorMsg);
   } finally {
     generandoDescripcion.value = false;
@@ -341,10 +404,14 @@ const fetchData = async () => {
   try {
     loading.value = true;
     const matrizResponse = await api.get(`ficha/matriz-compromiso/${route.params.id}/`);
-    
+
     if (matrizResponse.data) {
       matriz.value = matrizResponse.data;
-      
+
+      // Mostrar campos D y E si tienen datos
+      if (matriz.value.funcionario_d) showFuncionarioD.value = true;
+      if (matriz.value.funcionario_e) showFuncionarioE.value = true;
+
       if (!matriz.value.evaluacion_data) {
         const evaluacionResponse = await api.get(`ficha/evaluaciones/${matriz.value.evaluacion}/`);
         matriz.value.evaluacion_data = evaluacionResponse.data;
@@ -355,7 +422,6 @@ const fetchData = async () => {
         descripcion_situacional: '',
       };
     }
-    
   } catch (error) {
     console.error('Error al cargar datos:', error);
     $toast.error('Error al cargar la matriz de compromiso');
@@ -366,98 +432,116 @@ const fetchData = async () => {
 
 const guardarMatriz = async () => {
   try {
-    saving.value = true
-    
-    if (!matriz.value.descripcion_situacional || !matriz.value.riesgo_identificado || 
-        !matriz.value.medidas_correctivas || !matriz.value.hito_esperado || 
-        !matriz.value.responsable_directo || !matriz.value.plazo_inicio || 
-        !matriz.value.plazo_fin || !matriz.value.funcionario_depen_directo || 
-        !matriz.value.funcionario_depen_indirecto) {
-      $toast.warning('Por favor complete todos los campos requeridos')
-      return
+    saving.value = true;
+
+    // Validación de campos requeridos
+    if (!matriz.value.descripcion_situacional || !matriz.value.riesgo_identificado ||
+      !matriz.value.medidas_correctivas || !matriz.value.hito_esperado ||
+      !matriz.value.responsable_directo || !matriz.value.plazo_inicio ||
+      !matriz.value.plazo_fin || !matriz.value.funcionario_depen_directo ||
+      !matriz.value.funcionario_depen_indirecto) {
+      $toast.warning('Por favor complete todos los campos requeridos');
+      return;
     }
 
-    const data = {
-      ...matriz.value,
-      firma_a: firmaA.value,
-      firma_b: firmaB.value,
-      firma_c: firmaC.value
+    // Crear FormData para enviar archivos
+    const formData = new FormData();
+    
+    // Agregar todos los campos de la matriz
+    for (const key in matriz.value) {
+      if (key.startsWith('firma_')) continue;
+      if (matriz.value[key] !== null && matriz.value[key] !== undefined) {
+        formData.append(key, matriz.value[key]);
+      }
     }
     
+    // Agregar las firmas como archivos
+    const firmas = {
+      'firma_a': firmaA.value,
+      'firma_b': firmaB.value,
+      'firma_c': firmaC.value,
+      'firma_d': firmaD.value,
+      'firma_e': firmaE.value
+    };
+    
+for (const [key, value] of Object.entries(firmas)) {
+      if (value) {
+        const blob = dataURLtoBlob(value);
+        formData.append(key, blob, `${key}.png`);
+      } else {
+        formData.append(key, 'null');
+      }
+    }
+
+    const config = {
+      headers: { 'Content-Type': 'multipart/form-data' }
+
+    };
+
     if (matriz.value.id) {
-      await api.put(`ficha/matriz-compromiso/${matriz.value.id}/`, data)
-      $toast.success('Matriz actualizada correctamente')
+      await api.put(`ficha/matriz-compromiso/${matriz.value.id}/`, formData, config);
+      $toast.success('Matriz actualizada correctamente');
     } else {
-      await api.post('ficha/matriz-compromiso/', data)
-      $toast.success('Matriz creada correctamente')
+      await api.post('ficha/matriz-compromiso/', formData, config);
+      $toast.success('Matriz creada correctamente');
     }
-    
-    router.push('/fichas/seleccion')
-    
+
+    router.push('/fichas/seleccion');
   } catch (error) {
-    console.error('Error al guardar la matriz:', error)
-    $toast.error('Error al guardar la matriz')
+    console.error('Error al guardar la matriz:', error);
+    $toast.error('Error al guardar la matriz');
   } finally {
-    saving.value = false
+    saving.value = false;
   }
-}
+};
 
 const exportarPDF = async () => {
   try {
     if (!matriz.value?.id) {
-      $toast.warning('Debe guardar la matriz antes de exportar')
-      return
+      $toast.warning('Debe guardar la matriz antes de exportar');
+      return;
     }
-    
+
     const response = await api.get(
       `ficha/matriz-compromiso/${matriz.value.id}/export_pdf/`,
       { responseType: 'blob' }
-    )
-    
-    const url = window.URL.createObjectURL(new Blob([response.data]))
-    const link = document.createElement('a')
-    link.href = url
-    link.setAttribute('download', `matriz_compromiso_${matriz.value.id}.pdf`)
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    
+    );
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `matriz_compromiso_${matriz.value.id}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   } catch (error) {
-    console.error('Error al exportar PDF:', error)
-    $toast.error('Error al generar el PDF')
+    console.error('Error al exportar PDF:', error);
+    $toast.error('Error al generar el PDF');
   }
-}
+};
 
-const setFirmaA = (firma) => {
-  firmaA.value = firma
-}
-
-const setFirmaB = (firma) => {
-  firmaB.value = firma
-}
-
-const setFirmaC = (firma) => {
-  firmaC.value = firma
-}
+// Métodos para manejar firmas
+const setFirmaA = (firma) => { firmaA.value = firma; }
+const setFirmaB = (firma) => { firmaB.value = firma; }
+const setFirmaC = (firma) => { firmaC.value = firma; }
+const setFirmaD = (firma) => { firmaD.value = firma; }
+const setFirmaE = (firma) => { firmaE.value = firma; }
 
 const limpiarFirma = (tipo) => {
-  if (tipo === 'A') firmaA.value = null
-  if (tipo === 'B') firmaB.value = null
-  if (tipo === 'C') firmaC.value = null
-}
-
-const formatDate = (dateString) => {
-  const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }
-  return new Date(dateString).toLocaleDateString('es-ES', options)
+  if (tipo === 'A') firmaA.value = null;
+  if (tipo === 'B') firmaB.value = null;
+  if (tipo === 'C') firmaC.value = null;
+  if (tipo === 'D') firmaD.value = null;
+  if (tipo === 'E') firmaE.value = null;
 }
 
 const cancelar = () => {
-  router.back()
+  router.back();
 }
 
 onMounted(() => {
-  fetchData()
-})
+  fetchData();
+});
 </script>
 
 <style scoped>
@@ -507,5 +591,17 @@ onMounted(() => {
 
 .input-group-text:hover {
   background-color: #e9ecef;
+}
+
+.btn-add-signer {
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+.additional-signer-fields {
+  border-left: 3px solid #0d6efd;
+  padding-left: 15px;
+  margin-top: 10px;
+  margin-bottom: 20px;
 }
 </style>

@@ -1,11 +1,14 @@
 from django.shortcuts import render
 from django.db.models import Count
 from datetime import datetime
+import base64
+import uuid
+from django.core.files.base import ContentFile
+from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
-from rest_framework.parsers import MultiPartParser, FormParser
 
 from drf_spectacular.utils import extend_schema, extend_schema_view  # type: ignore
 from rest_framework import viewsets, status
@@ -79,6 +82,9 @@ class EvaluacionVerificadorViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
 class MatrizCompromisoViewSet(viewsets.ModelViewSet):
+    parser_classes = [JSONParser, MultiPartParser, FormParser]  # Add JSONParser
+
+    
     queryset = MatrizCompromiso.objects.all().prefetch_related(
         'evaluaciones_nc__verificador__subproceso__proceso',
         'evaluaciones_nc__usuario'
@@ -187,3 +193,51 @@ class MatrizCompromisoViewSet(viewsets.ModelViewSet):
                 {'error': str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+    
+    def create(self, request, *args, **kwargs):
+        data = request.data.copy()
+        
+        # Procesar cada firma
+        for field in ['firma_a', 'firma_b', 'firma_c', 'firma_d', 'firma_e']:
+            if field in data and data[field].startswith('data:image'):
+                # Convertir data URL a archivo
+                format, imgstr = data[field].split(';base64,') 
+                ext = format.split('/')[-1]
+                
+                file_name = f"{field}_{uuid.uuid4()}.{ext}"
+                file_content = ContentFile(base64.b64decode(imgstr), name=file_name)
+                data[field] = file_content
+        
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        data = request.data.copy()
+    
+        file_fields = ['firma_a', 'firma_b', 'firma_c', 'firma_d', 'firma_e']
+    
+        for field in file_fields:
+            if field in request.FILES:
+                old_file = getattr(instance, field)
+                if old_file:
+                    old_file.delete(save=False)
+                setattr(instance, field, request.FILES[field])
+            elif field in data and data[field] == 'null':
+                old_file = getattr(instance, field)
+                if old_file:
+                    old_file.delete(save=False)
+                setattr(instance, field, None)
+    
+        # Elimina los campos de archivo para evitar problemas con el serializer
+        for field in file_fields:
+            data.pop(field, None)
+    
+        serializer = self.get_serializer(instance, data=data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+    
+        return Response(serializer.data)
