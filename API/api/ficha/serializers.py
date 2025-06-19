@@ -29,11 +29,16 @@ class VerificadorSerializer(serializers.ModelSerializer):
             'orden': {'required': False}
         }
 
+
+        
 class EvaluacionVerificadorSerializer(serializers.ModelSerializer):
     estado_display = serializers.CharField(source='get_estado_display', read_only=True)
     tipo_display = serializers.CharField(source='get_tipo_display', read_only=True)
     verificador_nombre = serializers.CharField(source='verificador.descripcion', read_only=True)
     usuario_nombre = serializers.CharField(source='usuario.get_full_name', read_only=True)
+    subproceso_nombre = serializers.CharField(source='verificador.subproceso.nombre', read_only=True)
+    subproceso_nivel = serializers.CharField(source='verificador.subproceso.nivel', read_only=True)
+    subproceso_codigo = serializers.SerializerMethodField()
     
     class Meta:
         model = EvaluacionVerificador
@@ -42,7 +47,10 @@ class EvaluacionVerificadorSerializer(serializers.ModelSerializer):
             'usuario': {'read_only': True},
             'fecha_evaluacion': {'read_only': True}
         }
-        
+    
+    def get_subproceso_codigo(self, obj):
+        return f"PS{obj.verificador.subproceso.proceso.id}.{obj.verificador.subproceso.id}"
+
 class MatrizCompromisoSerializer(serializers.ModelSerializer):
     evaluacion_data = serializers.SerializerMethodField()
     evaluaciones_nc = EvaluacionVerificadorSerializer(many=True, read_only=True)
@@ -56,10 +64,15 @@ class MatrizCompromisoSerializer(serializers.ModelSerializer):
         return {
             'tipo': evaluacion.get_tipo_display(),
             'establecimiento': evaluacion.establecimiento,
-            'codigo': evaluacion.codigo,
+            'fecha_monitoreo': evaluacion.fecha_evaluacion,
             'proceso_nombre': evaluacion.verificador.subproceso.proceso.nombre_proceso,
-            # ... otros campos necesarios
+            'categoria': evaluacion.verificador.subproceso.proceso.categoria.name,
+            'dueño_proceso': evaluacion.verificador.subproceso.proceso.dueño_proceso,
+            'estado': evaluacion.get_estado_display(),
+            'subproceso_nombre': evaluacion.verificador.subproceso.nombre,
+            'verificador_descripcion': evaluacion.verificador.descripcion,
+            'total_nc': obj.evaluaciones_nc.count(),
+            'subprocesos_afectados': list(set(
+                nc.verificador.subproceso.nombre for nc in obj.evaluaciones_nc.all()
+            ))
         }
-    
-    def get_datos_ipress(self, obj):
-        return obj.datos_ipress

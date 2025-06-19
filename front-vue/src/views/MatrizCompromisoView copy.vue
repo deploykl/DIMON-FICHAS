@@ -104,23 +104,11 @@
                 </div>
 
                 <form @submit.prevent="guardarMatriz">
+                  <!-- Resto del formulario de la matriz... -->
                   <div class="row mb-3">
                     <div class="col-md-12">
                       <label class="form-label">Descripción del estado situacional del proceso</label>
-                      <div class="input-group">
-                        <textarea v-model="matriz.descripcion_situacional" class="form-control" rows="5" required></textarea>
-                        <button @click.prevent="generarDescripcion" class="btn btn-outline-primary" type="button" 
-                                :disabled="generandoDescripcion">
-                          <template v-if="generandoDescripcion">
-                            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            Generando...
-                          </template>
-                          <template v-else>
-                            <i class="fas fa-robot me-2"></i> Ayuda con IA
-                          </template>
-                        </button>
-                      </div>
-                      <small class="text-muted">Presiona el botón para obtener ayuda con la descripción</small>
+                      <textarea v-model="matriz.descripcion_situacional" class="form-control" rows="3" required></textarea>
                     </div>
                   </div>
 
@@ -250,7 +238,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { api } from '@/components/services/auth_axios'
 import SignaturePad from '@/components/SignaturePad.vue'
 import { useToast } from 'vue-toast-notification'
-import { generateText } from '@/components/services/gemini'
 import 'vue-toast-notification/dist/theme-sugar.css'
 
 const route = useRoute()
@@ -259,7 +246,6 @@ const $toast = useToast()
 
 const loading = ref(true)
 const saving = ref(false)
-const generandoDescripcion = ref(false)
 const matriz = ref(null)
 const firmaA = ref(null)
 const firmaB = ref(null)
@@ -286,51 +272,7 @@ const slugify = (text) => {
     .replace(/-+$/, '');            // Trim - from end of text
 }
 
-const generarDescripcion = async () => {
-  try {
-    generandoDescripcion.value = true;
-    
-    // 1. Verificar si hay texto existente para mejorar
-    const textoExistente = matriz.value.descripcion_situacional || '';
-    
-    // 2. Construir el prompt dinámico
-    const prompt = `Como experto en redacción técnica profesional, toma la siguiente descripción y conviértela en un texto formal, estructurado y técnicamente preciso, adecuado para un documento oficial de gestión de procesos. 
-    Mantén la esencia pero mejora la redacción, estructura y terminología técnica. Si el texto está vacío, genera una descripción técnica estándar basada en los verificadores no conformes.
-    
-    Texto original: "${textoExistente}"
-    
-    Verificadores no conformes: ${JSON.stringify(matriz.value.evaluaciones_nc?.map(nc => nc.verificador_nombre) || 'No especificados')}
-    
-    Proceso: ${matriz.value.evaluacion_data?.proceso_nombre || 'No especificado'}
-    
-    Devuelve SOLO el texto mejorado, sin comentarios adicionales.`;
-    
-    // 3. Llamar a la API de Gemini
-    const descripcionGenerada = await generateText(prompt);
-    
-    // 4. Asignar el resultado (limpiando posibles caracteres extraños)
-    matriz.value.descripcion_situacional = descripcionGenerada.trim()
-      .replace(/^"+|"+$/g, '') // Eliminar comillas al inicio/final si las hubiera
-      .replace(/\\n/g, '\n');  // Convertir saltos de línea codificados
-    
-    $toast.success('Descripción técnica generada con éxito');
-    
-  } catch (error) {
-    console.error('Error al generar descripción técnica:', error);
-    
-    let errorMsg = 'Error al generar la descripción técnica';
-    if (error.message.includes('model')) {
-      errorMsg = 'Error: Modelo no disponible. Intente con "gemini-1.5-pro"';
-    } else if (error.message.includes('API_KEY')) {
-      errorMsg = 'Error de configuración con la API de Gemini';
-    }
-    
-    $toast.error(errorMsg);
-  } finally {
-    generandoDescripcion.value = false;
-  }
-};
-
+// Resto de los métodos (fetchData, guardarMatriz, exportarPDF, etc.) se mantienen igual
 const fetchData = async () => {
   try {
     loading.value = true;
@@ -492,14 +434,5 @@ onMounted(() => {
 .btn-export:hover {
   background-color: #27ae60;
   border-color: #27ae60;
-}
-
-.input-group-text {
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.input-group-text:hover {
-  background-color: #e9ecef;
 }
 </style>

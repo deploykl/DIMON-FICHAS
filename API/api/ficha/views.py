@@ -78,7 +78,14 @@ class EvaluacionVerificadorViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
 class MatrizCompromisoViewSet(viewsets.ModelViewSet):
-    queryset = MatrizCompromiso.objects.all()
+    queryset = MatrizCompromiso.objects.all().prefetch_related(
+        'evaluaciones_nc__verificador__subproceso__proceso',
+        'evaluaciones_nc__usuario'
+    )
+    serializer_class = MatrizCompromisoSerializer
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = ['evaluacion']
+    ordering_fields = '__all__'    
     serializer_class = MatrizCompromisoSerializer
     
     def get_queryset(self):
