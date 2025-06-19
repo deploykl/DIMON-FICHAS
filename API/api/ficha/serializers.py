@@ -15,15 +15,12 @@ class ProcesoSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class SubprocesoSerializer(serializers.ModelSerializer):
-    #nivel_display = serializers.CharField(source='get_nivel_display', read_only=True)
-    #proceso_nombre = serializers.CharField(source='proceso.nombre', read_only=True)
     
     class Meta:
         model = Subproceso
         fields = '__all__'
 
 class VerificadorSerializer(serializers.ModelSerializer):
-    #subproceso_nombre = serializers.CharField(source='subproceso.nombre', read_only=True)
     
     class Meta:
         model = Verificador
@@ -48,23 +45,21 @@ class EvaluacionVerificadorSerializer(serializers.ModelSerializer):
         
 class MatrizCompromisoSerializer(serializers.ModelSerializer):
     evaluacion_data = serializers.SerializerMethodField()
+    evaluaciones_nc = EvaluacionVerificadorSerializer(many=True, read_only=True)
     
     class Meta:
         model = MatrizCompromiso
         fields = '__all__'
-        read_only_fields = ('fecha_creacion',)
     
     def get_evaluacion_data(self, obj):
         evaluacion = obj.evaluacion
         return {
             'tipo': evaluacion.get_tipo_display(),
             'establecimiento': evaluacion.establecimiento,
+            'codigo': evaluacion.codigo,
             'proceso_nombre': evaluacion.verificador.subproceso.proceso.nombre_proceso,
-            'categoria': evaluacion.verificador.subproceso.proceso.categoria.name,
-            'fecha_monitoreo': evaluacion.fecha_evaluacion,
-            'dueño_proceso': evaluacion.verificador.subproceso.proceso.dueño_proceso,
-            'subproceso_nombre': evaluacion.verificador.subproceso.nombre,
-            'verificador_descripcion': evaluacion.verificador.descripcion,
-            'estado': evaluacion.get_estado_display(),
-            'usuario': evaluacion.usuario.get_full_name() or evaluacion.usuario.username
+            # ... otros campos necesarios
         }
+    
+    def get_datos_ipress(self, obj):
+        return obj.datos_ipress

@@ -5,6 +5,7 @@ import NotFoundView from "../views/NotFoundView.vue";
 import LoginView from "../views/fichas/login/LoginView.vue";
 import SeleccionFichaView from "../views/SeleccionFichaView.vue";
 import EvaluarFichaView from "../views/EvaluarFichaView.vue";
+import MatrizCompromisoView from "../views/MatrizCompromisoView.vue";
 import TestLineView from "../views/TestLineView.vue";
 
 const routes = [
@@ -16,7 +17,7 @@ const routes = [
       title: "DIMON APP",
     },
   },
-    {
+  {
     path: "/test",
     name: "test",
     component: TestLineView,
@@ -31,7 +32,6 @@ const routes = [
     meta: {
       title: "FICHAS",
       requiresAuth: true,
-      requiresStaff: true,
     },
   },
   {
@@ -41,7 +41,6 @@ const routes = [
     meta: {
       title: "Seleccionar Ficha",
       requiresAuth: true,
-      requiresStaff: true,
     },
   },
   {
@@ -52,7 +51,16 @@ const routes = [
     meta: {
       title: "Evaluar Ficha",
       requiresAuth: true,
-      requiresStaff: true,
+    },
+  },
+  {
+    path: '/matriz-compromiso/matriz/:id',
+    name: "matriz-compromiso",
+    component: MatrizCompromisoView,
+    props: true,
+    meta: {
+      title: "Matriz de Compromiso",
+      requiresAuth: true,
     },
   },
   {

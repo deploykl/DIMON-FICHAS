@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
 User = get_user_model()  # Esto usará el modelo definido en AUTH_USER_MODEL
+from datetime import timedelta  # Añadir esto al inicio del archivo models.py
 
 # Create your models here.
 class Categoria(models.Model):
@@ -103,10 +104,26 @@ class MatrizCompromiso(models.Model):
     funcionario_depen_indirecto = models.CharField(max_length=200, verbose_name="Funcionario (C)")
     firmas_adicionales = models.TextField(verbose_name="Firmas adicionales (máx. 5)", blank=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+     # Relación ManyToMany para agrupar evaluaciones NC relacionadas
+    evaluaciones_nc = models.ManyToManyField(
+        EvaluacionVerificador,
+        related_name='matrices_asociadas',
+        verbose_name="Evaluaciones No Conformes"
+    )
 
     class Meta:
         verbose_name = "Matriz de Compromiso"
         verbose_name_plural = "Matrices de Compromiso"
 
     def __str__(self):
-        return f"Matriz para {self.evaluacion.verificador}"
+        return f"Matriz para {self.evaluacion.establecimiento} ({self.evaluacion.codigo})"
+    
+    # Propiedad para acceder fácilmente a los datos de la IPRESS
+    @property
+    def datos_ipress(self):
+        return {
+            'establecimiento': self.evaluacion.establecimiento,
+            'codigo': self.evaluacion.codigo,
+            'tipo': self.evaluacion.get_tipo_display(),
+            'categoria': self.evaluacion.categoria
+        }

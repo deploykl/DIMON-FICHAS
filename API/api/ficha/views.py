@@ -130,3 +130,52 @@ class MatrizCompromisoViewSet(viewsets.ModelViewSet):
                 {'error': 'Evaluación no encontrada'},
                 status=status.HTTP_404_NOT_FOUND
             )
+            
+    @action(detail=False, methods=['post'])
+    def generar_completa(self, request):
+        evaluaciones_ids = request.data.get('evaluaciones_ids', [])
+        
+        try:
+            evaluaciones_nc = EvaluacionVerificador.objects.filter(
+                id__in=evaluaciones_ids,
+                estado='NC'
+            ).select_related(
+                'verificador__subproceso__proceso',
+                'usuario'
+            )
+            
+            if not evaluaciones_nc.exists():
+                return Response(
+                    {'error': 'No se encontraron evaluaciones No Conformes'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Crear matriz con la primera evaluación como referencia
+            primera_eval = evaluaciones_nc.first()
+            matriz = MatrizCompromiso.objects.create(
+                evaluacion=primera_eval,
+                descripcion_situacional='Múltiples verificadores no cumplen',
+                semaforo='Rojo',
+                riesgo_identificado='Riesgos identificados en los verificadores evaluados',
+                medidas_correctivas='Plan de acción integral',
+                hito_esperado='Cumplimiento de los verificadores',
+                responsable_directo=primera_eval.usuario.get_full_name(),
+                plazo_inicio=datetime.now().date(),
+                plazo_fin=datetime.now().date() + timedelta(days=30),
+                funcionario_depen_directo='Por definir',
+                funcionario_depen_indirecto='Por definir',
+                firmas_adicionales=''
+            )
+            
+            # Asociar evaluaciones NC
+            matriz.evaluaciones_nc.set(evaluaciones_nc)
+            
+            # Serializar incluyendo datos completos
+            serializer = self.get_serializer(matriz)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
