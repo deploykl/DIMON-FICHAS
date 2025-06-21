@@ -123,8 +123,8 @@ class MatrizCompromisoViewSet(viewsets.ModelViewSet):
                 evaluacion=evaluacion,
                 defaults={
                     'descripcion_situacional': '',
-                    'semaforo': 'Rojo',  # Valor por defecto
-                    'riesgo_identificado': '',
+                    'semaforo': 'Verde' if evaluacion.estado == 'C' else 'Rojo',
+                    'riesgo_identificado': 'Cumple con observaciones' if evaluacion.estado == 'C' else 'Riesgos identificados',
                     'medidas_correctivas': '',
                     'hito_esperado': '',
                     'responsable_directo': '',
@@ -150,50 +150,65 @@ class MatrizCompromisoViewSet(viewsets.ModelViewSet):
         evaluaciones_ids = request.data.get('evaluaciones_ids', [])
         
         try:
-            evaluaciones_nc = EvaluacionVerificador.objects.filter(
-                id__in=evaluaciones_ids,
-                estado='NC'
+            # Obtener todas las evaluaciones sin filtrar por estado
+            evaluaciones = EvaluacionVerificador.objects.filter(
+                id__in=evaluaciones_ids
             ).select_related(
                 'verificador__subproceso__proceso',
                 'usuario'
             )
             
-            if not evaluaciones_nc.exists():
+            if not evaluaciones.exists():
                 return Response(
-                    {'error': 'No se encontraron evaluaciones No Conformes'},
+                    {'error': 'No se encontraron evaluaciones para generar la matriz'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Crear matriz con la primera evaluación como referencia
-            primera_eval = evaluaciones_nc.first()
+            # Obtener la evaluación principal (primera de la lista)
+            primera_eval = evaluaciones.first()
+            
+            # Fechas por defecto (hoy y 30 días después)
+            hoy = datetime.now().date()
+            plazo_fin = hoy + timedelta(days=30)
+            
+            # Crear matriz con valores por defecto
             matriz = MatrizCompromiso.objects.create(
                 evaluacion=primera_eval,
-                descripcion_situacional='Múltiples verificadores no cumplen',
-                semaforo='Rojo',
-                riesgo_identificado='Riesgos identificados en los verificadores evaluados',
-                medidas_correctivas='Plan de acción integral',
-                hito_esperado='Cumplimiento de los verificadores',
-                responsable_directo='',  # Ahora vacío por defecto
-                plazo_inicio=datetime.now().date(),
-                plazo_fin=datetime.now().date() + timedelta(days=30),
+                descripcion_situacional='Descripción pendiente',
+                semaforo='Verde' if not evaluaciones.filter(estado='NC').exists() else 'Rojo',
+                riesgo_identificado='Riesgos pendientes de identificación',
+                medidas_correctivas='Medidas correctivas pendientes',
+                hito_esperado='Hito esperado pendiente',
+                responsable_directo='Por definir',
+                plazo_inicio=hoy,  # Fecha actual como valor por defecto
+                plazo_fin=plazo_fin,  # 30 días después como valor por defecto
                 funcionario_depen_directo='Por definir',
                 funcionario_depen_indirecto='Por definir',
-                firmas_adicionales=''
+                firmas_adicionales='',
+                firma_a=None,
+                firma_b=None,
+                firma_c=None,
+                firma_d=None,
+                firma_e=None,
+                funcionario_d='',
+                funcionario_e=''
             )
             
-            # Asociar evaluaciones NC
-            matriz.evaluaciones_nc.set(evaluaciones_nc)
+            # Asociar TODAS las evaluaciones a la matriz
+            matriz.evaluaciones_nc.set(evaluaciones)
             
             # Serializar incluyendo datos completos
             serializer = self.get_serializer(matriz)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
             
         except Exception as e:
+            import traceback
+            traceback.print_exc()
             return Response(
-                {'error': str(e)},
+                {'error': f'Error al generar matriz: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-    
+        
     def create(self, request, *args, **kwargs):
         data = request.data.copy()
         

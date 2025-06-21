@@ -16,7 +16,6 @@ class ProcesoSerializer(serializers.ModelSerializer):
         model = Proceso
         fields = "__all__"
 
-
 class SubprocesoSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -67,6 +66,7 @@ class MatrizCompromisoSerializer(serializers.ModelSerializer):
     evaluacion_data = serializers.SerializerMethodField()
     evaluaciones_nc = EvaluacionVerificadorSerializer(many=True, read_only=True)
     monitor_nombre = serializers.SerializerMethodField()  # Nuevo campo
+    todas_evaluaciones = serializers.SerializerMethodField()
 
     class Meta:
         model = MatrizCompromiso
@@ -95,6 +95,7 @@ class MatrizCompromisoSerializer(serializers.ModelSerializer):
             "categoria": evaluacion.verificador.subproceso.proceso.categoria.tipo,
             "dueño_proceso": evaluacion.verificador.subproceso.proceso.dueño_proceso,
             "estado": evaluacion.get_estado_display(),
+            
             "monitor_nombre": self.get_monitor_nombre(obj),
             "subproceso_nombre": evaluacion.verificador.subproceso.nombre,
             "verificador_descripcion": evaluacion.verificador.descripcion,
@@ -105,3 +106,8 @@ class MatrizCompromisoSerializer(serializers.ModelSerializer):
                 )
             ),
         }
+# En MatrizCompromisoSerializer
+    def get_todas_evaluaciones(self, obj):
+        # Obtener todas las evaluaciones asociadas a esta matriz
+        evaluaciones = list(obj.evaluaciones_nc.all())
+        return EvaluacionVerificadorSerializer(evaluaciones, many=True).data

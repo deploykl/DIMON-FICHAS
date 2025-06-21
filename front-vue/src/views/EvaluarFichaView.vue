@@ -159,50 +159,114 @@
             <div class="modal fade" id="matrizModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title">Evaluaciones que no cumplen</h5>
+                        <div class="modal-header" :class="{ 
+                            'bg-success': todosCumplen || soloCumplen, 
+                            'bg-primary': !todosCumplen && !soloCumplen 
+                        }">
+                            <h5 class="modal-title text-white">
+                                {{ todosCumplen ? 'Resultado de la Evaluación' : 
+                                   soloCumplen ? 'Evaluaciones que cumplen' : 
+                                   'Evaluaciones que no cumplen' }}
+                            </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                                 aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <p>Se han identificado <strong>{{ totalVerificadoresNoCumplen }}</strong> verificadores que
-                                no cumplen en <strong>{{ subprocesosNoCumplen.length }}</strong> subprocesos.</p>
-
-                            <div class="table-responsive mb-4">
-                                <table class="table table-hover">
-                                    <thead>
-                                        <tr>
-                                            <th>Subproceso</th>
-                                            <th>Verificadores que no cumplen</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr v-for="subproceso in subprocesosNoCumplen" :key="subproceso.id">
-                                            <td>
-                                                <strong>{{ subproceso.nombre }}</strong>
-                                                <div class="small text-muted">
-                                                    Nivel: {{ subproceso.nivel }} |
-                                                    Código: {{ subproceso.nombre.split(' ')[0] }}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <ul class="list-unstyled mb-0">
-                                                    <li v-for="verificador in getVerificadoresNoCumplen(subproceso.id)"
-                                                        :key="verificador.id" class="mb-1">
-                                                        Verificador #{{ verificador.orden }}: {{ verificador.descripcion
-                                                        }}
-                                                    </li>
-                                                </ul>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div v-if="todosCumplen" class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i>
+                                ¡Todos los verificadores cumplen con los requisitos!
                             </div>
 
-                            <div class="alert alert-info">
+                            <p v-if="!todosCumplen && totalVerificadoresNoCumplen > 0">
+                                Se han identificado <strong>{{ totalVerificadoresNoCumplen }}</strong> verificadores que
+                                no cumplen en <strong>{{ subprocesosNoCumplen.length }}</strong> subprocesos.
+                            </p>
+
+                            <p v-if="!todosCumplen && totalVerificadoresCumplen > 0">
+                                Se han identificado <strong>{{ totalVerificadoresCumplen }}</strong> verificadores que
+                                cumplen con observaciones en <strong>{{ subprocesosCumplen.length }}</strong> subprocesos.
+                            </p>
+
+                            <!-- Tablas de resultados (mostrar solo si no es el caso de todos cumplen) -->
+                            <template v-if="!todosCumplen">
+                                <!-- Tabla para verificadores que no cumplen -->
+                                <div v-if="totalVerificadoresNoCumplen > 0" class="table-responsive mb-4">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Subproceso</th>
+                                                <th>Verificadores que no cumplen</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="subproceso in subprocesosNoCumplen" :key="subproceso.id">
+                                                <td>
+                                                    <strong>{{ subproceso.nombre }}</strong>
+                                                    <div class="small text-muted">
+                                                        Nivel: {{ subproceso.nivel }} |
+                                                        Código: {{ subproceso.nombre.split(' ')[0] }}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <ul class="list-unstyled mb-0">
+                                                        <li v-for="verificador in getVerificadoresNoCumplen(subproceso.id)"
+                                                            :key="verificador.id" class="mb-1">
+                                                            Verificador #{{ verificador.orden }}: {{ verificador.descripcion }}
+                                                        </li>
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Tabla para verificadores que cumplen con observaciones -->
+                                <div v-if="totalVerificadoresCumplen > 0" class="table-responsive mb-4">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Subproceso</th>
+                                                <th>Verificadores que cumplen con observaciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="subproceso in subprocesosCumplen" :key="subproceso.id">
+                                                <td>
+                                                    <strong>{{ subproceso.nombre }}</strong>
+                                                    <div class="small text-muted">
+                                                        Nivel: {{ subproceso.nivel }} |
+                                                        Código: {{ subproceso.nombre.split(' ')[0] }}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <ul class="list-unstyled mb-0">
+                                                        <li v-for="verificador in getVerificadoresCumplen(subproceso.id)"
+                                                            :key="verificador.id" class="mb-1">
+                                                            Verificador #{{ verificador.orden }}: {{ verificador.descripcion }}
+                                                        </li>
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </template>
+
+                            <div class="alert" :class="{ 
+                                'alert-success': todosCumplen,
+                                'alert-info': soloCumplen && !todosCumplen, 
+                                'alert-warning': !soloCumplen && !todosCumplen 
+                            }">
                                 <i class="fas fa-info-circle me-2"></i>
-                                Puede generar una matriz de compromiso que incluya todos los verificadores que no
-                                cumplen.
+                                <span v-if="todosCumplen">
+                                    Puede generar una matriz de compromiso para documentar el cumplimiento total.
+                                </span>
+                                <span v-else-if="!soloCumplen">
+                                    Puede generar una matriz de compromiso que incluya todos los verificadores que no cumplen.
+                                </span>
+                                <span v-else>
+                                    Puede generar una matriz de compromiso que incluya todos los verificadores que cumplen con observaciones.
+                                </span>
                             </div>
                         </div>
                         <div class="modal-footer">
@@ -210,8 +274,15 @@
                             <button type="button" class="btn btn-success" @click="continuarSinMatriz">
                                 Continuar sin generar matriz
                             </button>
-                            <button @click="generarMatrizCompleta" class="btn btn-primary">
-                                <i class="fas fa-file-alt me-2"></i> Generar Matriz Completa
+                            <button @click="generarMatrizCompleta" class="btn"
+                                :class="{ 
+                                    'btn-success': todosCumplen || soloCumplen, 
+                                    'btn-primary': !todosCumplen && !soloCumplen 
+                                }">
+                                <i class="fas fa-file-alt me-2"></i>
+                                {{ todosCumplen ? 'Generar Matriz de Cumplimiento' : 
+                                   soloCumplen ? 'Generar Matriz de Seguimiento' : 
+                                   'Generar Matriz Completa' }}
                             </button>
                         </div>
                     </div>
@@ -259,11 +330,36 @@ const saving = ref(false);
 const evaluacionesNoCumplen = ref([]);
 let matrizModal = null;
 
-
 // Computed properties
+const todosCumplen = computed(() => {
+    if (!verificadores.value || verificadores.value.length === 0) return false;
+    return Object.values(evaluaciones.value).every(evaluacion => evaluacion.estado === 'C');
+});
+
+const totalVerificadoresCumplen = computed(() => {
+    if (!verificadores.value) return 0;
+    return Object.keys(evaluaciones.value).filter(verificadorId => {
+        return evaluaciones.value[verificadorId]?.estado === 'C' && 
+               evaluaciones.value[verificadorId]?.observaciones;
+    }).length;
+});
+
+const subprocesosCumplen = computed(() => {
+    if (!subprocesosFiltrados.value || !verificadores.value) return [];
+    return subprocesosFiltrados.value.filter(subproceso => {
+        return getVerificadoresBySubproceso(subproceso.id).some(verificador => {
+            return evaluaciones.value[verificador.id]?.estado === 'C' && 
+                   evaluaciones.value[verificador.id]?.observaciones;
+        });
+    });
+});
+
+const soloCumplen = computed(() => {
+    return totalVerificadoresNoCumplen.value === 0 && totalVerificadoresCumplen.value > 0;
+});
+
 const subprocesosNoCumplen = computed(() => {
     if (!subprocesosFiltrados.value || !verificadores.value) return [];
-
     return subprocesosFiltrados.value.filter(subproceso => {
         return getVerificadoresBySubproceso(subproceso.id).some(verificador => {
             return evaluaciones.value[verificador.id]?.estado === 'NC';
@@ -273,33 +369,47 @@ const subprocesosNoCumplen = computed(() => {
 
 const totalVerificadoresNoCumplen = computed(() => {
     if (!verificadores.value) return 0;
-
     return Object.keys(evaluaciones.value).filter(verificadorId => {
         return evaluaciones.value[verificadorId]?.estado === 'NC';
     }).length;
 });
 
-// Methods
+// Computed para filtrar subprocesos
+const subprocesosFiltrados = computed(() => {
+    if (!proceso.value) return [];
+    return subprocesos.value.filter(sub => sub.proceso === proceso.value.id);
+});
+
+// Métodos
+const getVerificadoresCumplen = (subprocesoId) => {
+    return getVerificadoresBySubproceso(subprocesoId).filter(verificador => {
+        return evaluaciones.value[verificador.id]?.estado === 'C' && 
+               evaluaciones.value[verificador.id]?.observaciones;
+    });
+};
+
 const getVerificadoresNoCumplen = (subprocesoId) => {
     return getVerificadoresBySubproceso(subprocesoId).filter(verificador => {
         return evaluaciones.value[verificador.id]?.estado === 'NC';
     });
 };
 
+// En el método que genera la matriz
 const generarMatrizCompleta = async () => {
     try {
         if (matrizModal) {
             matrizModal.hide();
         }
 
-        const evaluacionesNCIds = evaluacionesNoCumplen.value.map(e => e.id);
+        // Enviar TODAS las evaluaciones, no solo las NC
+        const evaluacionesIds = evaluacionesNoCumplen.value.map(e => e.id);
 
-        // 1. Crear la matriz en el backend
+        // Crear la matriz en el backend
         const response = await api.post('ficha/matriz-compromiso/generar_completa/', {
-            evaluaciones_ids: evaluacionesNCIds
+            evaluaciones_ids: evaluacionesIds
         });
 
-        // 2. Redirigir usando el ID de la matriz, no de la evaluación
+        // Redirigir usando el ID de la matriz
         router.push(`/matriz-compromiso/matriz/${response.data.id}`);
 
     } catch (error) {
@@ -307,11 +417,6 @@ const generarMatrizCompleta = async () => {
         $toast.error(error.response?.data?.error || 'Error al generar la matriz');
     }
 };
-// Computed para filtrar subprocesos
-const subprocesosFiltrados = computed(() => {
-    if (!proceso.value) return [];
-    return subprocesos.value.filter(sub => sub.proceso === proceso.value.id);
-});
 
 // Método para obtener verificadores por subproceso
 const getVerificadoresBySubproceso = (subprocesoId) => {
@@ -373,21 +478,11 @@ const submitEvaluaciones = async () => {
             )
         );
 
-        // Filtrar evaluaciones que no cumplen
-        const evaluacionesNC = responses
-            .map(res => res.data)
-            .filter(evaluacion => evaluacion.estado === 'NC');
+        // Guardar todas las evaluaciones para mostrar en el modal
+        evaluacionesNoCumplen.value = responses.map(res => res.data);
 
-        if (evaluacionesNC.length > 0) {
-            // Guardar las evaluaciones que no cumplen
-            evaluacionesNoCumplen.value = evaluacionesNC;
-
-            // Mostrar modal para preguntar si desea generar matrices
-            matrizModal.show();
-        } else {
-            $toast.success('Evaluaciones guardadas correctamente');
-            router.push('/fichas/seleccion');
-        }
+        // Siempre mostrar el modal, independientemente del estado
+        matrizModal.show();
 
     } catch (err) {
         console.error('Error al guardar evaluaciones:', err);
