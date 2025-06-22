@@ -48,149 +48,158 @@
 
                 <!-- Contenido cuando existe matriz -->
                 <div v-else>
-<!-- Resumen de Verificadores -->
-<div class="row mb-4">
-  <div class="col-md-4">
-    <div class="card border-success">
-      <div class="card-body text-center">
-        <h6 class="card-title text-success">Verificadores Cumplidos</h6>
-        <h3 class="text-success">{{ totalVerificadoresCumplidos }}</h3>
-        <button @click="mostrarVerificadoresCumplidos = !mostrarVerificadoresCumplidos" 
-                class="btn btn-sm btn-outline-success">
-          <i :class="mostrarVerificadoresCumplidos ? 'fas fa-eye-slash' : 'fas fa-eye'" class="me-1"></i>
-          {{ mostrarVerificadoresCumplidos ? 'Ocultar' : 'Mostrar' }}
-        </button>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card border-warning">
-      <div class="card-body text-center">
-        <h6 class="card-title text-warning">Verificadores No Aplica</h6>
-        <h3 class="text-warning">{{ totalVerificadoresNoAplica }}</h3>
-        <button @click="mostrarVerificadoresNoAplica = !mostrarVerificadoresNoAplica" 
-                class="btn btn-sm btn-outline-warning">
-          <i :class="mostrarVerificadoresNoAplica ? 'fas fa-eye-slash' : 'fas fa-eye'" class="me-1"></i>
-          {{ mostrarVerificadoresNoAplica ? 'Ocultar' : 'Mostrar' }}
-        </button>
-      </div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="card border-danger">
-      <div class="card-body text-center">
-        <h6 class="card-title text-danger">Verificadores No Cumplidos</h6>
-        <h3 class="text-danger">{{ totalVerificadoresNoCumplidos }}</h3>
-        <button @click="mostrarVerificadoresNoCumplidos = !mostrarVerificadoresNoCumplidos" 
-                class="btn btn-sm btn-outline-danger">
-          <i :class="mostrarVerificadoresNoCumplidos ? 'fas fa-eye-slash' : 'fas fa-eye'" class="me-1"></i>
-          {{ mostrarVerificadoresNoCumplidos ? 'Ocultar' : 'Mostrar' }}
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+                  <!-- Resumen de Verificadores -->
+                  <div class="row mb-4">
+                    <div class="col-md-4">
+                      <div class="card border-success">
+                        <div class="card-body text-center">
+                          <h6 class="card-title text-success">Verificadores Cumplidos</h6>
+                          <h3 class="text-success">{{ totalVerificadoresCumplidos }}</h3>
+                          <button @click="mostrarVerificadoresCumplidos = !mostrarVerificadoresCumplidos"
+                            class="btn btn-sm btn-outline-success">
+                            <i :class="mostrarVerificadoresCumplidos ? 'fas fa-eye-slash' : 'fas fa-eye'"
+                              class="me-1"></i>
+                            {{ mostrarVerificadoresCumplidos ? 'Ocultar' : 'Mostrar' }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="card border-warning">
+                        <div class="card-body text-center">
+                          <h6 class="card-title text-warning">Verificadores No Aplica</h6>
+                          <h3 class="text-warning">{{ totalVerificadoresNoAplica }}</h3>
+                          <button @click="mostrarVerificadoresNoAplica = !mostrarVerificadoresNoAplica"
+                            class="btn btn-sm btn-outline-warning">
+                            <i :class="mostrarVerificadoresNoAplica ? 'fas fa-eye-slash' : 'fas fa-eye'"
+                              class="me-1"></i>
+                            {{ mostrarVerificadoresNoAplica ? 'Ocultar' : 'Mostrar' }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="card border-danger">
+                        <div class="card-body text-center">
+                          <h6 class="card-title text-danger">Verificadores No Cumplidos</h6>
+                          <h3 class="text-danger">{{ totalVerificadoresNoCumplidos }}</h3>
+                          <button @click="mostrarVerificadoresNoCumplidos = !mostrarVerificadoresNoCumplidos"
+                            class="btn btn-sm btn-outline-danger">
+                            <i :class="mostrarVerificadoresNoCumplidos ? 'fas fa-eye-slash' : 'fas fa-eye'"
+                              class="me-1"></i>
+                            {{ mostrarVerificadoresNoCumplidos ? 'Ocultar' : 'Mostrar' }}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
 
-<!-- Sección de Verificadores No Aplica -->
-<div v-if="mostrarVerificadoresNoAplica" class="mb-4">
-  <h5 class="card-title">
-    <i class="fas fa-info-circle text-warning me-2"></i>
-    Verificadores No Aplica
-  </h5>
-  
-  <div v-if="verificadoresNoAplica.length === 0" class="alert alert-info">
-    <i class="fas fa-info-circle me-2"></i>
-    No hay verificadores marcados como "No Aplica"
-  </div>
+                  <!-- Sección de Verificadores No Aplica -->
+                  <div v-if="mostrarVerificadoresNoAplica" class="mb-4">
+                    <h5 class="card-title">
+                      <i class="fas fa-info-circle text-warning me-2"></i>
+                      Verificadores No Aplica
+                    </h5>
 
-  <div v-else class="accordion" id="accordionNoAplica">
-    <template v-for="(grupo, subproceso) in agruparPorSubproceso(verificadoresNoAplica)" :key="'na-'+subproceso">
-      <div class="accordion-item mb-2 border border-warning">
-        <h2 class="accordion-header">
-          <button class="accordion-button collapsed bg-warning bg-opacity-10" type="button" data-bs-toggle="collapse"
-            :data-bs-target="'#collapseNA-' + slugify(subproceso)" aria-expanded="false">
-            <strong class="me-2">Subproceso:</strong> {{ subproceso }}
-            <span class="badge bg-warning ms-2">
-              {{ grupo.length }} verificador(es)
-            </span>
-          </button>
-        </h2>
-        <div :id="'collapseNA-' + slugify(subproceso)" class="accordion-collapse collapse"
-          data-bs-parent="#accordionNoAplica">
-          <div class="accordion-body p-2">
-            <div v-for="(verificador, index) in grupo" :key="'na-'+verificador.id" 
-                class="mb-2 p-2 border-bottom border-warning border-opacity-25">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1 }}:</strong> 
-                    {{ verificador.verificador_nombre }}</p>
-                  <span class="badge bg-warning">
-                    {{ verificador.estado_display }}
-                  </span>
-                </div>
-                <small class="text-muted">Código: {{ verificador.subproceso_codigo }}</small>
-              </div>
-              <p v-if="verificador.observaciones" class="mt-2 small">
-                <strong>Observaciones:</strong> {{ verificador.observaciones }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </template>
-  </div>
-</div>
+                    <div v-if="verificadoresNoAplica.length === 0" class="alert alert-info">
+                      <i class="fas fa-info-circle me-2"></i>
+                      No hay verificadores marcados como "No Aplica"
+                    </div>
 
-<!-- Sección de Verificadores No Cumplidos -->
-<div v-if="mostrarVerificadoresNoCumplidos" class="mb-4">
-  <h5 class="card-title">
-    <i class="fas fa-exclamation-triangle text-danger me-2"></i>
-    Verificadores No Cumplidos
-  </h5>
-  
-  <div v-if="verificadoresNoConformes.length === 0" class="alert alert-info">
-    <i class="fas fa-info-circle me-2"></i>
-    No hay verificadores no cumplidos para mostrar
-  </div>
+                    <div v-else class="accordion" id="accordionNoAplica">
+                      <template v-for="(grupo, subproceso) in agruparPorSubproceso(verificadoresNoAplica)"
+                        :key="'na-'+subproceso">
+                        <div class="accordion-item mb-2 border border-warning">
+                          <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-warning bg-opacity-10" type="button"
+                              data-bs-toggle="collapse" :data-bs-target="'#collapseNA-' + slugify(subproceso)"
+                              aria-expanded="false">
+                              <strong class="me-2">Subproceso:</strong> {{ subproceso }}
+                              <span class="badge bg-warning ms-2">
+                                {{ grupo.length }} verificador(es)
+                              </span>
+                            </button>
+                          </h2>
+                          <div :id="'collapseNA-' + slugify(subproceso)" class="accordion-collapse collapse"
+                            data-bs-parent="#accordionNoAplica">
+                            <div class="accordion-body p-2">
+                              <div v-for="(verificador, index) in grupo" :key="'na-' + verificador.id"
+                                class="mb-2 p-2 border-bottom border-warning border-opacity-25">
+                                <div class="d-flex justify-content-between align-items-start">
+                                  <div>
+                                    <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1
+                                        }}:</strong>
+                                      {{ verificador.verificador_nombre }}</p>
+                                    <span class="badge bg-warning">
+                                      {{ verificador.estado_display }}
+                                    </span>
+                                  </div>
+                                  <small class="text-muted">Código: {{ verificador.subproceso_codigo }}</small>
+                                </div>
+                                <p v-if="verificador.observaciones" class="mt-2 small">
+                                  <strong>Observaciones:</strong> {{ verificador.observaciones }}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
 
-  <div v-else class="accordion" id="accordionNoCumplidos">
-    <template v-for="(grupo, subproceso) in agruparPorSubproceso(verificadoresNoConformes)" :key="'nc-'+subproceso">
-      <div class="accordion-item mb-2 border border-danger">
-        <h2 class="accordion-header">
-          <button class="accordion-button collapsed bg-danger bg-opacity-10" type="button" data-bs-toggle="collapse"
-            :data-bs-target="'#collapseNC-' + slugify(subproceso)" aria-expanded="false">
-            <strong class="me-2">Subproceso:</strong> {{ subproceso }}
-            <span class="badge bg-danger ms-2">
-              {{ grupo.length }} verificador(es)
-            </span>
-          </button>
-        </h2>
-        <div :id="'collapseNC-' + slugify(subproceso)" class="accordion-collapse collapse"
-          data-bs-parent="#accordionNoCumplidos">
-          <div class="accordion-body p-2">
-            <div v-for="(verificador, index) in grupo" :key="'nc-'+verificador.id" 
-                class="mb-2 p-2 border-bottom border-danger border-opacity-25">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1 }}:</strong> 
-                    {{ verificador.verificador_nombre }}</p>
-                  <span class="badge bg-danger">
-                    {{ verificador.estado_display }}
-                  </span>
-                </div>
-                <small class="text-muted">Código: {{ verificador.subproceso_codigo }}</small>
-              </div>
-              <p v-if="verificador.observaciones" class="mt-2 small">
-                <strong>Observaciones:</strong> {{ verificador.observaciones }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </template>
-  </div>
-</div>
+                  <!-- Sección de Verificadores No Cumplidos -->
+                  <div v-if="mostrarVerificadoresNoCumplidos" class="mb-4">
+                    <h5 class="card-title">
+                      <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                      Verificadores No Cumplidos
+                    </h5>
+
+                    <div v-if="verificadoresNoConformes.length === 0" class="alert alert-info">
+                      <i class="fas fa-info-circle me-2"></i>
+                      No hay verificadores no cumplidos para mostrar
+                    </div>
+
+                    <div v-else class="accordion" id="accordionNoCumplidos">
+                      <template v-for="(grupo, subproceso) in agruparPorSubproceso(verificadoresNoConformes)"
+                        :key="'nc-'+subproceso">
+                        <div class="accordion-item mb-2 border border-danger">
+                          <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-danger bg-opacity-10" type="button"
+                              data-bs-toggle="collapse" :data-bs-target="'#collapseNC-' + slugify(subproceso)"
+                              aria-expanded="false">
+                              <strong class="me-2">Subproceso:</strong> {{ subproceso }}
+                              <span class="badge bg-danger ms-2">
+                                {{ grupo.length }} verificador(es)
+                              </span>
+                            </button>
+                          </h2>
+                          <div :id="'collapseNC-' + slugify(subproceso)" class="accordion-collapse collapse"
+                            data-bs-parent="#accordionNoCumplidos">
+                            <div class="accordion-body p-2">
+                              <div v-for="(verificador, index) in grupo" :key="'nc-' + verificador.id"
+                                class="mb-2 p-2 border-bottom border-danger border-opacity-25">
+                                <div class="d-flex justify-content-between align-items-start">
+                                  <div>
+                                    <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1
+                                        }}:</strong>
+                                      {{ verificador.verificador_nombre }}</p>
+                                    <span class="badge bg-danger">
+                                      {{ verificador.estado_display }}
+                                    </span>
+                                  </div>
+                                  <small class="text-muted">Código: {{ verificador.subproceso_codigo }}</small>
+                                </div>
+                                <p v-if="verificador.observaciones" class="mt-2 small">
+                                  <strong>Observaciones:</strong> {{ verificador.observaciones }}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
 
                   <!-- Sección de Verificadores Cumplidos -->
                   <div v-if="mostrarVerificadoresCumplidos" class="mb-4">
@@ -198,18 +207,20 @@
                       <i class="fas fa-check-circle text-success me-2"></i>
                       Verificadores Cumplidos
                     </h5>
-                    
+
                     <div v-if="verificadoresCumplidos.length === 0" class="alert alert-info">
                       <i class="fas fa-info-circle me-2"></i>
                       No hay verificadores cumplidos para mostrar
                     </div>
 
                     <div v-else class="accordion" id="accordionCumplidos">
-                      <template v-for="(grupo, subproceso) in agruparPorSubproceso(verificadoresCumplidos)" :key="'c-'+subproceso">
+                      <template v-for="(grupo, subproceso) in agruparPorSubproceso(verificadoresCumplidos)"
+                        :key="'c-'+subproceso">
                         <div class="accordion-item mb-2 border border-success">
                           <h2 class="accordion-header">
-                            <button class="accordion-button collapsed bg-success bg-opacity-10" type="button" data-bs-toggle="collapse"
-                              :data-bs-target="'#collapseC-' + slugify(subproceso)" aria-expanded="false">
+                            <button class="accordion-button collapsed bg-success bg-opacity-10" type="button"
+                              data-bs-toggle="collapse" :data-bs-target="'#collapseC-' + slugify(subproceso)"
+                              aria-expanded="false">
                               <strong class="me-2">Subproceso:</strong> {{ subproceso }}
                               <span class="badge bg-success ms-2">
                                 {{ grupo.length }} verificador(es)
@@ -219,11 +230,12 @@
                           <div :id="'collapseC-' + slugify(subproceso)" class="accordion-collapse collapse"
                             data-bs-parent="#accordionCumplidos">
                             <div class="accordion-body p-2">
-                              <div v-for="(verificador, index) in grupo" :key="'c-'+verificador.id" 
-                                  class="mb-2 p-2 border-bottom border-success border-opacity-25">
+                              <div v-for="(verificador, index) in grupo" :key="'c-' + verificador.id"
+                                class="mb-2 p-2 border-bottom border-success border-opacity-25">
                                 <div class="d-flex justify-content-between align-items-start">
                                   <div>
-                                    <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1 }}:</strong> 
+                                    <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1
+                                        }}:</strong>
                                       {{ verificador.verificador_nombre }}</p>
                                     <span class="badge bg-success">
                                       {{ verificador.estado_display }}
@@ -253,7 +265,8 @@
                         <div class="row">
                           <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-muted">Dependencia:</label>
-                            <p class="fw-semibold">{{ matriz.evaluacion_data?.tipo }} - {{ matriz.evaluacion_data?.establecimiento }}</p>
+                            <p class="fw-semibold">{{ matriz.evaluacion_data?.tipo }} - {{
+                              matriz.evaluacion_data?.establecimiento }}</p>
                           </div>
                           <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-muted">Fecha del Monitoreo:</label>
@@ -281,7 +294,9 @@
                           </div>
                           <div class="col-md-6 mb-3">
                             <label class="form-label fw-bold text-muted">Total verificadores:</label>
-                            <p class="fw-semibold">{{ totalVerificadores }} (C: {{ totalVerificadoresCumplidos }}, NC: {{ totalVerificadoresNoCumplidos }}, NA: {{ totalVerificadoresNoAplica }})</p>
+                            <p class="fw-semibold">{{ totalVerificadores }} (C: {{ totalVerificadoresCumplidos }}, NC:
+                              {{
+                              totalVerificadoresNoCumplidos }}, NA: {{ totalVerificadoresNoAplica }})</p>
                           </div>
                         </div>
                       </div>
@@ -325,12 +340,13 @@
                           Descripción del estado situacional del proceso <span class="text-danger">*</span>
                         </label>
                         <div class="input-group">
-                          <textarea v-model="matriz.descripcion_situacional" class="form-control" rows="5"
-                            required placeholder="Describa la situación actual del proceso"></textarea>
+                          <textarea v-model="matriz.descripcion_situacional" class="form-control" rows="5" required
+                            placeholder="Describa la situación actual del proceso"></textarea>
                           <button @click.prevent="generarDescripcion" class="btn btn-outline-primary" type="button"
                             :disabled="generandoDescripcion" title="Generar descripción con IA">
                             <template v-if="generandoDescripcion">
-                              <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                              <span class="spinner-border spinner-border-sm me-2" role="status"
+                                aria-hidden="true"></span>
                               Generando...
                             </template>
                             <template v-else>
@@ -362,7 +378,8 @@
                     <!-- Medidas correctivas y Hito esperado -->
                     <div class="row mb-3">
                       <div class="col-md-6">
-                        <label class="form-label">Medidas correctivas/Compromisos <span class="text-danger">*</span></label>
+                        <label class="form-label">Medidas correctivas/Compromisos <span
+                            class="text-danger">*</span></label>
                         <textarea v-model="matriz.medidas_correctivas" class="form-control" rows="3" required
                           placeholder="Describa las medidas correctivas a implementar"></textarea>
                       </div>
@@ -397,12 +414,14 @@
                         <small class="text-muted">Monitor: {{ matriz.evaluacion_data?.monitor_nombre }}</small>
                       </div>
                       <div class="col-md-4">
-                        <label class="form-label">Funcionario del que depende directamente (B) <span class="text-danger">*</span></label>
+                        <label class="form-label">Funcionario del que depende directamente (B) <span
+                            class="text-danger">*</span></label>
                         <input v-model="matriz.funcionario_depen_directo" type="text" class="form-control" required
                           placeholder="Nombre del funcionario">
                       </div>
                       <div class="col-md-4">
-                        <label class="form-label">Funcionario del que depende indirectamente (C) <span class="text-danger">*</span></label>
+                        <label class="form-label">Funcionario del que depende indirectamente (C) <span
+                            class="text-danger">*</span></label>
                         <input v-model="matriz.funcionario_depen_indirecto" type="text" class="form-control" required
                           placeholder="Nombre del funcionario">
                       </div>
@@ -415,8 +434,8 @@
                         <textarea v-model="matriz.firmas_adicionales" class="form-control" rows="2"
                           placeholder="Ingrese nombres completos separados por comas"></textarea>
 
-                        <button v-if="!showFuncionarioD && !matriz.funcionario_d" @click="showFuncionarioD = true" type="button"
-                          class="btn btn-sm btn-outline-primary mt-2">
+                        <button v-if="!showFuncionarioD && !matriz.funcionario_d" @click="showFuncionarioD = true"
+                          type="button" class="btn btn-sm btn-outline-primary mt-2">
                           <i class="fas fa-plus me-1"></i> Agregar Funcionario D
                         </button>
                       </div>
@@ -426,7 +445,8 @@
                     <div v-if="showFuncionarioD || matriz.funcionario_d" class="row mb-3">
                       <div class="col-md-6">
                         <label class="form-label">Funcionario (D)</label>
-                        <input v-model="matriz.funcionario_d" type="text" class="form-control" placeholder="Nombre del funcionario">
+                        <input v-model="matriz.funcionario_d" type="text" class="form-control"
+                          placeholder="Nombre del funcionario">
                       </div>
                       <div class="col-md-6">
                         <h6>Firma Funcionario (D)</h6>
@@ -440,9 +460,9 @@
                           </button>
                         </div>
                         <signature-pad v-else @save="setFirmaD" />
-                        
-                        <button v-if="!showFuncionarioE && !matriz.funcionario_e" @click="showFuncionarioE = true" type="button"
-                          class="btn btn-sm btn-outline-primary mt-2">
+
+                        <button v-if="!showFuncionarioE && !matriz.funcionario_e" @click="showFuncionarioE = true"
+                          type="button" class="btn btn-sm btn-outline-primary mt-2">
                           <i class="fas fa-plus me-1"></i> Agregar Funcionario E
                         </button>
                       </div>
@@ -452,7 +472,8 @@
                     <div v-if="showFuncionarioE || matriz.funcionario_e" class="row mb-3">
                       <div class="col-md-6">
                         <label class="form-label">Funcionario (E)</label>
-                        <input v-model="matriz.funcionario_e" type="text" class="form-control" placeholder="Nombre del funcionario">
+                        <input v-model="matriz.funcionario_e" type="text" class="form-control"
+                          placeholder="Nombre del funcionario">
                       </div>
                       <div class="col-md-6">
                         <h6>Firma Funcionario (E)</h6>
@@ -488,7 +509,7 @@
                             </div>
                             <signature-pad v-else @save="setFirmaA" />
                           </div>
-                          
+
                           <!-- Firma B -->
                           <div class="col-md-4">
                             <h6>Funcionario (B)</h6>
@@ -503,7 +524,7 @@
                             </div>
                             <signature-pad v-else @save="setFirmaB" />
                           </div>
-                          
+
                           <!-- Firma C -->
                           <div class="col-md-4">
                             <h6>Funcionario (C)</h6>
@@ -544,11 +565,12 @@
               </div>
 
               <!-- Modal para reemplazar firmas -->
-              <div v-if="showSignatureModal" class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
+              <div v-if="showSignatureModal" class="modal fade show d-block" tabindex="-1"
+                style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
                 <div class="modal-dialog">
                   <div class="modal-content">
                     <div class="modal-header">
-                      <h5 class="modal-title">Reemplazar Firma {{firmaActual}}</h5>
+                      <h5 class="modal-title">Reemplazar Firma {{ firmaActual }}</h5>
                       <button type="button" class="btn-close" @click="cerrarModalFirma"></button>
                     </div>
                     <div class="modal-body">
@@ -556,7 +578,8 @@
                     </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" @click="cerrarModalFirma">Cancelar</button>
-                      <button type="button" class="btn btn-primary" @click="guardarFirmaDesdeModal">Guardar Firma</button>
+                      <button type="button" class="btn btn-primary" @click="guardarFirmaDesdeModal">Guardar
+                        Firma</button>
                     </div>
                   </div>
                 </div>
@@ -663,11 +686,11 @@ const verificadoresNoConformes = computed(() => {
 })
 const diasPlazo = computed(() => {
   if (!matriz.value.plazo_inicio || !matriz.value.plazo_fin) return 0
-  
+
   const start = new Date(matriz.value.plazo_inicio)
   const end = new Date(matriz.value.plazo_fin)
   const diff = end.getTime() - start.getTime()
-  
+
   return Math.ceil(diff / (1000 * 3600 * 24)) + 1 // +1 para incluir ambos días
 })
 
@@ -801,7 +824,7 @@ const generarDescripcion = async () => {
     const verificadoresNC = matriz.value.evaluaciones_nc
       ?.filter(nc => nc.estado === 'NC')
       .map(nc => nc.verificador_nombre) || ['No especificados'];
-    
+
     // Obtener nombre del proceso
     const nombreProceso = matriz.value.evaluacion_data?.proceso_nombre || 'No especificado';
 
@@ -831,7 +854,7 @@ Texto existente (puedes mejorarlo): "${textoExistente}"
 Devuelve SOLO el texto mejorado, sin comentarios adicionales.`;
 
     const descripcionGenerada = await generateText(prompt);
-    
+
     // Limpiar y formatear la respuesta
     matriz.value.descripcion_situacional = descripcionGenerada
       .trim()
@@ -880,18 +903,18 @@ const resetForm = () => {
       funcionario_d: '',
       funcionario_e: ''
     }
-    
+
     // Resetear firmas reactivas
     firmaA.value = null
     firmaB.value = null
     firmaC.value = null
     firmaD.value = null
     firmaE.value = null
-    
+
     // Ocultar campos adicionales
     showFuncionarioD.value = false
     showFuncionarioE.value = false
-    
+
     $toast.info('Formulario reiniciado')
   }
 }
@@ -902,13 +925,13 @@ const crearNuevaMatriz = async () => {
     const response = await api.post('ficha/matriz-compromiso/', {
       evaluacion: route.params.id
     })
-    
+
     matriz.value = {
       ...matriz.value,
       ...response.data,
       id: response.data.id
     }
-    
+
     $toast.success('Matriz creada correctamente')
     await fetchData()
   } catch (error) {
@@ -966,15 +989,15 @@ const guardarMatriz = async () => {
     saving.value = true
 
     // Validación básica
-    if (!matriz.value.descripcion_situacional || 
-        !matriz.value.riesgo_identificado ||
-        !matriz.value.medidas_correctivas || 
-        !matriz.value.hito_esperado ||
-        !matriz.value.plazo_inicio || 
-        !matriz.value.plazo_fin ||
-        !matriz.value.responsable_directo || 
-        !matriz.value.funcionario_depen_directo ||
-        !matriz.value.funcionario_depen_indirecto) {
+    if (!matriz.value.descripcion_situacional ||
+      !matriz.value.riesgo_identificado ||
+      !matriz.value.medidas_correctivas ||
+      !matriz.value.hito_esperado ||
+      !matriz.value.plazo_inicio ||
+      !matriz.value.plazo_fin ||
+      !matriz.value.responsable_directo ||
+      !matriz.value.funcionario_depen_directo ||
+      !matriz.value.funcionario_depen_indirecto) {
       $toast.warning('Por favor complete todos los campos requeridos')
       return
     }
@@ -982,7 +1005,7 @@ const guardarMatriz = async () => {
     // Validar fechas
     const inicio = new Date(matriz.value.plazo_inicio)
     const fin = new Date(matriz.value.plazo_fin)
-    
+
     if (fin < inicio) {
       $toast.warning('La fecha de fin no puede ser anterior a la fecha de inicio')
       return
@@ -1230,11 +1253,11 @@ onMounted(() => {
   .card-body {
     padding: 15px;
   }
-  
+
   .form-label {
     font-size: 14px;
   }
-  
+
   .btn {
     padding: 8px 12px;
     font-size: 14px;
