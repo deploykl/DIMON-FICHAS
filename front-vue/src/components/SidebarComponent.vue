@@ -95,8 +95,14 @@ const menuItems = ref([
     path: '/dashboard',
     submenu: null
   },
-  {
-    title: 'Pacientes',
+    {
+    title: 'Fichas',
+    icon: 'fa-chart-bar',
+    path: '/reports',
+    submenu: null
+  },
+    {
+    title: 'Menu',
     icon: 'fa-user-injured',
     path: '/patients',
     submenu: [
@@ -115,7 +121,7 @@ const menuItems = ref([
     ]
   },
   {
-    title: 'Reportes',
+    title: 'Alertas',
     icon: 'fa-chart-bar',
     path: '/reports',
     submenu: null

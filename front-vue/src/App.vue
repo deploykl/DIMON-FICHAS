@@ -1,6 +1,6 @@
 <template>
-<header-component-vue v-if="showHeader"/>
-<sidebar-component-vue/>
+<header-component-vue v-if="shouldShowComponents"/>
+  <sidebar-component-vue v-if="shouldShowComponents"/>
   <router-view />
 </template>
 <script setup>
@@ -14,10 +14,9 @@ import SidebarComponentVue from './components/SidebarComponent.vue';
 const route = useRoute();
 
 
-// Determina si se deben mostrar los componentes
-const showHeader = computed(
-  () => route.name !== 'HOME' &&
-    route.name !== 'login'
+// Lógica compartida para ambos componentes
+const shouldShowComponents = computed(
+  () => route.name !== 'HOME' && route.name !== 'login'
 );
 </script>
 <style>
