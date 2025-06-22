@@ -1,8 +1,25 @@
 <template>
-
+<header-component-vue v-if="showHeader"/>
+<sidebar-component-vue/>
   <router-view />
 </template>
+<script setup>
+import { onMounted, computed, ref } from 'vue';
+import { useRoute } from 'vue-router';
 
+import HeaderComponentVue from './components/HeaderComponent.vue';
+import SidebarComponentVue from './components/SidebarComponent.vue';
+
+// Importa los componentes
+const route = useRoute();
+
+
+// Determina si se deben mostrar los componentes
+const showHeader = computed(
+  () => route.name !== 'HOME' &&
+    route.name !== 'login'
+);
+</script>
 <style>
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;

@@ -1,52 +1,43 @@
 <template>
-  <header id="header" class="header fixed-top d-flex align-items-center">
-    <div class="d-flex align-items-center justify-content-between">
-      <a href="#" class="logo d-flex align-items-center">
-        <img :src="require('@/assets/img/logo1.png')" alt="logo">
-        <span class="d-none d-lg-block">H-Gestión</span>
-      </a>
-      <i class="fas fa-bars toggle-sidebar-btn" @click="$emit('toggleAside')"></i>
-    </div><!-- End Logo -->
+  <header id="header" class="header fixed-top">
+    <div class="container-fluid d-flex align-items-center justify-content-between">
+      <!-- Logo Section -->
+      <div class="d-flex align-items-center">
+        <a href="#" class="logo d-flex align-items-center">
+          <img :src="require('@/assets/img/logo1.png')" alt="logo" class="logo-img">
+          <span class="logo-text d-none d-lg-block">OBS-Salud</span>
+        </a>
+      </div>
 
-    <!-- 
-    <div class="search-bar">
-      <form class="search-form d-flex align-items-center" method="POST" action="#">
-        <input type="text" name="query" placeholder="Search" title="Enter search keyword">
-        <button type="submit" title="Search"><i class="bi bi-search"></i></button>
-      </form>
+      <!-- Navigation -->
+      <nav class="header-nav ms-auto">
+        <ul class="d-flex align-items-center gap-3">
+          <!-- Clock Component -->
+          <li class="nav-item clock-container">
+            <clock-component-vue />
+          </li>
+
+          <!-- User Profile -->
+          <li class="nav-item dropdown">
+            <a class="nav-profile d-flex align-items-center" href="#" @click="toggleDropdown">
+              <div class="avatar-container">
+                <img :src="userImage" alt="Profile" class="avatar-img">
+              </div>
+              <span class="user-name d-none d-md-block">{{ userName }} {{ userLastName }}</span>
+            </a>
+          </li>
+
+          <!-- Logout Button -->
+          <li class="nav-item">
+            <button class="logout-btn" @click="logout">
+              <i class="fas fa-sign-out-alt"></i>
+              <span class="d-none d-md-inline">Salir</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
     </div>
-    -->
-
-    <nav class="header-nav ms-auto">
-      <ul class="d-flex align-items-center">
-        <li class="nav-item d-block d-lg-none">
-          <a class="nav-link nav-icon search-bar-toggle" href="#">
-            <i class="bi bi-search"></i>
-          </a>
-        </li><!-- End Search Icon -->
-        <li class="nav-item me-4">
-          <clock-component-vue />
-        </li>
-       <!-- End Notification Nav -->
-        <li class="nav-item dropdown pe-3">
-          <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" @click="toggleDropdown"
-            data-bs-toggle="">
-            <img :src="userImage" alt="Profile Picture" class="img-fluid rounded-circle">
-            <span class="d-none d-md-block  ps-2">{{ userName }} {{ userLastName }}</span>
-          </a><!-- End Profile Image Icon -->
-          <!-- End ProfiLe Dropdown Items -->
-        </li><!-- End Profile Nav -->
-        <li class="nav-item dropdown pe-3">
-          <a class="btn btn-danger w-100" @click="logout">
-            <i class="fa-solid fa-right-from-bracket"></i>
-            <span> Salir</span>
-          </a class><!-- End Profile Image Icon -->
-          <!-- End Profie Dropdown Items -->
-        </li>
-        <!-- End Dependency Display -->
-      </ul>
-    </nav><!-- End Icons Navigation -->
-  </header><!-- End Header -->
+  </header>
 </template>
 
 <script setup>
@@ -113,12 +104,146 @@ const logout = async () => {
 
 </script>
 
+
 <style scoped>
-a {
+/* Base Styles */
+.header {
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+  box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+  height: 70px;
+  padding: 0 2rem;
+  transition: all 0.3s ease;
+  z-index: 1000;
+}
+
+.container-fluid {
+  height: 100%;
+}
+
+/* Logo Styles */
+.logo {
+  text-decoration: none;
+  transition: transform 0.3s ease;
+}
+
+.logo:hover {
+  transform: scale(1.03);
+}
+/* Agrega esto al inicio de tus estilos para resetear las listas */
+.header-nav ul {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
+.header-nav li {
+  list-style: none;
+  display: inline-block; /* o flex, según necesites */
+}
+.logo-img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+.logo-text {
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-left: 10px;
+  letter-spacing: 0.5px;
+}
+
+/* Toggle Button */
+.toggle-sidebar-btn {
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.toggle-sidebar-btn:hover {
+  color: #f8f9fa;
+  transform: scale(1.1);
+}
+
+/* User Profile */
+.nav-profile {
+  text-decoration: none;
+  color: white;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+}
+
+.nav-profile:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.avatar-container {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.user-name {
+  margin-left: 10px;
+  font-weight: 500;
+}
+
+/* Logout Button */
+.logout-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   cursor: pointer;
 }
 
-button i {
-  background-color: rgb(255, 255, 255) !important;
+.logout-btn:hover {
+  background: rgba(231, 76, 60, 0.8);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Clock Component */
+.clock-container {
+  color: white;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 1rem;
+  }
+  
+  .logo-text {
+    font-size: 1.1rem;
+  }
+  
+  .logout-btn span {
+    display: none;
+  }
+  
+  .nav-profile {
+    padding: 0.3rem;
+  }
 }
 </style>

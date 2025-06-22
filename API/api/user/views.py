@@ -5,10 +5,28 @@ from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.decorators import action
+
+from api.user.serializers import *
 
 User = get_user_model()
 
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def profile(self, request):
+        # Devuelve solo los detalles del usuario autenticado
+        serializer = self.get_serializer(request.user)
+        return Response(serializer.data)
+    
+    
 class LoginView(APIView):
     permission_classes = [AllowAny]
 
@@ -44,3 +62,21 @@ class LoginView(APIView):
 
         return Response(user_data, status=status.HTTP_200_OK)
             
+class LogoutView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        refresh_token = request.data.get('refresh')
+        if not refresh_token:
+            return Response({"detail": "Refresh token is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Crea un objeto RefreshToken a partir del token recibido
+            token = RefreshToken(refresh_token)
+            # Añade el token a la lista negra
+            token.blacklist()
+            return Response({"detail": "Logout successful"}, status=status.HTTP_205_RESET_CONTENT)
+        except InvalidToken:
+            return Response({"detail": "Invalid refresh token."}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)

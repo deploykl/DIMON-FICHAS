@@ -12,10 +12,10 @@
 
       <section class="container presentation my-auto py-5">
         <div class="row align-items-center justify-content-center">
-          <div class="col-md-6 text-center mb-4 mb-md-0">
-            <img src="@/assets/img/home/portada3.png" alt="Presentación" class="img-fluid img-presentation">
+          <div class="col-md-8 text-center mb-4 mb-md-0 d-flex justify-content-center align-items-center">
+            <img src="@/assets/img/home/portada4.png" alt="Presentación" class="img-fluid img-presentation mx-auto">
           </div>
-          <div class="col-md-6">
+          <div class="col-md-4">
             <h1 class="display-5 fw-bold text-primary text-center mb-4">Plataforma OBS Salud</h1>
             <p class="lead text-justify">
               La Plataforma OBS Salud es un sistema web desarrollado en Django para gestionar el cumplimiento de
