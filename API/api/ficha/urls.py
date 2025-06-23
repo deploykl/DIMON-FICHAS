@@ -10,6 +10,7 @@ router.register(r'subproceso', SubprocesoViewSet)
 router.register(r'verificador', VerificadorViewSet)
 router.register(r'evaluaciones', EvaluacionVerificadorViewSet)  # Añade esta línea
 router.register(r'matriz-compromiso', MatrizCompromisoViewSet, basename='matriz-compromiso')
+router.register(r'renipress', RenipressViewSet, basename='renipress')  # Nueva ruta
 
 
 urlpatterns = router.urls

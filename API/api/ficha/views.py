@@ -1,20 +1,18 @@
-from django.shortcuts import render
-from django.db.models import Count
 from datetime import datetime
 import base64
 import uuid
 from django.core.files.base import ContentFile
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
+import requests
+from django.db.models import Prefetch
 
 from rest_framework.response import Response
-from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 
-from drf_spectacular.utils import extend_schema, extend_schema_view  # type: ignore
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, mixins
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend  # type: ignore
-from rest_framework.filters import OrderingFilter
+from rest_framework.filters import OrderingFilter, SearchFilter
 from api.ficha.serializers import *
 
 class CategoriaViewSet(viewsets.ModelViewSet):
@@ -507,3 +505,27 @@ class MatrizCompromisoViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         print(f"Datos enviados (no paginados): {serializer.data}")  # Debug
         return Response(serializer.data)
+    
+# Nuevo ViewSet para el proxy de SUSALUD
+class RenipressViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+    permission_classes = [AllowAny]
+    filter_backends = [SearchFilter]
+    search_fields = ['q']  # Campo para la búsqueda
+
+    def list(self, request, *args, **kwargs):
+        search_term = request.query_params.get('q', '')
+        
+        try:
+            response = requests.get(
+                'http://datos.susalud.gob.pe/api/action/datastore/search.json',
+                params={
+                    'resource_id': '8bb014bd-bb39-40d8-bfd7-0c8bcb4eb37d',
+                    'q': search_term,
+                    'limit': 10
+                },
+                timeout=5
+            )
+            response.raise_for_status()
+            return Response(response.json())
+        except requests.RequestException as e:
+            return Response({'error': str(e)}, status=500)

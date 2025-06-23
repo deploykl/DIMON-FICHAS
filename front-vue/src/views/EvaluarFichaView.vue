@@ -11,24 +11,18 @@
                 </li>
             </ol>
         </nav>
- <!-- Botón para generar PDF -->
-    <div class="d-flex justify-content-end mb-3">
-      <button @click="generatePdf" class="btn btn-danger">
-        <i class="fas fa-file-pdf me-2"></i> Generar PDF
-      </button>
-    </div>
+        <!-- Botón para generar PDF -->
+        <div class="d-flex justify-content-end mb-3">
+            <button @click="generatePdf" class="btn btn-danger">
+                <i class="fas fa-file-pdf me-2"></i> Generar PDF
+            </button>
+        </div>
 
-    <!-- Componente PDF (oculto visualmente) -->
-    <div style="position: absolute; left: -9999px;">
-      <pdf-generator
-        ref="pdfGenerator"
-        :proceso="proceso"
-        :subprocesos="subprocesos"
-        :verificadores="verificadores"
-        :evaluaciones="evaluaciones"
-        :evaluacion-data="evaluacionData"
-      />
-    </div>
+        <!-- Componente PDF (oculto visualmente) -->
+        <div style="position: absolute; left: -9999px;">
+            <pdf-generator ref="pdfGenerator" :proceso="proceso" :subprocesos="subprocesos"
+                :verificadores="verificadores" :evaluaciones="evaluaciones" :evaluacion-data="evaluacionData" />
+        </div>
 
 
         <!-- Contenido de la Ficha -->
@@ -63,6 +57,7 @@
             </div>
 
             <!-- Formulario de IPRESS -->
+            <!-- Dentro del Formulario de IPRESS -->
             <div class="card mb-4 shadow-sm">
                 <div class="card-body">
                     <h2 class="card-title h4 mb-4">Datos de la IPRESS</h2>
@@ -76,17 +71,49 @@
                                 <option value="GERESA">Gerencia Regional de Salud</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-3 position-relative">
                             <label class="form-label">Nombre de la IPRESS:</label>
-                            <input v-model="evaluacionData.establecimiento" type="text" class="form-control" required>
+                            <input v-model="evaluacionData.establecimiento" type="text" class="form-control" required
+                                @input="handleIpressSearch" @focus="showSuggestions = true" @blur="hideSuggestions">
+                            <div v-if="showSuggestions && ipressResults.length > 0" class="suggestions-dropdown">
+                                <div v-for="(item, index) in ipressResults" :key="index" class="suggestion-item"
+                                    @mousedown="selectIpress(item)">
+                                    <strong>{{ item.NOMBRE }}</strong>
+                                    <small class="text-muted ms-2">{{ item.COD_IPRESS }}</small>
+                                </div>
+                            </div>
                         </div>
+
                         <div class="col-md-3">
                             <label class="form-label">Código de la IPRESS:</label>
-                            <input v-model="evaluacionData.codigo" type="text" class="form-control" required>
+                            <input v-model="evaluacionData.codigo" type="text" class="form-control" required readonly>
                         </div>
+
                         <div class="col-md-3">
                             <label class="form-label">Categoría:</label>
-                            <input v-model="evaluacionData.categoria" type="text" class="form-control" required>
+                            <input v-model="evaluacionData.categoria" type="text" class="form-control" required
+                                readonly>
+                        </div>
+
+                        <!-- Nuevos campos -->
+                        <div class="col-md-3">
+                            <label class="form-label">Departamento:</label>
+                            <input v-model="evaluacionData.departamento" type="text" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Provincia:</label>
+                            <input v-model="evaluacionData.provincia" type="text" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Distrito:</label>
+                            <input v-model="evaluacionData.distrito" type="text" class="form-control" readonly>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">DISA:</label>
+                            <input v-model="evaluacionData.disa" type="text" class="form-control" readonly>
                         </div>
                     </div>
                 </div>
@@ -232,7 +259,7 @@
                                                         <li v-for="verificador in getVerificadoresNoCumplen(subproceso.id)"
                                                             :key="verificador.id" class="mb-1">
                                                             Verificador #{{ verificador.orden }}: {{
-                                                            verificador.descripcion }}
+                                                                verificador.descripcion }}
                                                         </li>
                                                     </ul>
                                                 </td>
@@ -264,7 +291,7 @@
                                                         <li v-for="verificador in getVerificadoresCumplen(subproceso.id)"
                                                             :key="verificador.id" class="mb-1">
                                                             Verificador #{{ verificador.orden }}: {{
-                                                            verificador.descripcion }}
+                                                                verificador.descripcion }}
                                                         </li>
                                                     </ul>
                                                 </td>
@@ -341,19 +368,28 @@ const verificadores = ref([]);
 const loadingVerificadores = ref(false);
 const verificadoresError = ref(null);
 const pdfGenerator = ref(null);
-
+// Variables reactivas
+const ipressResults = ref([]);
+const searchTimeout = ref(null);
+// Variables reactivas adicionales
+const showSuggestions = ref(false);
+const isSearching = ref(false);
 // Datos de evaluación
 const evaluacionData = ref({
     tipo: 'EESS',
     establecimiento: '',
     codigo: '',
-    categoria: ''
+    categoria: '',
+    departamento: '',
+    provincia: '',
+    distrito: '',
+    disa: ''
 });
 
 const generatePdf = () => {
-  if (pdfGenerator.value) {
-    pdfGenerator.value.generatePdf();
-  }
+    if (pdfGenerator.value) {
+        pdfGenerator.value.generatePdf();
+    }
 };
 // Evaluaciones por verificador
 const evaluaciones = ref({});
@@ -361,6 +397,66 @@ const saving = ref(false);
 const evaluacionesNoCumplen = ref([]);
 let matrizModal = null;
 
+
+const searchIpress = async (input) => {
+    if (!input || input.length < 2) return [];
+    isSearching.value = true;
+
+    try {
+        const response = await api.get('ficha/renipress/', {
+            params: { q: input, limit: 10 }
+        });
+
+        return response.data?.result?.records?.map(item => ({
+            ...item,
+            COD_IPRESS: item.COD_IPRESS?.toString() || '',
+            CATEGORIA: item.CATEGORIA || 'Sin categoría'
+        })) || [];
+
+    } catch (error) {
+        console.error('Error en búsqueda:', error);
+        $toast.error('Error al buscar IPRESS');
+        return [];
+    } finally {
+        isSearching.value = false;
+    }
+};
+// Selección de item
+const selectIpress = (item) => {
+    evaluacionData.value = {
+        ...evaluacionData.value,
+        establecimiento: item.NOMBRE,
+        codigo: item.COD_IPRESS,
+        categoria: item.CATEGORIA,
+        departamento: item.DEPARTAMENTO || '',
+        provincia: item.PROVINCIA || '',
+        distrito: item.DISTRITO || '',
+        disa: item.DISA || ''
+    };
+    showSuggestions.value = false;
+};
+// Método para buscar IPRESS
+const handleIpressSearch = debounce(async (event) => {
+    const inputValue = event.target.value.trim();
+    if (inputValue.length < 2) {
+        ipressResults.value = [];
+        return;
+    }
+
+    ipressResults.value = await searchIpress(inputValue);
+}, 300);
+const hideSuggestions = () => {
+    showSuggestions.value = false;
+};
+
+// Función debounce
+function debounce(fn, delay) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => fn.apply(this, args), delay);
+    };
+}
 // Computed properties
 const todosCumplen = computed(() => {
     if (!verificadores.value || verificadores.value.length === 0) return false;
@@ -486,7 +582,11 @@ const resetForm = () => {
         tipo: 'EESS',
         establecimiento: '',
         codigo: '',
-        categoria: ''
+        categoria: '',
+        departamento: '',
+        provincia: '',
+        distrito: '',
+        disa: ''
     };
     initializeEvaluaciones();
 };
@@ -646,5 +746,42 @@ onMounted(async () => {
 
 .modal-footer {
     padding: 1rem 1.5rem;
+}
+
+.suggestions-dropdown {
+    position: absolute;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+}
+
+.suggestion-item {
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.suggestion-item:hover {
+    background-color: #f8f9fa;
+}
+
+.suggestion-item small {
+    font-size: 0.8rem;
+}
+
+/* Indicador de carga */
+.search-loading::after {
+    content: "Buscando...";
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6c757d;
+    font-size: 0.8rem;
 }
 </style>

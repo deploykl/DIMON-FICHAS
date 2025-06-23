@@ -57,10 +57,14 @@
         </div>
       </div>
     </footer>
+
+    <!-- Añade el componente del chatbot aquí -->
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
+
 const currentYear = new Date().getFullYear();
 </script>
 
@@ -77,6 +81,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  position: relative; /* Necesario para el posicionamiento del chatbot */
 }
 
 .main-container {

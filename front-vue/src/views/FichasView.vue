@@ -6,7 +6,7 @@
                 <i class="fas fa-arrow-left me-2"></i> Volver
             </router-link>
         </div>
-        
+
         <div v-if="loading" class="text-center py-5">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Cargando...</span>
@@ -23,12 +23,9 @@
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">
-                            <router-link 
-                                v-for="proceso in getProcesosByCategory(category.id)" 
-                                :key="proceso.id"
+                            <router-link v-for="proceso in getProcesosByCategory(category.id)" :key="proceso.id"
                                 :to="{ name: 'evaluar-ficha', params: { id: proceso.id } }"
-                                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-                            >
+                                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                                 <div>
                                     <h3 class="h6 mb-1">{{ proceso.nombre }}</h3>
                                     <small class="text-muted">{{ proceso.nombre_proceso }}</small>
@@ -41,12 +38,14 @@
             </div>
         </div>
     </main>
+    <FloatingChat />
+
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
 import { api } from '@/components/services/auth_axios';
-
+import FloatingChat from '@/components/widgets/GeminiChatbot.vue';
 const categorias = ref([]);
 const procesos = ref([]);
 const loading = ref(true);
@@ -55,7 +54,7 @@ const error = ref(null);
 // Obtener color según categoría
 const getCategoryColor = (category) => {
     const colors = [
-        'bg-primary', 'bg-success', 'bg-info', 
+        'bg-primary', 'bg-success', 'bg-info',
         'bg-warning', 'bg-danger', 'bg-secondary'
     ];
     const index = category.id % colors.length;
@@ -74,10 +73,10 @@ onMounted(async () => {
             api.get('ficha/categoria/'),
             api.get('ficha/proceso/')
         ]);
-        
+
         categorias.value = catResponse.data;
         procesos.value = procResponse.data;
-        
+
         // Ordenar categorías
         categorias.value.sort((a, b) => a.name.localeCompare(b.name));
     } catch (err) {
@@ -94,25 +93,31 @@ onMounted(async () => {
     transition: all 0.3s ease;
     border: none;
 }
+
 .card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
+
 .card-header {
     border-bottom: none;
 }
+
 .list-group-item {
     border-left: none;
     border-right: none;
     padding: 1rem 1.25rem;
     transition: all 0.2s ease;
 }
+
 .list-group-item:hover {
     background-color: #f8f9fa;
 }
+
 .list-group-item h3 {
     transition: all 0.2s ease;
 }
+
 .list-group-item:hover h3 {
     color: #0d6efd;
 }

@@ -81,7 +81,11 @@ class EvaluacionVerificador(models.Model):
     tipo = models.CharField(max_length=10, choices=TIPO_CHOICES, verbose_name="Tipo de IPRESS")
     codigo = models.CharField(max_length=20, verbose_name="Código de la IPRESS")
     categoria = models.CharField(max_length=100, verbose_name="Categoría")
-    
+    departamento = models.CharField(max_length=100, verbose_name="Departamento", blank=True, null=True)
+    provincia = models.CharField(max_length=100, verbose_name="Provincia", blank=True, null=True)
+    distrito = models.CharField(max_length=100, verbose_name="Distrito", blank=True, null=True)
+    disa = models.CharField(max_length=100, verbose_name="DISA", blank=True, null=True)
+
     class Meta:
         ordering = ['-fecha_evaluacion']
         verbose_name_plural = "Evaluaciones"
