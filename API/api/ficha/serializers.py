@@ -67,6 +67,7 @@ class MatrizCompromisoSerializer(serializers.ModelSerializer):
     evaluaciones_nc = EvaluacionVerificadorSerializer(many=True, read_only=True)
     monitor_nombre = serializers.SerializerMethodField()  # Nuevo campo
     todas_evaluaciones = serializers.SerializerMethodField()
+    codigo = serializers.CharField(source='evaluacion.codigo', read_only=True)
 
     class Meta:
         model = MatrizCompromiso
