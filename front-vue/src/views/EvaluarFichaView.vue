@@ -57,67 +57,130 @@
             </div>
 
             <!-- Formulario de IPRESS -->
-            <!-- Dentro del Formulario de IPRESS -->
-            <div class="card mb-4 shadow-sm">
-                <div class="card-body">
-                    <h2 class="card-title h4 mb-4">Datos de la IPRESS</h2>
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label">Tipo de IPRESS:</label>
-                            <select v-model="evaluacionData.tipo" class="form-select" required>
-                                <option value="EESS">Establecimiento de Salud</option>
-                                <option value="DIRIS">Dirección de Red Integrada de Salud</option>
-                                <option value="DIRESA">Dirección Regional de Salud</option>
-                                <option value="GERESA">Gerencia Regional de Salud</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 position-relative">
-                            <label class="form-label">Nombre de la IPRESS:</label>
-                            <input v-model="evaluacionData.establecimiento" type="text" class="form-control" required
-                                @input="handleIpressSearch" @focus="showSuggestions = true" @blur="hideSuggestions">
-                            <div v-if="showSuggestions && ipressResults.length > 0" class="suggestions-dropdown">
-                                <div v-for="(item, index) in ipressResults" :key="index" class="suggestion-item"
-                                    @mousedown="selectIpress(item)">
-                                    <strong>{{ item.NOMBRE }}</strong>
-                                    <small class="text-muted ms-2">{{ item.COD_IPRESS }}</small>
-                                </div>
-                            </div>
-                        </div>
+  <!-- Formulario de IPRESS -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title h4 mb-4">Datos de la IPRESS</h2>
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">Tipo de IPRESS:</label>
+          <select v-model="evaluacionData.tipo" class="form-select" required>
+            <option value="EESS">Establecimiento de Salud</option>
+            <option value="DIRIS">Dirección de Red Integrada de Salud</option>
+            <option value="DIRESA">Dirección Regional de Salud</option>
+            <option value="GERESA">Gerencia Regional de Salud</option>
+          </select>
+        </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label">Código de la IPRESS:</label>
-                            <input v-model="evaluacionData.codigo" type="text" class="form-control" required readonly>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">Categoría:</label>
-                            <input v-model="evaluacionData.categoria" type="text" class="form-control" required
-                                readonly>
-                        </div>
-
-                        <!-- Nuevos campos -->
-                        <div class="col-md-3">
-                            <label class="form-label">Departamento:</label>
-                            <input v-model="evaluacionData.departamento" type="text" class="form-control" readonly>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">Provincia:</label>
-                            <input v-model="evaluacionData.provincia" type="text" class="form-control" readonly>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">Distrito:</label>
-                            <input v-model="evaluacionData.distrito" type="text" class="form-control" readonly>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label">DISA:</label>
-                            <input v-model="evaluacionData.disa" type="text" class="form-control" readonly>
-                        </div>
-                    </div>
-                </div>
+        <!-- Búsqueda por Nombre -->
+        <div class="col-md-3 position-relative">
+          <label class="form-label">Nombre de la IPRESS:</label>
+          <input 
+            v-model="evaluacionData.establecimiento" 
+            type="text" 
+            class="form-control" 
+            required
+            @input="(e) => handleIpressSearch('nombre', e)"
+            @focus="showNameSuggestions = true"
+            @blur="hideNameSuggestions"
+          >
+          <div v-if="isSearchingByName" class="position-absolute top-50 end-0 translate-middle-y me-2">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          </div>
+          <div v-if="showNameSuggestions && nameResults.length > 0" class="suggestions-dropdown">
+            <div 
+              v-for="item in nameResults" 
+              :key="item.COD_IPRESS" 
+              class="suggestion-item"
+              @mousedown="selectIpress(item)"
+            >
+              <div class="fw-bold">{{ item.NOMBRE }}</div>
+              <div class="small text-muted">
+                <span>Código: {{ item.COD_IPRESS }}</span> |
+                <span>Categoría: {{ item.CATEGORIA }}</span>
+              </div>
+              <div class="small text-muted">
+                {{ item.DEPARTAMENTO }} > {{ item.PROVINCIA }} > {{ item.DISTRITO }} - {{ item.DISA }} - {{ item.INSTITUCION }}
+              </div>
             </div>
+          </div>
+          <div v-if="showNameSuggestions && nameResults.length === 0 && !isSearchingByName" 
+               class="suggestions-dropdown">
+            <div class="p-3 text-muted">No se encontraron resultados</div>
+          </div>
+        </div>
+
+        <!-- Búsqueda por Código -->
+        <div class="col-md-3 position-relative">
+          <label class="form-label">Código de la IPRESS:</label>
+          <input 
+            v-model="evaluacionData.codigo" 
+            type="text" 
+            class="form-control" 
+            required
+            @input="(e) => handleIpressSearch('codigo', e)"
+            @focus="showCodeSuggestions = true"
+            @blur="hideCodeSuggestions"
+          >
+          <div v-if="isSearchingByCode" class="position-absolute top-50 end-0 translate-middle-y me-2">
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+          </div>
+          <div v-if="showCodeSuggestions && codeResults.length > 0" class="suggestions-dropdown">
+            <div 
+              v-for="item in codeResults" 
+              :key="item.COD_IPRESS" 
+              class="suggestion-item"
+              @mousedown="selectIpress(item)"
+            >
+              <div class="fw-bold">{{ item.NOMBRE }}</div>
+              <div class="small text-muted">
+                <span>Código: {{ item.COD_IPRESS }}</span> |
+                <span>Categoría: {{ item.CATEGORIA }}</span>
+              </div>
+              <div class="small text-muted">
+                {{ item.DEPARTAMENTO }} > {{ item.PROVINCIA }} > {{ item.DISTRITO }}
+              </div>
+            </div>
+          </div>
+          <div v-if="showCodeSuggestions && codeResults.length === 0 && !isSearchingByCode" 
+               class="suggestions-dropdown">
+            <div class="p-3 text-muted">No se encontraron resultados</div>
+          </div>
+        </div>
+
+        <!-- Resto de campos (se autocompletarán) -->
+        <div class="col-md-3">
+          <label class="form-label">Categoría:</label>
+          <input v-model="evaluacionData.categoria" type="text" class="form-control" required readonly>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Departamento:</label>
+          <input v-model="evaluacionData.departamento" type="text" class="form-control" readonly>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Provincia:</label>
+          <input v-model="evaluacionData.provincia" type="text" class="form-control" readonly>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">Distrito:</label>
+          <input v-model="evaluacionData.distrito" type="text" class="form-control" readonly>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label">DISA:</label>
+          <input v-model="evaluacionData.disa" type="text" class="form-control" readonly>
+        </div>
+        
+        <div class="col-md-3">
+          <label class="form-label">Institución:</label>
+          <input v-model="evaluacionData.institucion" type="text" class="form-control" readonly>
+        </div>
+      </div>
+    </div>
+  </div>
 
             <!-- Tabla de Subprocesos con Verificadores -->
             <div class="card mb-4 shadow-sm">
@@ -368,9 +431,14 @@ const verificadores = ref([]);
 const loadingVerificadores = ref(false);
 const verificadoresError = ref(null);
 const pdfGenerator = ref(null);
-// Variables reactivas
+// Variables reactivas para búsqueda
+const nameResults = ref([]);
+const codeResults = ref([]);
+const showNameSuggestions = ref(false);
+const showCodeSuggestions = ref(false);
+const isSearchingByName = ref(false);
+const isSearchingByCode = ref(false);
 const ipressResults = ref([]);
-const searchTimeout = ref(null);
 // Variables reactivas adicionales
 const showSuggestions = ref(false);
 const isSearching = ref(false);
@@ -383,7 +451,8 @@ const evaluacionData = ref({
     departamento: '',
     provincia: '',
     distrito: '',
-    disa: ''
+    disa: '',
+    institucion: ''
 });
 
 const generatePdf = () => {
@@ -398,30 +467,57 @@ const evaluacionesNoCumplen = ref([]);
 let matrizModal = null;
 
 
-const searchIpress = async (input) => {
-    if (!input || input.length < 2) return [];
-    isSearching.value = true;
+// Método para buscar IPRESS por nombre o código
+const searchIpress = async (type, inputValue) => {
+    if (!inputValue) return [];
+    
+    if (type === 'nombre') isSearchingByName.value = true;
+    else isSearchingByCode.value = true;
 
     try {
+        const params = new URLSearchParams();
+        params.append('limit', '10');
+        
+        if (type === 'nombre') {
+            params.append('q', inputValue);
+        } else {
+            // Validar que sea un número válido
+            const codigo = parseInt(inputValue);
+            if (isNaN(codigo)) return [];
+            
+            // Enviar como filtro exacto
+            params.append('COD_IPRESS', codigo.toString());
+        }
+
         const response = await api.get('ficha/renipress/', {
-            params: { q: input, limit: 10 }
+            params,
+            paramsSerializer: params => params.toString()
         });
 
-        return response.data?.result?.records?.map(item => ({
+        // Verificar respuesta y mapear resultados
+        if (!response.data?.result?.records) return [];
+        
+        return response.data.result.records.map(item => ({
             ...item,
             COD_IPRESS: item.COD_IPRESS?.toString() || '',
-            CATEGORIA: item.CATEGORIA || 'Sin categoría'
-        })) || [];
+            CATEGORIA: item.CATEGORIA || 'Sin categoría',
+            DEPARTAMENTO: item.DEPARTAMENTO || 'Sin departamento',
+            PROVINCIA: item.PROVINCIA || 'Sin provincia',
+            DISTRITO: item.DISTRITO || 'Sin distrito',
+            DISA: item.DISA || 'Sin DISA',
+            INSTITUCION: item.INSTITUCION || 'Sin Institución'
+        }));
 
     } catch (error) {
         console.error('Error en búsqueda:', error);
         $toast.error('Error al buscar IPRESS');
         return [];
     } finally {
-        isSearching.value = false;
+        if (type === 'nombre') isSearchingByName.value = false;
+        else isSearchingByCode.value = false;
     }
 };
-// Selección de item
+// Seleccionar IPRESS
 const selectIpress = (item) => {
     evaluacionData.value = {
         ...evaluacionData.value,
@@ -431,22 +527,46 @@ const selectIpress = (item) => {
         departamento: item.DEPARTAMENTO || '',
         provincia: item.PROVINCIA || '',
         distrito: item.DISTRITO || '',
-        disa: item.DISA || ''
+        disa: item.DISA || '',
+        institucion: item.INSTITUCION || ''
     };
-    showSuggestions.value = false;
+    showNameSuggestions.value = false;
+    showCodeSuggestions.value = false;
 };
 // Método para buscar IPRESS
-const handleIpressSearch = debounce(async (event) => {
+// Manejar búsqueda con debounce
+const handleIpressSearch = debounce(async (type, event) => {
     const inputValue = event.target.value.trim();
-    if (inputValue.length < 2) {
-        ipressResults.value = [];
+    
+    if (type === 'codigo' && inputValue.length < 1) {
+        codeResults.value = [];
+        return;
+    }
+    if (type === 'nombre' && inputValue.length < 2) {
+        nameResults.value = [];
         return;
     }
 
-    ipressResults.value = await searchIpress(inputValue);
+    const results = await searchIpress(type, inputValue);
+    
+    if (type === 'nombre') {
+        nameResults.value = results;
+    } else {
+        codeResults.value = results;
+    }
 }, 300);
-const hideSuggestions = () => {
-    showSuggestions.value = false;
+
+// Ocultar sugerencias con retraso
+const hideNameSuggestions = () => {
+    setTimeout(() => {
+        showNameSuggestions.value = false;
+    }, 200);
+};
+
+const hideCodeSuggestions = () => {
+    setTimeout(() => {
+        showCodeSuggestions.value = false;
+    }, 200);
 };
 
 // Función debounce
@@ -586,7 +706,8 @@ const resetForm = () => {
         departamento: '',
         provincia: '',
         distrito: '',
-        disa: ''
+        disa: '',
+        institucion: ''
     };
     initializeEvaluaciones();
 };
@@ -757,31 +878,35 @@ onMounted(async () => {
     border: 1px solid #ced4da;
     border-radius: 0.25rem;
     box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-    z-index: 1000;
+    z-index: 1050;
+    margin-top: 2px;
 }
 
 .suggestion-item {
     padding: 0.5rem 1rem;
     cursor: pointer;
     transition: background-color 0.2s;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
 }
 
 .suggestion-item:hover {
     background-color: #f8f9fa;
 }
 
-.suggestion-item small {
-    font-size: 0.8rem;
+.suggestion-item .fw-bold {
+    font-size: 0.9rem;
 }
 
-/* Indicador de carga */
-.search-loading::after {
-    content: "Buscando...";
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6c757d;
+.suggestion-item .small {
     font-size: 0.8rem;
+    line-height: 1.3;
+}
+
+.position-relative {
+    position: relative;
 }
 </style>

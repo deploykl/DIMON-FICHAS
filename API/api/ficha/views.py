@@ -1,13 +1,16 @@
 from datetime import datetime
 import base64
+import json
 import uuid
 from django.core.files.base import ContentFile
 from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 import requests
 from django.db.models import Prefetch
+from urllib.parse import urlencode
 
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from rest_framework.viewsets import ViewSet
 
 from rest_framework import viewsets, status, mixins
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -506,26 +509,55 @@ class MatrizCompromisoViewSet(viewsets.ModelViewSet):
         print(f"Datos enviados (no paginados): {serializer.data}")  # Debug
         return Response(serializer.data)
     
-# Nuevo ViewSet para el proxy de SUSALUD
-class RenipressViewSet(mixins.ListModelMixin, viewsets.GenericViewSet):
+class RenipressViewSet(ViewSet):
     permission_classes = [AllowAny]
-    filter_backends = [SearchFilter]
-    search_fields = ['q']  # Campo para la búsqueda
-
-    def list(self, request, *args, **kwargs):
-        search_term = request.query_params.get('q', '')
+    
+    def list(self, request):
+        codigo = request.query_params.get('COD_IPRESS')
+        nombre = request.query_params.get('q')
         
         try:
+            params = {
+                'resource_id': '8bb014bd-bb39-40d8-bfd7-0c8bcb4eb37d',
+                'limit': 10
+            }
+            
+            if nombre:
+                params['q'] = nombre
+            elif codigo:
+                # Formato CORRECTO para filtros en SUSALUD
+                params['filters[COD_IPRESS]'] = codigo
+            else:
+                return Response({'error': 'Se requiere parámetro de búsqueda'}, status=400)
+            
+            # DEBUG: Verificar URL final
+            final_url = f'http://datos.susalud.gob.pe/api/action/datastore/search.json?{urlencode(params)}'
+            print("URL SUSALUD:", final_url)
+            
             response = requests.get(
                 'http://datos.susalud.gob.pe/api/action/datastore/search.json',
-                params={
-                    'resource_id': '8bb014bd-bb39-40d8-bfd7-0c8bcb4eb37d',
-                    'q': search_term,
-                    'limit': 10
-                },
+                params=params,
                 timeout=5
             )
             response.raise_for_status()
-            return Response(response.json())
+            
+            data = response.json()
+            records = data.get('result', {}).get('records', [])
+            
+            # Filtrado adicional en caso de que la API no aplique bien el filtro
+            if codigo:
+                records = [r for r in records if str(r.get('COD_IPRESS')) == codigo]
+            
+            return Response({
+                'success': True,
+                'result': {
+                    'records': records,
+                    'total': len(records)
+                }
+            })
+            
         except requests.RequestException as e:
-            return Response({'error': str(e)}, status=500)
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=500)

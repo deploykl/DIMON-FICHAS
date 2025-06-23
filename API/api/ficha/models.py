@@ -85,6 +85,7 @@ class EvaluacionVerificador(models.Model):
     provincia = models.CharField(max_length=100, verbose_name="Provincia", blank=True, null=True)
     distrito = models.CharField(max_length=100, verbose_name="Distrito", blank=True, null=True)
     disa = models.CharField(max_length=100, verbose_name="DISA", blank=True, null=True)
+    institucion = models.CharField(max_length=100, verbose_name="Institucion", blank=True, null=True)
 
     class Meta:
         ordering = ['-fecha_evaluacion']
