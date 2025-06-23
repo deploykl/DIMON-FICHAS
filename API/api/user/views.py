@@ -28,29 +28,47 @@ class UserProfileView(APIView):
     
     
 class LoginView(APIView):
-    permission_classes = [AllowAny]
+    permission_classes = [AllowAny]  # Permitir acceso sin autenticación previa
 
     def post(self, request):
         username = request.data.get('username')
         password = request.data.get('password')
 
         if not username or not password:
-            return Response({'detail': 'Las credenciales de autenticación no se proveyeron.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Las credenciales de autenticación no se proveyeron.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
         user = User.objects.filter(username=username).first()
 
         if user is None:
-            return Response({'detail': 'Usuario no encontrado'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {'detail': 'Usuario no encontrado'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
         if not user.check_password(password):
-            return Response({'detail': 'Contraseña incorrecta'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {'detail': 'Contraseña incorrecta'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
 
-        # Verificación adicional para usuarios no superusuarios
-        if not user.is_superuser and not user.is_staff:
-            return Response({'detail': 'Su cuenta no tiene permisos de acceso al sistema'},
-                          status=status.HTTP_403_FORBIDDEN)
+        # Verificar si el usuario está activo
+        if not user.is_active:
+            return Response(
+                {'detail': 'Cuenta desactivada'}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
 
+        # Permitir acceso si es staff O superusuario
+        if not user.is_staff and not user.is_superuser:
+            return Response(
+                {'detail': 'Su cuenta no tiene permisos de acceso al sistema'},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
-        # Generar tokens si el usuario tiene un grupo válido
+        # Generar tokens JWT
         refresh = RefreshToken.for_user(user)
 
         user_data = {

@@ -15,3 +15,11 @@ class User(AbstractUser):
             print(f"Error al eliminar usuario: {e}")
             # Puedes lanzar la excepción de nuevo si quieres manejarla en otra parte
             raise
+        
+    def has_perm(self, perm, obj=None):
+        """Solo los superusuarios pueden acceder al admin de Django."""
+        return self.is_superuser
+
+    def has_module_perms(self, app_label):
+        """Solo los superusuarios pueden ver el módulo 'admin'."""
+        return self.is_superuser

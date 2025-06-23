@@ -131,7 +131,7 @@
                                             <div><strong>Código:</strong> {{ subproceso.nombre.split(' ')[0] }}</div>
                                         </div>
                                     </td>
-                                    <td>
+                                    <td colspan="2">
                                         <div v-if="getVerificadoresBySubproceso(subproceso.id).length === 0"
                                             class="text-muted fst-italic">
                                             No hay verificadores para este subproceso
