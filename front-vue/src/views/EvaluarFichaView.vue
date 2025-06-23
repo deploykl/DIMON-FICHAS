@@ -11,7 +11,26 @@
                 </li>
             </ol>
         </nav>
+ <!-- Botón para generar PDF -->
+    <div class="d-flex justify-content-end mb-3">
+      <button @click="generatePdf" class="btn btn-danger">
+        <i class="fas fa-file-pdf me-2"></i> Generar PDF
+      </button>
+    </div>
 
+    <!-- Componente PDF (oculto visualmente) -->
+    <div style="position: absolute; left: -9999px;">
+      <pdf-generator
+        ref="pdfGenerator"
+        :proceso="proceso"
+        :subprocesos="subprocesos"
+        :verificadores="verificadores"
+        :evaluaciones="evaluaciones"
+        :evaluacion-data="evaluacionData"
+      />
+    </div>
+
+    
         <!-- Contenido de la Ficha -->
         <template v-if="proceso">
             <!-- Información del Proceso -->

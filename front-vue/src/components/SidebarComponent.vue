@@ -89,13 +89,19 @@ const menuItems = ref([
     submenu: null
   },
   {
-    title: 'Fichas',
+    title: 'Fichas de Monitoreo',
+    icon: 'fa-chart-bar',
+    path: '/reports',
+    submenu: null
+  },
+    {
+    title: 'Matriz de compromiso',
     icon: 'fa-chart-bar',
     path: '/reports',
     submenu: null
   },
   {
-    title: 'Menu',
+    title: 'Menu 1',
     icon: 'fa-user-injured',
     path: '/patients',
     submenu: [
