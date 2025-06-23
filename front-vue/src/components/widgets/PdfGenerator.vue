@@ -109,7 +109,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed } from 'vue'; // Añade computed aquí
 import html2pdf from 'html2pdf.js';
 
 const props = defineProps({
@@ -154,7 +154,6 @@ const generatePdf = () => {
 
 defineExpose({ generatePdf });
 </script>
-
 <style scoped>
 .pdf-container {
   padding: 20px;

@@ -8,7 +8,7 @@
             <router-link to="/">Inicio</router-link>
           </li>
           <li class="breadcrumb-item">
-            <router-link to="/fichas/seleccion">Fichas</router-link>
+            <router-link to="/fichas">Fichas</router-link>
           </li>
           <li class="breadcrumb-item active">Matriz de Compromiso</li>
         </ol>
@@ -129,7 +129,7 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                   <div>
                                     <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1
-                                        }}:</strong>
+                                    }}:</strong>
                                       {{ verificador.verificador_nombre }}</p>
                                     <span class="badge bg-warning">
                                       {{ verificador.estado_display }}
@@ -182,7 +182,7 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                   <div>
                                     <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1
-                                        }}:</strong>
+                                    }}:</strong>
                                       {{ verificador.verificador_nombre }}</p>
                                     <span class="badge bg-danger">
                                       {{ verificador.estado_display }}
@@ -235,7 +235,7 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                   <div>
                                     <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1
-                                        }}:</strong>
+                                    }}:</strong>
                                       {{ verificador.verificador_nombre }}</p>
                                     <span class="badge bg-success">
                                       {{ verificador.estado_display }}
@@ -296,7 +296,7 @@
                             <label class="form-label fw-bold text-muted">Total verificadores:</label>
                             <p class="fw-semibold">{{ totalVerificadores }} (C: {{ totalVerificadoresCumplidos }}, NC:
                               {{
-                              totalVerificadoresNoCumplidos }}, NA: {{ totalVerificadoresNoAplica }})</p>
+                                totalVerificadoresNoCumplidos }}, NA: {{ totalVerificadoresNoAplica }})</p>
                           </div>
                         </div>
                       </div>
@@ -405,25 +405,77 @@
                       </div>
                     </div>
 
-                    <!-- Responsables -->
+                    <!-- Firmas principales -->
                     <div class="row mb-3">
-                      <div class="col-md-4">
-                        <label class="form-label">Responsable directo (A) <span class="text-danger">*</span></label>
-                        <input v-model="matriz.responsable_directo" type="text" class="form-control" required
-                          placeholder="Nombre del responsable">
-                        <small class="text-muted">Monitor: {{ matriz.evaluacion_data?.monitor_nombre }}</small>
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Funcionario del que depende directamente (B) <span
-                            class="text-danger">*</span></label>
-                        <input v-model="matriz.funcionario_depen_directo" type="text" class="form-control" required
-                          placeholder="Nombre del funcionario">
-                      </div>
-                      <div class="col-md-4">
-                        <label class="form-label">Funcionario del que depende indirectamente (C) <span
-                            class="text-danger">*</span></label>
-                        <input v-model="matriz.funcionario_depen_indirecto" type="text" class="form-control" required
-                          placeholder="Nombre del funcionario">
+                      <div class="col-md-12">
+                        <label class="form-label">Firmas obligatorias <span class="text-danger">*</span></label>
+                        <div class="row">
+                          <!-- Responsable directo (A) -->
+                          <div class="col-md-4">
+                            <div class="mb-3">
+                              <label class="form-label">Responsable directo (A) <span
+                                  class="text-danger">*</span></label>
+                              <input v-model="matriz.responsable_directo" type="text" class="form-control mb-2" required
+                                placeholder="Nombre del responsable">
+                            </div>
+                            <div v-if="matriz.firma_a" class="mb-3">
+                              <img :src="matriz.firma_a" class="img-fluid border rounded" style="max-height: 150px;" />
+                              <div class="d-flex mt-2">
+                                <button @click="mostrarPadFirma('A')" class="btn btn-sm btn-outline-primary me-2">
+                                  <i class="fas fa-edit me-1"></i> Reemplazar
+                                </button>
+                                <button @click="limpiarFirma('A')" class="btn btn-sm btn-outline-danger">
+                                  <i class="fas fa-trash me-1"></i> Eliminar
+                                </button>
+                              </div>
+                            </div>
+                            <signature-pad v-else @save="setFirmaA" />
+                          </div>
+
+                          <!-- Funcionario (B) -->
+                          <div class="col-md-4">
+                            <div class="mb-3">
+                              <label class="form-label">Funcionario del que depende directamente (B) <span
+                                  class="text-danger">*</span></label>
+                              <input v-model="matriz.funcionario_depen_directo" type="text" class="form-control mb-2"
+                                required placeholder="Nombre del funcionario">
+                            </div>
+                            <div v-if="matriz.firma_b" class="mb-3">
+                              <img :src="matriz.firma_b" class="img-fluid border rounded" style="max-height: 150px;" />
+                              <div class="d-flex mt-2">
+                                <button @click="mostrarPadFirma('B')" class="btn btn-sm btn-outline-primary me-2">
+                                  <i class="fas fa-edit me-1"></i> Reemplazar
+                                </button>
+                                <button @click="limpiarFirma('B')" class="btn btn-sm btn-outline-danger">
+                                  <i class="fas fa-trash me-1"></i> Eliminar
+                                </button>
+                              </div>
+                            </div>
+                            <signature-pad v-else @save="setFirmaB" />
+                          </div>
+
+                          <!-- Funcionario (C) -->
+                          <div class="col-md-4">
+                            <div class="mb-3">
+                              <label class="form-label">Funcionario del que depende indirectamente (C) <span
+                                  class="text-danger">*</span></label>
+                              <input v-model="matriz.funcionario_depen_indirecto" type="text" class="form-control mb-2"
+                                required placeholder="Nombre del funcionario">
+                            </div>
+                            <div v-if="matriz.firma_c" class="mb-3">
+                              <img :src="matriz.firma_c" class="img-fluid border rounded" style="max-height: 150px;" />
+                              <div class="d-flex mt-2">
+                                <button @click="mostrarPadFirma('C')" class="btn btn-sm btn-outline-primary me-2">
+                                  <i class="fas fa-edit me-1"></i> Reemplazar
+                                </button>
+                                <button @click="limpiarFirma('C')" class="btn btn-sm btn-outline-danger">
+                                  <i class="fas fa-trash me-1"></i> Eliminar
+                                </button>
+                              </div>
+                            </div>
+                            <signature-pad v-else @save="setFirmaC" />
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -490,58 +542,6 @@
                       </div>
                     </div>
 
-                    <!-- Firmas principales -->
-                    <div class="row mb-3">
-                      <div class="col-md-12">
-                        <label class="form-label">Firmas obligatorias <span class="text-danger">*</span></label>
-                        <div class="row">
-                          <!-- Firma A -->
-                          <div class="col-md-4">
-                            <h6>Responsable directo (A)</h6>
-                            <div v-if="matriz.firma_a" class="mb-3">
-                              <img :src="matriz.firma_a" class="img-fluid border rounded" style="max-height: 150px;" />
-                              <button @click="mostrarPadFirma('A')" class="btn btn-sm btn-outline-primary mt-2 me-2">
-                                <i class="fas fa-edit me-1"></i> Reemplazar
-                              </button>
-                              <button @click="limpiarFirma('A')" class="btn btn-sm btn-outline-danger mt-2">
-                                <i class="fas fa-trash me-1"></i> Eliminar
-                              </button>
-                            </div>
-                            <signature-pad v-else @save="setFirmaA" />
-                          </div>
-
-                          <!-- Firma B -->
-                          <div class="col-md-4">
-                            <h6>Funcionario (B)</h6>
-                            <div v-if="matriz.firma_b" class="mb-3">
-                              <img :src="matriz.firma_b" class="img-fluid border rounded" style="max-height: 150px;" />
-                              <button @click="mostrarPadFirma('B')" class="btn btn-sm btn-outline-primary mt-2 me-2">
-                                <i class="fas fa-edit me-1"></i> Reemplazar
-                              </button>
-                              <button @click="limpiarFirma('B')" class="btn btn-sm btn-outline-danger mt-2">
-                                <i class="fas fa-trash me-1"></i> Eliminar
-                              </button>
-                            </div>
-                            <signature-pad v-else @save="setFirmaB" />
-                          </div>
-
-                          <!-- Firma C -->
-                          <div class="col-md-4">
-                            <h6>Funcionario (C)</h6>
-                            <div v-if="matriz.firma_c" class="mb-3">
-                              <img :src="matriz.firma_c" class="img-fluid border rounded" style="max-height: 150px;" />
-                              <button @click="mostrarPadFirma('C')" class="btn btn-sm btn-outline-primary mt-2 me-2">
-                                <i class="fas fa-edit me-1"></i> Reemplazar
-                              </button>
-                              <button @click="limpiarFirma('C')" class="btn btn-sm btn-outline-danger mt-2">
-                                <i class="fas fa-trash me-1"></i> Eliminar
-                              </button>
-                            </div>
-                            <signature-pad v-else @save="setFirmaC" />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
                     <div class="text-center mt-4">
                       <button type="submit" class="btn btn-primary me-2" :disabled="saving">
@@ -679,8 +679,6 @@ const verificadoresCumplidos = computed(() => {
 const verificadoresNoAplica = computed(() => {
   return todasEvaluaciones.value.filter(e => e.estado === 'NA')
 })
-
-
 const verificadoresNoConformes = computed(() => {
   return todasEvaluaciones.value.filter(e => e.estado === 'NC')
 })

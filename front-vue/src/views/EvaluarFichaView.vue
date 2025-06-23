@@ -4,7 +4,7 @@
         <nav aria-label="breadcrumb" class="mb-4">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <router-link to="/fichas/seleccion">Fichas</router-link>
+                    <router-link to="/fichas">Fichas</router-link>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">
                     {{ proceso?.nombre || 'Cargando...' }}
@@ -30,7 +30,7 @@
       />
     </div>
 
-    
+
         <!-- Contenido de la Ficha -->
         <template v-if="proceso">
             <!-- Información del Proceso -->
@@ -323,6 +323,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { Modal } from 'bootstrap';
 import { useToast } from 'vue-toast-notification';
 import 'vue-toast-notification/dist/theme-sugar.css';
+import PdfGenerator from '@/components/widgets/PdfGenerator.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -339,6 +340,7 @@ const subprocesosError = ref(null);
 const verificadores = ref([]);
 const loadingVerificadores = ref(false);
 const verificadoresError = ref(null);
+const pdfGenerator = ref(null);
 
 // Datos de evaluación
 const evaluacionData = ref({
@@ -348,6 +350,11 @@ const evaluacionData = ref({
     categoria: ''
 });
 
+const generatePdf = () => {
+  if (pdfGenerator.value) {
+    pdfGenerator.value.generatePdf();
+  }
+};
 // Evaluaciones por verificador
 const evaluaciones = ref({});
 const saving = ref(false);

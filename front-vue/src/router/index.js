@@ -17,8 +17,8 @@ const routes = [
     },
   },
   {
-    path: "/test",
-    name: "test",
+    path: "/matriz-list",
+    name: "matriz-list",
     component: TestLineView,
     meta: {
       title: "DIMON APP",

@@ -21,7 +21,14 @@
       <ul>
         <li v-for="(item, index) in menuItems" :key="index" :class="{ 'active': activeMenu === index }">
           <!-- Ítems de primer nivel -->
-          <div class="menu-item" @click="toggleSubmenu(index)">
+          <router-link v-if="!item.submenu" :to="item.path" class="menu-item" @click="() => toggleSubmenu(index)">
+            <div class="menu-content">
+              <i :class="['fas', item.icon]"></i>
+              <span v-if="!isCollapsed || isMobile">{{ item.title }}</span>
+            </div>
+          </router-link>
+
+          <div v-else class="menu-item" @click="toggleSubmenu(index)">
             <div class="menu-content">
               <i :class="['fas', item.icon]"></i>
               <span v-if="!isCollapsed || isMobile">{{ item.title }}</span>
@@ -29,6 +36,7 @@
             <i v-if="item.submenu && (!isCollapsed || isMobile)"
               :class="['fas', 'submenu-arrow', isSubmenuOpen(index) ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
           </div>
+
 
           <!-- Submenús -->
           <transition name="slide">
@@ -91,13 +99,13 @@ const menuItems = ref([
   {
     title: 'Fichas de Monitoreo',
     icon: 'fa-chart-bar',
-    path: '/reports',
+    path: '/fichas',
     submenu: null
   },
-    {
+  {
     title: 'Matriz de compromiso',
     icon: 'fa-chart-bar',
-    path: '/reports',
+    path: '/matriz-list',
     submenu: null
   },
   {
@@ -411,19 +419,19 @@ onMounted(() => {
     z-index: 1001;
     box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
   }
-  
+
   .sidebar:not(.collapsed) {
     transform: translateX(0);
   }
-  
+
   .sidebar.collapsed {
     width: 250px;
   }
-  
+
   .toggle-btn {
     display: none;
   }
-  
+
   /* Mostrar texto completo en móvil cuando el sidebar está abierto */
   .sidebar:not(.collapsed) .menu-item span,
   .sidebar:not(.collapsed) .submenu-arrow {
@@ -433,6 +441,7 @@ onMounted(() => {
 
 /* Estilos para sidebar colapsado (solo desktop) */
 @media (min-width: 769px) {
+
   .sidebar.collapsed .menu-item span,
   .sidebar.collapsed .submenu-arrow,
   .sidebar.collapsed .user-details,
