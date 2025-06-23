@@ -3,7 +3,6 @@ import HomeView from "../views/HomeView.vue";
 import FichasView from "../views/FichasView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import LoginView from "../views/fichas/login/LoginView.vue";
-import SeleccionFichaView from "../views/SeleccionFichaView.vue";
 import EvaluarFichaView from "../views/EvaluarFichaView.vue";
 import MatrizCompromisoView from "../views/MatrizCompromisoView.vue";
 import TestLineView from "../views/TestLineView.vue";
@@ -31,15 +30,6 @@ const routes = [
     component: FichasView,
     meta: {
       title: "FICHAS",
-      requiresAuth: true,
-    },
-  },
-  {
-    path: "/fichas/seleccion",
-    name: "seleccion-ficha",
-    component: SeleccionFichaView,
-    meta: {
-      title: "Seleccionar Ficha",
       requiresAuth: true,
     },
   },

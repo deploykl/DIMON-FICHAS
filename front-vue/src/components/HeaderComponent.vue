@@ -13,9 +13,7 @@
       <nav class="header-nav ms-auto">
         <ul class="d-flex align-items-center gap-3">
           <!-- Clock Component -->
-          <li class="nav-item clock-container">
             <clock-component-vue />
-          </li>
 
           <!-- User Profile -->
           <li class="nav-item dropdown">

@@ -1,6 +1,6 @@
 <template>
   <div class="page-wrapper">
-    <main class="main-container py-5">
+    <main class="main-container">
       <header class="header-bar mb-4 shadow-sm">
         <div class="d-flex justify-content-between align-items-center container py-3">
           <img src="@/assets/img/login/logo.png" alt="Logo" class="logo">

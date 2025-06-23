@@ -124,7 +124,7 @@
                                                 <div class="fw-bold">Verificador #{{ verificador.orden }}</div>
                                                 <div class="small">{{ verificador.descripcion }}</div>
                                             </div>
-                                            <select v-model="evaluaciones[verificador.id].estado"
+                                            <select v-model="getEvaluacion(verificador.id).estado"
                                                 class="form-select form-select-sm" style="width: 120px">
                                                 <option value="C">Cumple</option>
                                                 <option value="NC">No Cumple</option>
@@ -159,14 +159,14 @@
             <div class="modal fade" id="matrizModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
-                        <div class="modal-header" :class="{ 
-                            'bg-success': todosCumplen || soloCumplen, 
-                            'bg-primary': !todosCumplen && !soloCumplen 
+                        <div class="modal-header" :class="{
+                            'bg-success': todosCumplen || soloCumplen,
+                            'bg-primary': !todosCumplen && !soloCumplen
                         }">
                             <h5 class="modal-title text-white">
-                                {{ todosCumplen ? 'Resultado de la Evaluación' : 
-                                   soloCumplen ? 'Evaluaciones que cumplen' : 
-                                   'Evaluaciones que no cumplen' }}
+                                {{ todosCumplen ? 'Resultado de la Evaluación' :
+                                    soloCumplen ? 'Evaluaciones que cumplen' :
+                                        'Evaluaciones que no cumplen' }}
                             </h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                                 aria-label="Close"></button>
@@ -184,7 +184,8 @@
 
                             <p v-if="!todosCumplen && totalVerificadoresCumplen > 0">
                                 Se han identificado <strong>{{ totalVerificadoresCumplen }}</strong> verificadores que
-                                cumplen con observaciones en <strong>{{ subprocesosCumplen.length }}</strong> subprocesos.
+                                cumplen con observaciones en <strong>{{ subprocesosCumplen.length }}</strong>
+                                subprocesos.
                             </p>
 
                             <!-- Tablas de resultados (mostrar solo si no es el caso de todos cumplen) -->
@@ -211,7 +212,8 @@
                                                     <ul class="list-unstyled mb-0">
                                                         <li v-for="verificador in getVerificadoresNoCumplen(subproceso.id)"
                                                             :key="verificador.id" class="mb-1">
-                                                            Verificador #{{ verificador.orden }}: {{ verificador.descripcion }}
+                                                            Verificador #{{ verificador.orden }}: {{
+                                                            verificador.descripcion }}
                                                         </li>
                                                     </ul>
                                                 </td>
@@ -242,7 +244,8 @@
                                                     <ul class="list-unstyled mb-0">
                                                         <li v-for="verificador in getVerificadoresCumplen(subproceso.id)"
                                                             :key="verificador.id" class="mb-1">
-                                                            Verificador #{{ verificador.orden }}: {{ verificador.descripcion }}
+                                                            Verificador #{{ verificador.orden }}: {{
+                                                            verificador.descripcion }}
                                                         </li>
                                                     </ul>
                                                 </td>
@@ -252,20 +255,23 @@
                                 </div>
                             </template>
 
-                            <div class="alert" :class="{ 
+                            <div class="alert" :class="{
                                 'alert-success': todosCumplen,
-                                'alert-info': soloCumplen && !todosCumplen, 
-                                'alert-warning': !soloCumplen && !todosCumplen 
+                                'alert-info': soloCumplen && !todosCumplen,
+                                'alert-warning': !soloCumplen && !todosCumplen
                             }">
                                 <i class="fas fa-info-circle me-2"></i>
                                 <span v-if="todosCumplen">
                                     Puede generar una matriz de compromiso para documentar el cumplimiento total.
                                 </span>
                                 <span v-else-if="!soloCumplen">
-                                    Puede generar una matriz de compromiso que incluya todos los verificadores que no cumplen.
+                                    Puede generar una matriz de compromiso que incluya todos los verificadores que no
+                                    cumplen.
                                 </span>
                                 <span v-else>
-                                    Puede generar una matriz de compromiso que incluya todos los verificadores que cumplen con observaciones.
+                                    Puede generar una matriz de compromiso que incluya todos los verificadores que
+                                    cumplen con
+                                    observaciones.
                                 </span>
                             </div>
                         </div>
@@ -274,15 +280,14 @@
                             <button type="button" class="btn btn-success" @click="continuarSinMatriz">
                                 Continuar sin generar matriz
                             </button>
-                            <button @click="generarMatrizCompleta" class="btn"
-                                :class="{ 
-                                    'btn-success': todosCumplen || soloCumplen, 
-                                    'btn-primary': !todosCumplen && !soloCumplen 
-                                }">
+                            <button @click="generarMatrizCompleta" class="btn" :class="{
+                                'btn-success': todosCumplen || soloCumplen,
+                                'btn-primary': !todosCumplen && !soloCumplen
+                            }">
                                 <i class="fas fa-file-alt me-2"></i>
-                                {{ todosCumplen ? 'Generar Matriz de Cumplimiento' : 
-                                   soloCumplen ? 'Generar Matriz de Seguimiento' : 
-                                   'Generar Matriz Completa' }}
+                                {{ todosCumplen ? 'Generar Matriz de Cumplimiento' :
+                                    soloCumplen ? 'Generar Matriz de Seguimiento' :
+                                        'Generar Matriz Completa' }}
                             </button>
                         </div>
                     </div>
@@ -339,17 +344,26 @@ const todosCumplen = computed(() => {
 const totalVerificadoresCumplen = computed(() => {
     if (!verificadores.value) return 0;
     return Object.keys(evaluaciones.value).filter(verificadorId => {
-        return evaluaciones.value[verificadorId]?.estado === 'C' && 
-               evaluaciones.value[verificadorId]?.observaciones;
+        return evaluaciones.value[verificadorId]?.estado === 'C' &&
+            evaluaciones.value[verificadorId]?.observaciones;
     }).length;
 });
-
+// Método para obtener la evaluación de forma segura
+const getEvaluacion = (verificadorId) => {
+    if (!evaluaciones.value[verificadorId]) {
+        evaluaciones.value[verificadorId] = {
+            estado: 'C',  // Valor por defecto: Cumple
+            observaciones: ''
+        };
+    }
+    return evaluaciones.value[verificadorId];
+};
 const subprocesosCumplen = computed(() => {
     if (!subprocesosFiltrados.value || !verificadores.value) return [];
     return subprocesosFiltrados.value.filter(subproceso => {
         return getVerificadoresBySubproceso(subproceso.id).some(verificador => {
-            return evaluaciones.value[verificador.id]?.estado === 'C' && 
-                   evaluaciones.value[verificador.id]?.observaciones;
+            return evaluaciones.value[verificador.id]?.estado === 'C' &&
+                evaluaciones.value[verificador.id]?.observaciones;
         });
     });
 });
@@ -383,8 +397,8 @@ const subprocesosFiltrados = computed(() => {
 // Métodos
 const getVerificadoresCumplen = (subprocesoId) => {
     return getVerificadoresBySubproceso(subprocesoId).filter(verificador => {
-        return evaluaciones.value[verificador.id]?.estado === 'C' && 
-               evaluaciones.value[verificador.id]?.observaciones;
+        return evaluaciones.value[verificador.id]?.estado === 'C' &&
+            evaluaciones.value[verificador.id]?.observaciones;
     });
 };
 
@@ -424,7 +438,7 @@ const getVerificadoresBySubproceso = (subprocesoId) => {
         .sort((a, b) => a.orden - b.orden);
 };
 
-// Inicializar evaluaciones para cada verificador
+// Modificar el método initializeEvaluaciones para que sea más robusto
 const initializeEvaluaciones = () => {
     evaluaciones.value = {};
     if (verificadores.value && verificadores.value.length > 0) {
@@ -438,6 +452,7 @@ const initializeEvaluaciones = () => {
         });
     }
 };
+
 
 // Resetear formulario
 const resetForm = () => {

@@ -1,57 +1,41 @@
 <template>
-  <aside 
-    :class="['sidebar', { 'collapsed': isCollapsed }]"
-    :style="sidebarStyle"
-  >
-    <!-- Botón para colapsar/expandir -->
-    <div class="toggle-btn" @click="toggleSidebar">
+  <!-- Botón de toggle para móvil (siempre visible en móvil) -->
+  <div v-if="isMobile" class="mobile-toggle-btn" @click="toggleSidebar">
+    <i class="fas fa-bars"></i>
+  </div>
+
+  <!-- Sidebar con overlay en móvil -->
+  <div v-if="isMobile && !isCollapsed" class="sidebar-overlay" @click="toggleSidebar"></div>
+
+  <aside :class="['sidebar', { 'collapsed': isCollapsed, 'mobile-hidden': isMobile && isCollapsed }]">
+    <!-- Botón para colapsar/expandir (oculto en móvil) -->
+    <div class="toggle-btn" @click="toggleSidebar" v-if="!isMobile">
       <i :class="[isCollapsed ? 'fas fa-angle-double-right' : 'fas fa-angle-double-left']"></i>
     </div>
 
-    <!-- Logo >-->
-    <div class="sidebar-header">
-      
-    </div>
+    <!-- Logo -->
+    <div class="sidebar-header"></div>
 
     <!-- Menú principal -->
     <nav class="sidebar-menu">
       <ul>
-        <li 
-          v-for="(item, index) in menuItems" 
-          :key="index"
-          :class="{ 'active': activeMenu === index }"
-        >
+        <li v-for="(item, index) in menuItems" :key="index" :class="{ 'active': activeMenu === index }">
           <!-- Ítems de primer nivel -->
-          <div 
-            class="menu-item" 
-            @click="toggleSubmenu(index)"
-          >
+          <div class="menu-item" @click="toggleSubmenu(index)">
             <div class="menu-content">
               <i :class="['fas', item.icon]"></i>
-              <span v-if="!isCollapsed">{{ item.title }}</span>
+              <span v-if="!isCollapsed || isMobile">{{ item.title }}</span>
             </div>
-            <i 
-              v-if="item.submenu && !isCollapsed" 
-              :class="['fas', 'submenu-arrow', isSubmenuOpen(index) ? 'fa-chevron-up' : 'fa-chevron-down']"
-            ></i>
+            <i v-if="item.submenu && (!isCollapsed || isMobile)"
+              :class="['fas', 'submenu-arrow', isSubmenuOpen(index) ? 'fa-chevron-up' : 'fa-chevron-down']"></i>
           </div>
 
           <!-- Submenús -->
           <transition name="slide">
-            <ul 
-              v-if="item.submenu && isSubmenuOpen(index) && !isCollapsed" 
-              class="submenu"
-            >
-              <li 
-                v-for="(subItem, subIndex) in item.submenu" 
-                :key="subIndex"
-                :class="{ 'active': activeSubmenu === `${index}-${subIndex}` }"
-              >
-                <router-link 
-                  :to="subItem.path" 
-                  class="submenu-item"
-                  @click="setActiveSubmenu(index, subIndex)"
-                >
+            <ul v-if="item.submenu && isSubmenuOpen(index) && (!isCollapsed || isMobile)" class="submenu">
+              <li v-for="(subItem, subIndex) in item.submenu" :key="subIndex"
+                :class="{ 'active': activeSubmenu === `${index}-${subIndex}` }">
+                <router-link :to="subItem.path" class="submenu-item" @click="handleSubmenuClick(index, subIndex)">
                   <i :class="['fas', subItem.icon]"></i>
                   <span>{{ subItem.title }}</span>
                 </router-link>
@@ -61,33 +45,42 @@
         </li>
       </ul>
     </nav>
-
-    <!-- Footer del sidebar
-    <div class="sidebar-footer" v-if="!isCollapsed">
-      <div class="user-info">
-        <img :src="userImage" alt="Usuario" class="user-avatar">
-        <div class="user-details">
-          <span class="user-name">{{ userName }}</span>
-          <span class="user-role">{{ userRole }}</span>
-        </div>
-      </div>
-    </div> -->
   </aside>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
+const emit = defineEmits(['toggle-collapse'])
 
 // Estado del sidebar
 const isCollapsed = ref(false)
+const isMobile = ref(false)
 const activeMenu = ref(null)
 const activeSubmenu = ref(null)
 const openSubmenus = ref([])
 
-// Datos de ejemplo
+const props = defineProps({
+  isCollapsed: {
+    type: Boolean,
+    default: false
+  }
+})
+
+// Función para alternar el sidebar
+const toggleSidebar = () => {
+  isCollapsed.value = !isCollapsed.value
+  emit('toggle-collapse', isCollapsed.value)
+}
+
+// Sincronizamos con los cambios de props
+watch(() => props.isCollapsed, (newVal) => {
+  isCollapsed.value = newVal
+})
+
+// Datos de ejemplo del menú
 const menuItems = ref([
   {
     title: 'Dashboard',
@@ -95,13 +88,13 @@ const menuItems = ref([
     path: '/dashboard',
     submenu: null
   },
-    {
+  {
     title: 'Fichas',
     icon: 'fa-chart-bar',
     path: '/reports',
     submenu: null
   },
-    {
+  {
     title: 'Menu',
     icon: 'fa-user-injured',
     path: '/patients',
@@ -112,7 +105,7 @@ const menuItems = ref([
     ]
   },
   {
-    title: 'Citas',
+    title: 'Menu 2',
     icon: 'fa-calendar-check',
     path: '/appointments',
     submenu: [
@@ -137,16 +130,6 @@ const menuItems = ref([
   }
 ])
 
-// Datos de usuario
-const userName = ref('Dr. Juan Pérez')
-const userRole = ref('Administrador')
-const userImage = ref('https://via.placeholder.com/40')
-
-// Funciones para manejar el estado
-const toggleSidebar = () => {
-  isCollapsed.value = !isCollapsed.value
-}
-
 const toggleSubmenu = (index) => {
   if (menuItems.value[index].submenu) {
     const submenuIndex = openSubmenus.value.indexOf(index)
@@ -158,6 +141,9 @@ const toggleSubmenu = (index) => {
   } else {
     activeMenu.value = index
     activeSubmenu.value = null
+    if (isMobile.value) {
+      isCollapsed.value = true // Cerrar sidebar después de seleccionar un ítem en móvil
+    }
   }
 }
 
@@ -170,29 +156,28 @@ const setActiveSubmenu = (menuIndex, submenuIndex) => {
   activeSubmenu.value = `${menuIndex}-${submenuIndex}`
 }
 
-// Estilo computado para el sidebar
-const sidebarStyle = computed(() => {
-  return {
-    width: isCollapsed.value ? '70px' : '250px',
-    top: '60px', // Ajustar según la altura de tu header
-    height: 'calc(100vh - 60px)' // Restar la altura del header
+const handleSubmenuClick = (menuIndex, submenuIndex) => {
+  setActiveSubmenu(menuIndex, submenuIndex)
+  if (isMobile.value) {
+    isCollapsed.value = true // Cerrar sidebar después de seleccionar un subítem en móvil
   }
-})
+}
 
 // Configuración responsive
 const checkScreenSize = () => {
   const width = window.innerWidth
-  if (width < 768) {
-    isCollapsed.value = true
+  isMobile.value = width < 768
+  if (isMobile.value) {
+    isCollapsed.value = true // Por defecto colapsado en móvil
   } else {
-    isCollapsed.value = false
+    isCollapsed.value = false // Expandido en desktop
   }
 }
 
 onMounted(() => {
   checkScreenSize()
   window.addEventListener('resize', checkScreenSize)
-  
+
   // Marcar menú activo según la ruta actual
   const currentPath = route.path
   menuItems.value.forEach((item, index) => {
@@ -214,18 +199,33 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Variables CSS */
+:root {
+  --sidebar-width: 250px;
+  --sidebar-collapsed-width: 70px;
+  --header-height: 60px;
+  --transition-speed: 0.3s;
+}
+
 /* Estilos base */
 .sidebar {
+  width: var(--sidebar-width);
+  height: calc(100vh - var(--header-height));
   position: fixed;
+  top: var(--header-height);
   left: 0;
   background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
   color: white;
-  transition: all 0.3s ease;
-  z-index: 100;
+  transition: all var(--transition-speed) ease;
+  z-index: 1001;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
 }
 
 /* Encabezado del sidebar */
@@ -337,7 +337,7 @@ onMounted(() => {
 }
 
 /* Estilos activos */
-.active > .menu-item {
+.active>.menu-item {
   background: rgba(255, 255, 255, 0.15);
   border-left: 3px solid white;
 }
@@ -346,105 +346,109 @@ onMounted(() => {
   color: white;
 }
 
-/* Footer del sidebar */
-.sidebar-footer {
-  padding: 15px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.user-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-}
-
-.user-details {
-  display: flex;
-  flex-direction: column;
-}
-
-.user-name {
-  font-weight: 500;
-  font-size: 0.9rem;
-}
-
-.user-role {
-  font-size: 0.7rem;
-  opacity: 0.8;
-}
-
 /* Transiciones */
-.slide-enter-active, .slide-leave-active {
+.slide-enter-active,
+.slide-leave-active {
   transition: max-height 0.3s ease;
 }
 
-.slide-enter-from, .slide-leave-to {
+.slide-enter-from,
+.slide-leave-to {
   max-height: 0;
 }
 
-.slide-enter-to, .slide-leave-from {
+.slide-enter-to,
+.slide-leave-from {
   max-height: 300px;
 }
 
-/* Estilos para sidebar colapsado */
-.sidebar.collapsed .menu-item span,
-.sidebar.collapsed .submenu-arrow,
-.sidebar.collapsed .user-details,
-.sidebar.collapsed .logo-full {
-  display: none;
-}
-
-.sidebar.collapsed .menu-item {
+/* Estilo para el botón de toggle en móvil */
+.mobile-toggle-btn {
+  position: fixed;
+  left: 15px;
+  top: calc(var(--header-height) + 5px);
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  padding: 12px 0;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
 }
 
-.sidebar.collapsed .menu-content {
-  justify-content: center;
+.mobile-toggle-btn:hover {
+  transform: scale(1.1);
 }
 
-.sidebar.collapsed .sidebar-header {
-  padding: 20px 0;
+/* Overlay para móviles */
+.sidebar-overlay {
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  backdrop-filter: blur(2px);
 }
 
-.sidebar.collapsed .toggle-btn {
-  right: 20px;
-}
-
-/* Responsive */
+/* Ajustes para móvil */
 @media (max-width: 768px) {
-  .sidebar:not(.collapsed) {
+  .sidebar {
     width: 250px;
-    z-index: 1000;
-    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
+    transform: translateX(-100%);
+    z-index: 1001;
+    box-shadow: 2px 0 15px rgba(0, 0, 0, 0.3);
+  }
+  
+  .sidebar:not(.collapsed) {
+    transform: translateX(0);
   }
   
   .sidebar.collapsed {
-    width: 70px;
+    width: 250px;
   }
   
-  /* Opcional: overlay para móviles */
-  .sidebar-overlay {
-    position: fixed;
-    top: 60px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 99;
+  .toggle-btn {
     display: none;
   }
   
-  .sidebar:not(.collapsed) + .sidebar-overlay {
-    display: block;
+  /* Mostrar texto completo en móvil cuando el sidebar está abierto */
+  .sidebar:not(.collapsed) .menu-item span,
+  .sidebar:not(.collapsed) .submenu-arrow {
+    display: inline !important;
+  }
+}
+
+/* Estilos para sidebar colapsado (solo desktop) */
+@media (min-width: 769px) {
+  .sidebar.collapsed .menu-item span,
+  .sidebar.collapsed .submenu-arrow,
+  .sidebar.collapsed .user-details,
+  .sidebar.collapsed .logo-full {
+    display: none;
+  }
+
+  .sidebar.collapsed .menu-item {
+    justify-content: center;
+    padding: 12px 0;
+  }
+
+  .sidebar.collapsed .menu-content {
+    justify-content: center;
+  }
+
+  .sidebar.collapsed .sidebar-header {
+    padding: 20px 0;
+  }
+
+  .sidebar.collapsed .toggle-btn {
+    right: 20px;
   }
 }
 </style>
