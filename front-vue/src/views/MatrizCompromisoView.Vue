@@ -129,7 +129,7 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                   <div>
                                     <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1
-                                    }}:</strong>
+                                        }}:</strong>
                                       {{ verificador.verificador_nombre }}</p>
                                     <span class="badge bg-warning">
                                       {{ verificador.estado_display }}
@@ -182,7 +182,7 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                   <div>
                                     <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1
-                                    }}:</strong>
+                                        }}:</strong>
                                       {{ verificador.verificador_nombre }}</p>
                                     <span class="badge bg-danger">
                                       {{ verificador.estado_display }}
@@ -235,7 +235,7 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                   <div>
                                     <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1
-                                    }}:</strong>
+                                        }}:</strong>
                                       {{ verificador.verificador_nombre }}</p>
                                     <span class="badge bg-success">
                                       {{ verificador.estado_display }}
@@ -413,7 +413,8 @@
                           <!-- Monitor (M) -->
                           <div class="col-md-4">
                             <div class="mb-3">
-                              <label class="form-label">Monitor (M) <span class="text-danger">*</span></label>
+                              <label class="form-label">Monitor (M) <span
+                                  class="text-danger">*</span></label>
                               <input v-model="matriz.monitor_nombre" type="text" class="form-control mb-2" required
                                 placeholder="Nombre del responsable">
                             </div>
@@ -743,22 +744,17 @@ const formatDate = (dateString) => {
 }
 
 const dataURLtoBlob = (dataURL) => {
-  try {
-    const arr = dataURL.split(',')
-    const mime = arr[0].match(/:(.*?);/)[1]
-    const bstr = atob(arr[1])
-    let n = bstr.length
-    const u8arr = new Uint8Array(n)
+  const arr = dataURL.split(',')
+  const mime = arr[0].match(/:(.*?);/)[1]
+  const bstr = atob(arr[1])
+  let n = bstr.length
+  const u8arr = new Uint8Array(n)
 
-    while (n--) {
-      u8arr[n] = bstr.charCodeAt(n)
-    }
-
-    return new Blob([u8arr], { type: mime })
-  } catch (error) {
-    console.error('Error converting dataURL to Blob:', error)
-    return null
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n)
   }
+
+  return new Blob([u8arr], { type: mime })
 }
 
 // Métodos para manejar firmas
@@ -789,16 +785,10 @@ const guardarFirmaReemplazo = (firma) => {
   const firmaProp = `firma_${firmaActual.value.toLowerCase()}`
   const firmaRef = `firma${firmaActual.value}`
 
-  // Convertir a Blob si es base64
-  let firmaParaGuardar = firma
-  if (typeof firma === 'string' && firma.startsWith('data:image')) {
-    firmaParaGuardar = dataURLtoBlob(firma)
-  }
-
   if (firmaRef in { firmaM, firmaA, firmaB, firmaC, firmaD, firmaE }) {
-    eval(`${firmaRef}.value = firmaParaGuardar`)
+    eval(`${firmaRef}.value = firma`)
   }
-  matriz.value[firmaProp] = firmaParaGuardar
+  matriz.value[firmaProp] = firma
 
   showSignatureModal.value = false
 }
@@ -1060,7 +1050,7 @@ const guardarMatriz = async () => {
     // Crear FormData para enviar archivos
     const formData = new FormData()
 
-    // Agregar todos los campos de la matriz excepto las firmas
+    // Agregar todos los campos de la matriz
     for (const key in matriz.value) {
       if (key.startsWith('firma_')) continue
       if (matriz.value[key] !== null && matriz.value[key] !== undefined) {
@@ -1068,40 +1058,31 @@ const guardarMatriz = async () => {
       }
     }
 
-    // Función para agregar firmas al FormData
-    const agregarFirma = (tipo, valor) => {
-      if (!valor) return
-      
-      // Si es una URL (firma ya existente), enviar como string
-      if (typeof valor === 'string' && (valor.startsWith('http') || valor.startsWith('/'))) {
-        formData.append(tipo, valor)
-      } 
-      // Si es base64, convertirlo a Blob
-      else if (typeof valor === 'string' && valor.startsWith('data:image')) {
-        const blob = dataURLtoBlob(valor)
-        formData.append(tipo, blob, `${tipo}.png`)
-      }
-      // Si ya es un Blob/File (debería ser el caso cuando se reemplaza)
-      else if (valor instanceof Blob) {
-        formData.append(tipo, valor, `${tipo}.png`)
+    // Agregar las firmas como archivos
+    const firmas = {
+      'firma_m': firmaM.value,
+      'firma_a': firmaA.value,
+      'firma_b': firmaB.value,
+      'firma_c': firmaC.value,
+      'firma_d': firmaD.value,
+      'firma_e': firmaE.value
+    }
+
+    for (const [key, value] of Object.entries(firmas)) {
+      if (value) {
+        if (typeof value === 'string' && (value.startsWith('http') || value.startsWith('/'))) {
+          formData.append(key, value)
+        } else {
+          const blob = dataURLtoBlob(value)
+          formData.append(key, blob, `${key}.png`)
+        }
+      } else {
+        formData.append(key, '')
       }
     }
 
-    // Agregar todas las firmas
-    agregarFirma('firma_m', firmaM.value)
-    agregarFirma('firma_a', firmaA.value)
-    agregarFirma('firma_b', firmaB.value)
-    agregarFirma('firma_c', firmaC.value)
-    agregarFirma('firma_d', firmaD.value)
-    agregarFirma('firma_e', firmaE.value)
-
     const config = {
-      headers: { 
-        'Content-Type': 'multipart/form-data',
-        // Asegurar que no se agregue automáticamente el Content-Type
-        // para permitir que el navegador establezca el boundary correcto
-        'X-Requested-With': 'XMLHttpRequest'
-      }
+      headers: { 'Content-Type': 'multipart/form-data' }
     }
 
     if (matriz.value.id) {
@@ -1118,15 +1099,11 @@ const guardarMatriz = async () => {
   } catch (error) {
     console.error('Error al guardar la matriz:', error)
     $toast.error(error.response?.data?.message || 'Error al guardar la matriz')
-    
-    // Debug: Mostrar detalles del error en consola
-    if (error.response) {
-      console.error('Detalles del error:', error.response.data)
-    }
   } finally {
     saving.value = false
   }
 }
+
 const exportarPDF = async () => {
   try {
     if (!matriz.value?.id) {

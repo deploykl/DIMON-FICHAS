@@ -272,32 +272,31 @@ class MatrizCompromisoViewSet(viewsets.ModelViewSet):
         """Endpoint para actualizar matriz con manejo de firmas"""
         instance = self.get_object()
         data = request.data.copy()
-
+        
         # Verificar permisos
         if not request.user.is_superuser and instance.evaluacion.usuario != request.user:
             return Response(
                 {'error': 'No tienes permiso para editar esta matriz'},
                 status=status.HTTP_403_FORBIDDEN
             )
-
-        # Lista de campos de firma
+        
         file_fields = ['firma_m', 'firma_a', 'firma_b', 'firma_c', 'firma_d', 'firma_e']
-
+        
         # Manejar actualización/eliminación de firmas
         for field in file_fields:
             if field in request.FILES:
-                # Procesa el archivo enviado
+                # Eliminar archivo antiguo si existe
                 old_file = getattr(instance, field)
                 if old_file:
-                    old_file.delete(save=False)  # Elimina el archivo antiguo
+                    old_file.delete(save=False)
                 setattr(instance, field, request.FILES[field])
-            elif field in data and (data[field] == 'null' or data[field] == ''):
+            elif field in data and data[field] == 'null':
                 # Eliminar firma existente
                 old_file = getattr(instance, field)
                 if old_file:
                     old_file.delete(save=False)
                 setattr(instance, field, None)
-                data.pop(field)  # Elimina el campo de datos para no procesarlo
+                data.pop(field)
             elif field in data and isinstance(data[field], str) and data[field].startswith('data:image'):
                 # Convertir base64 a archivo
                 try:
@@ -306,19 +305,19 @@ class MatrizCompromisoViewSet(viewsets.ModelViewSet):
                     file_name = f"{field}_{uuid.uuid4()}.{ext}"
                     file_content = ContentFile(base64.b64decode(imgstr), name=file_name)
                     setattr(instance, field, file_content)
-                    data.pop(field)  # Elimina el campo de datos para no procesarlo
+                    data.pop(field)
                 except Exception as e:
                     return Response(
                         {'error': f'Error procesando {field}: {str(e)}'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
-
+        
         serializer = self.get_serializer(instance, data=data, partial=True)
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-
+        
         return Response(serializer.data)
-
+    
 
     def list(self, request, *args, **kwargs):
         # Debug: Verificar si hay matrices en la base de datos
