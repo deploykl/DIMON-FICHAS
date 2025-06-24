@@ -4,7 +4,7 @@
       <div class="login-card">
         <!-- Logo superior -->
         <div class="logo-container">
-          <img src="@/assets/img/login/logo.png" alt="Logo" class="logo-img" />
+          <img src="@/assets/img/login/user-login.png" alt="Logo" class="logo-img" />
         </div>
 
         <!-- Mensaje de error con animación -->
@@ -132,7 +132,7 @@ const handleSubmit = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #6e45e2 0%, #88d3ce 100%);
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
@@ -161,12 +161,12 @@ const handleSubmit = async () => {
 /* Logo */
 .logo-container {
   text-align: center;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .logo-img {
-  max-width: 180px;
-  height: auto;
+  max-width: 250px;
+  height: 100px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
@@ -202,7 +202,7 @@ const handleSubmit = async () => {
   left: 15px;
   top: 50%;
   transform: translateY(-50%);
-  color: #6e45e2;
+  color: #143168f8;
   font-size: 18px;
 }
 
@@ -217,9 +217,10 @@ const handleSubmit = async () => {
 }
 
 .input-field:focus {
-  border-color: #6e45e2;
+  border-color: #27038d;
   box-shadow: 0 0 0 3px rgba(110, 69, 226, 0.2);
   outline: none;
+  
 }
 
 .password-toggle {
@@ -234,14 +235,14 @@ const handleSubmit = async () => {
 }
 
 .password-toggle:hover {
-  color: #6e45e2;
+  color: #380bb6;
 }
 
 /* Botón de login */
 .login-btn {
   width: 100%;
   padding: 15px;
-  background: linear-gradient(to right, #6e45e2, #88d3ce);
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -293,7 +294,7 @@ const handleSubmit = async () => {
 
 .footer-decoration {
   height: 4px;
-  background: linear-gradient(to right, #6e45e2, #88d3ce);
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
   border-radius: 2px;
   margin-top: 8px;
   width: 50%;

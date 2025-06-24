@@ -118,6 +118,12 @@ class MatrizCompromiso(models.Model):
         verbose_name="Evaluaciones No Conformes"
     )
     # Campos para almacenar las firmas como imágenes
+    firma_m = models.ImageField(
+        upload_to='firmas_matrices/',
+        verbose_name="Firma Monitor  (M)",
+        null=True,
+        blank=True
+    )
     firma_a = models.ImageField(
         upload_to='firmas_matrices/',
         verbose_name="Firma Responsable Directo (A)",

@@ -129,7 +129,7 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                   <div>
                                     <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1
-                                    }}:</strong>
+                                        }}:</strong>
                                       {{ verificador.verificador_nombre }}</p>
                                     <span class="badge bg-warning">
                                       {{ verificador.estado_display }}
@@ -182,7 +182,7 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                   <div>
                                     <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1
-                                    }}:</strong>
+                                        }}:</strong>
                                       {{ verificador.verificador_nombre }}</p>
                                     <span class="badge bg-danger">
                                       {{ verificador.estado_display }}
@@ -235,7 +235,7 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                   <div>
                                     <p class="mb-1"><strong>Verificador #{{ verificador.verificador?.orden || index + 1
-                                    }}:</strong>
+                                        }}:</strong>
                                       {{ verificador.verificador_nombre }}</p>
                                     <span class="badge bg-success">
                                       {{ verificador.estado_display }}
@@ -410,6 +410,27 @@
                       <div class="col-md-12">
                         <label class="form-label">Firmas obligatorias <span class="text-danger">*</span></label>
                         <div class="row">
+                          <!-- Monitor (M) -->
+                          <div class="col-md-4">
+                            <div class="mb-3">
+                              <label class="form-label">Monitor (M) <span
+                                  class="text-danger">*</span></label>
+                              <input v-model="matriz.monitor_nombre" type="text" class="form-control mb-2" required
+                                placeholder="Nombre del responsable">
+                            </div>
+                            <div v-if="matriz.firma_m" class="mb-3">
+                              <img :src="matriz.firma_m" class="img-fluid border rounded" style="max-height: 150px;" />
+                              <div class="d-flex mt-2">
+                                <button @click="mostrarPadFirma('M')" class="btn btn-sm btn-outline-primary me-2">
+                                  <i class="fas fa-edit me-1"></i> Reemplazar
+                                </button>
+                                <button @click="limpiarFirma('M')" class="btn btn-sm btn-outline-danger">
+                                  <i class="fas fa-trash me-1"></i> Eliminar
+                                </button>
+                              </div>
+                            </div>
+                            <signature-pad v-else @save="setFirmaM" />
+                          </div>
                           <!-- Responsable directo (A) -->
                           <div class="col-md-4">
                             <div class="mb-3">
@@ -622,6 +643,7 @@ const showFuncionarioD = ref(false)
 const showFuncionarioE = ref(false)
 
 // Refs para firmas
+const firmaM = ref(null)
 const firmaA = ref(null)
 const firmaB = ref(null)
 const firmaC = ref(null)
@@ -643,6 +665,7 @@ const matriz = ref({
   funcionario_depen_directo: '',
   funcionario_depen_indirecto: '',
   firmas_adicionales: '',
+  firma_m: null,
   firma_a: null,
   firma_b: null,
   firma_c: null,
@@ -762,12 +785,17 @@ const guardarFirmaReemplazo = (firma) => {
   const firmaProp = `firma_${firmaActual.value.toLowerCase()}`
   const firmaRef = `firma${firmaActual.value}`
 
-  if (firmaRef in { firmaA, firmaB, firmaC, firmaD, firmaE }) {
+  if (firmaRef in { firmaM, firmaA, firmaB, firmaC, firmaD, firmaE }) {
     eval(`${firmaRef}.value = firma`)
   }
   matriz.value[firmaProp] = firma
 
   showSignatureModal.value = false
+}
+
+const setFirmaM = (firma) => {
+  firmaM.value = firma
+  matriz.value.firma_m = firma
 }
 
 const setFirmaA = (firma) => {
@@ -799,7 +827,7 @@ const limpiarFirma = (tipo) => {
   const firmaProp = `firma_${tipo.toLowerCase()}`
   const firmaRef = `firma${tipo}`
 
-  if (firmaRef in { firmaA, firmaB, firmaC, firmaD, firmaE }) {
+  if (firmaRef in { firmaM, firmaA, firmaB, firmaC, firmaD, firmaE }) {
     eval(`${firmaRef}.value = null`)
   }
   matriz.value[firmaProp] = null
@@ -893,6 +921,7 @@ const resetForm = () => {
       funcionario_depen_directo: '',
       funcionario_depen_indirecto: '',
       firmas_adicionales: '',
+      firma_m: null,
       firma_a: null,
       firma_b: null,
       firma_c: null,
@@ -903,6 +932,7 @@ const resetForm = () => {
     }
 
     // Resetear firmas reactivas
+    firmaM.value = null
     firmaA.value = null
     firmaB.value = null
     firmaC.value = null
@@ -950,6 +980,7 @@ const fetchData = async () => {
       matriz.value = {
         ...matriz.value,
         ...matrizResponse.data,
+        firma_m: matrizResponse.data.firma_m || null,
         firma_a: matrizResponse.data.firma_a || null,
         firma_b: matrizResponse.data.firma_b || null,
         firma_c: matrizResponse.data.firma_c || null,
@@ -962,6 +993,7 @@ const fetchData = async () => {
       if (matriz.value.funcionario_e) showFuncionarioE.value = true
 
       // Asignar firmas a las variables reactivas
+      firmaM.value = matriz.value.firma_m
       firmaA.value = matriz.value.firma_a
       firmaB.value = matriz.value.firma_b
       firmaC.value = matriz.value.firma_c
@@ -1028,6 +1060,7 @@ const guardarMatriz = async () => {
 
     // Agregar las firmas como archivos
     const firmas = {
+      'firma_m': firmaM.value,
       'firma_a': firmaA.value,
       'firma_b': firmaB.value,
       'firma_c': firmaC.value,

@@ -73,6 +73,7 @@ class MatrizCompromisoSerializer(serializers.ModelSerializer):
         model = MatrizCompromiso
         fields = "__all__"
         extra_kwargs = {
+            "firma_m": {"required": False, "allow_null": True},
             "firma_a": {"required": False, "allow_null": True},
             "firma_b": {"required": False, "allow_null": True},
             "firma_c": {"required": False, "allow_null": True},

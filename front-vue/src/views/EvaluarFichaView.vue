@@ -118,6 +118,7 @@
             type="text" 
             class="form-control" 
             required
+            @keypress="soloNumeros"
             @input="(e) => handleIpressSearch('codigo', e)"
             @focus="showCodeSuggestions = true"
             @blur="hideCodeSuggestions"
@@ -454,7 +455,15 @@ const evaluacionData = ref({
     disa: '',
     institucion: ''
 });
-
+const soloNumeros = (event) => {
+  const charCode = event.keyCode || event.which;
+  const charStr = String.fromCharCode(charCode);
+  
+  // Permitir solo dígitos (0-9) y teclas de control (backspace, delete, etc.)
+  if (!/^\d+$/.test(charStr)) {
+    event.preventDefault();
+  }
+};
 const generatePdf = () => {
     if (pdfGenerator.value) {
         pdfGenerator.value.generatePdf();
