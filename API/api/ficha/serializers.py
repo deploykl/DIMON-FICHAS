@@ -133,7 +133,6 @@ class SeguimientoMatrizCompromisoSerializer(serializers.ModelSerializer):
         source='matriz',
         write_only=True,
         required=False  # Asegúrate que esto esté presente
-
     )
 
     class Meta:
