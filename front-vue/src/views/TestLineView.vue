@@ -351,7 +351,7 @@ onMounted(async () => {
         matrices.value = [response.data]
       }
       
-      console.log("Matrices cargadas:", matrices.value)
+      //console.log("Matrices cargadas:", matrices.value)
     } else {
       console.error("La respuesta no contiene datos:", response)
       $toast.error("No se recibieron datos del servidor")

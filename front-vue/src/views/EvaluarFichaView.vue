@@ -56,7 +56,6 @@
                 </div>
             </div>
 
-            <!-- Formulario de IPRESS -->
   <!-- Formulario de IPRESS -->
   <div class="card mb-4 shadow-sm">
     <div class="card-body">
@@ -139,7 +138,7 @@
                 <span>Categoría: {{ item.CATEGORIA }}</span>
               </div>
               <div class="small text-muted">
-                {{ item.DEPARTAMENTO }} > {{ item.PROVINCIA }} > {{ item.DISTRITO }}
+                {{ item.DEPARTAMENTO }} > {{ item.PROVINCIA }} > {{ item.DISTRITO }} - {{ item.DISA }} - {{ item.INSTITUCION }}
               </div>
             </div>
           </div>

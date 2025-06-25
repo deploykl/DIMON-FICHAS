@@ -328,11 +328,9 @@ class MatrizCompromisoViewSet(viewsets.ModelViewSet):
         
         if page is not None:
             serializer = self.get_serializer(page, many=True)
-            print(f"Datos enviados: {serializer.data}")  # Debug
             return self.get_paginated_response(serializer.data)
             
         serializer = self.get_serializer(queryset, many=True)
-        print(f"Datos enviados (no paginados): {serializer.data}")  # Debug
         return Response(serializer.data)
     
 class RenipressViewSet(ViewSet):
