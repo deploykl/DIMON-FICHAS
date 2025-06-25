@@ -7,6 +7,8 @@ from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 import requests
 from django.db.models import Prefetch
 from urllib.parse import urlencode
+from django.core.exceptions import PermissionDenied
+from rest_framework.exceptions import ValidationError
 
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -353,6 +355,34 @@ class SeguimientoMatrizCompromisoViewSet(viewsets.ModelViewSet):
             queryset = queryset.filter(matriz__evaluacion__usuario=self.request.user)
             
         return queryset.order_by('-fecha_seguimiento')
+    
+    def perform_create(self, serializer):
+        # Asegúrate que matriz_id esté en los datos validados
+        if 'matriz' not in serializer.validated_data:
+            raise serializers.ValidationError({"matriz_id": "Este campo es requerido."})
+        
+        # Verificación de permisos
+        matriz = serializer.validated_data['matriz']
+        if not self.request.user.is_superuser and matriz.evaluacion.usuario != self.request.user:
+            raise PermissionDenied("No tienes permiso para crear seguimientos en esta matriz")
+        
+        serializer.save()
+        
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # Verifica permisos
+        if not request.user.is_superuser and instance.matriz.evaluacion.usuario != request.user:
+            return Response(
+                {'error': 'No tienes permiso para editar este seguimiento'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        serializer = self.get_serializer(instance, data=request.data, partial=False)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        return Response(serializer.data)
     
 class RenipressViewSet(ViewSet):
     permission_classes = [AllowAny]

@@ -127,15 +127,41 @@ class MatrizCompromisoSerializer(serializers.ModelSerializer):
         }
 
 class SeguimientoMatrizCompromisoSerializer(serializers.ModelSerializer):
+    matriz = MatrizCompromisoSerializer(read_only=True)
+    matriz_id = serializers.PrimaryKeyRelatedField(
+        queryset=MatrizCompromiso.objects.all(), 
+        source='matriz',
+        write_only=True,
+        required=False  # Asegúrate que esto esté presente
+
+    )
+
     class Meta:
         model = SeguimientoMatrizCompromiso
         fields = '__all__'
         read_only_fields = ['fecha_creacion', 'fecha_actualizacion']
 
     def validate(self, data):
-        # Validar que la fecha de seguimiento no sea anterior a la creación de la matriz
-        if data['fecha_seguimiento'] < data['matriz'].fecha_creacion.date():
+        matriz = data.get('matriz')
+        
+        # Para actualizaciones, usa la matriz existente
+        if self.instance and not matriz:
+            matriz = self.instance.matriz
+            
+        if not matriz:
+            raise serializers.ValidationError("Se requiere una matriz para el seguimiento.")
+            
+        # Solo valida la fecha si está en los datos
+        if 'fecha_seguimiento' in data and data['fecha_seguimiento'] < matriz.fecha_creacion.date():
             raise serializers.ValidationError(
                 "La fecha de seguimiento no puede ser anterior a la creación de la matriz."
             )
+            
         return data
+
+    def get_matriz_data(self, obj):
+        return {
+            'establecimiento': obj.matriz.evaluacion.establecimiento,
+            'codigo': obj.matriz.evaluacion.codigo,
+            'categoria': obj.matriz.evaluacion.categoria
+        }

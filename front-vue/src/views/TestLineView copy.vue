@@ -108,11 +108,10 @@
                               class="btn btn-sm btn-outline-success me-2" title="Editar">
                               <i class="fas fa-edit"></i>
                             </router-link>
-                            <button @click="exportarPDF(matriz.id)" class="btn btn-sm btn-outline-secondary"
+                            <button @click="exportarPDF(matriz.id)" class="btn btn-sm btn-outline-secondary me-2"
                               title="Exportar PDF">
                               <i class="fas fa-file-pdf"></i>
                             </button>
-                            <!-- Botón para seguimiento -->
                             <button @click="verSeguimientos(matriz.id)" class="btn btn-sm btn-outline-info"
                               title="Seguimientos">
                               <i class="fas fa-history"></i>
@@ -131,13 +130,13 @@
     </section>
 
     <!-- Modal para ver detalles -->
-    <div v-if="matrizSeleccionada" class="modal fade show d-block" tabindex="-1"
+    <div v-if="showDetallesModal" class="modal fade show d-block" tabindex="-1"
       style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Detalles de Matriz de Compromiso</h5>
-            <button type="button" class="btn-close" @click="matrizSeleccionada = null"></button>
+            <button type="button" class="btn-close" @click="cerrarModales"></button>
           </div>
           <div class="modal-body">
             <div class="row">
@@ -146,15 +145,15 @@
                 <h6><i class="fas fa-info-circle me-2"></i>Información General</h6>
                 <div class="card border-0 shadow-sm mb-3">
                   <div class="card-body">
-                    <p><strong>Establecimiento:</strong> {{ getEstablecimiento(matrizSeleccionada) }}</p>
-                    <p><strong>Código:</strong> {{ getCodigo(matrizSeleccionada) }}</p>
-                    <p><strong>Categoría:</strong> {{ getCategoria(matrizSeleccionada) }}</p>
+                    <p><strong>Establecimiento:</strong> {{ getEstablecimiento(matrizDetalles) }}</p>
+                    <p><strong>Código:</strong> {{ getCodigo(matrizDetalles) }}</p>
+                    <p><strong>Categoría:</strong> {{ getCategoria(matrizDetalles) }}</p>
                     <p><strong>Semáforo:</strong>
-                      <span class="badge" :class="getSemaforoClass(matrizSeleccionada.semaforo)">
-                        {{ matrizSeleccionada.semaforo }}
+                      <span class="badge" :class="getSemaforoClass(matrizDetalles.semaforo)">
+                        {{ matrizDetalles.semaforo }}
                       </span>
                     </p>
-                    <p><strong>Fecha Creación:</strong> {{ formatDate(matrizSeleccionada.fecha_creacion) }}</p>
+                    <p><strong>Fecha Creación:</strong> {{ formatDate(matrizDetalles.fecha_creacion) }}</p>
                   </div>
                 </div>
 
@@ -162,16 +161,16 @@
                 <div class="card border-0 shadow-sm mb-3">
                   <div class="card-body">
                     <p><strong>Descripción situacional:</strong></p>
-                    <p class="text-muted">{{ matrizSeleccionada.descripcion_situacional }}</p>
+                    <p class="text-muted">{{ matrizDetalles.descripcion_situacional }}</p>
 
                     <p><strong>Riesgo identificado:</strong></p>
-                    <p class="text-muted">{{ matrizSeleccionada.riesgo_identificado }}</p>
+                    <p class="text-muted">{{ matrizDetalles.riesgo_identificado }}</p>
 
                     <p><strong>Medidas correctivas:</strong></p>
-                    <p class="text-muted">{{ matrizSeleccionada.medidas_correctivas }}</p>
+                    <p class="text-muted">{{ matrizDetalles.medidas_correctivas }}</p>
 
                     <p><strong>Hito esperado:</strong></p>
-                    <p class="text-muted">{{ matrizSeleccionada.hito_esperado }}</p>
+                    <p class="text-muted">{{ matrizDetalles.hito_esperado }}</p>
                   </div>
                 </div>
               </div>
@@ -181,10 +180,10 @@
                 <h6><i class="fas fa-calendar-alt me-2"></i>Plazos</h6>
                 <div class="card border-0 shadow-sm mb-3">
                   <div class="card-body">
-                    <p><strong>Inicio:</strong> {{ formatDate(matrizSeleccionada.plazo_inicio) }}</p>
-                    <p><strong>Fin:</strong> {{ formatDate(matrizSeleccionada.plazo_fin) }}</p>
-                    <p><strong>Duración:</strong> {{ calcularDias(matrizSeleccionada.plazo_inicio,
-                      matrizSeleccionada.plazo_fin) }} días</p>
+                    <p><strong>Inicio:</strong> {{ formatDate(matrizDetalles.plazo_inicio) }}</p>
+                    <p><strong>Fin:</strong> {{ formatDate(matrizDetalles.plazo_fin) }}</p>
+                    <p><strong>Duración:</strong> {{ calcularDias(matrizDetalles.plazo_inicio,
+                      matrizDetalles.plazo_fin) }} días</p>
                   </div>
                 </div>
 
@@ -192,48 +191,46 @@
                 <div class="card border-0 shadow-sm mb-3">
                   <div class="card-body">
                     <!-- Responsable M -->
-                    <p><strong>Monitor (M):</strong> {{ matrizSeleccionada.monitor_nombre }}</p>
-                    <div v-if="matrizSeleccionada.firma_m" class="text-center mb-3">
-                      <img :src="matrizSeleccionada.firma_m" class="img-fluid border rounded" style="max-height: 80px;">
+                    <p><strong>Monitor (M):</strong> {{ matrizDetalles.monitor_nombre }}</p>
+                    <div v-if="matrizDetalles.firma_m" class="text-center mb-3">
+                      <img :src="matrizDetalles.firma_m" class="img-fluid border rounded" style="max-height: 80px;">
                       <p class="small text-muted mt-1">Firma Monitor</p>
                     </div>
 
                     <!-- Responsable A -->
-                    <p><strong>Responsable directo (A):</strong> {{ matrizSeleccionada.responsable_directo }}</p>
-                    <div v-if="matrizSeleccionada.firma_a" class="text-center mb-3">
-                      <img :src="matrizSeleccionada.firma_a" class="img-fluid border rounded" style="max-height: 80px;">
+                    <p><strong>Responsable directo (A):</strong> {{ matrizDetalles.responsable_directo }}</p>
+                    <div v-if="matrizDetalles.firma_a" class="text-center mb-3">
+                      <img :src="matrizDetalles.firma_a" class="img-fluid border rounded" style="max-height: 80px;">
                       <p class="small text-muted mt-1">Firma Responsable Directo</p>
                     </div>
                     <!-- Funcionario B -->
-                    <p><strong>Funcionario (B):</strong> {{ matrizSeleccionada.funcionario_depen_directo }}</p>
-                    <div v-if="matrizSeleccionada.firma_b" class="text-center mb-3">
-                      <img :src="matrizSeleccionada.firma_b" class="img-fluid border rounded" style="max-height: 80px;">
+                    <p><strong>Funcionario (B):</strong> {{ matrizDetalles.funcionario_depen_directo }}</p>
+                    <div v-if="matrizDetalles.firma_b" class="text-center mb-3">
+                      <img :src="matrizDetalles.firma_b" class="img-fluid border rounded" style="max-height: 80px;">
                       <p class="small text-muted mt-1">Firma Funcionario B</p>
                     </div>
 
                     <!-- Funcionario C -->
-                    <p><strong>Funcionario (C):</strong> {{ matrizSeleccionada.funcionario_depen_indirecto }}</p>
-                    <div v-if="matrizSeleccionada.firma_c" class="text-center mb-3">
-                      <img :src="matrizSeleccionada.firma_c" class="img-fluid border rounded" style="max-height: 80px;">
+                    <p><strong>Funcionario (C):</strong> {{ matrizDetalles.funcionario_depen_indirecto }}</p>
+                    <div v-if="matrizDetalles.firma_c" class="text-center mb-3">
+                      <img :src="matrizDetalles.firma_c" class="img-fluid border rounded" style="max-height: 80px;">
                       <p class="small text-muted mt-1">Firma Funcionario C</p>
                     </div>
 
                     <!-- Funcionario D (condicional) -->
-                    <div v-if="matrizSeleccionada.funcionario_d">
-                      <p><strong>Funcionario (D):</strong> {{ matrizSeleccionada.funcionario_d }}</p>
-                      <div v-if="matrizSeleccionada.firma_d" class="text-center mb-3">
-                        <img :src="matrizSeleccionada.firma_d" class="img-fluid border rounded"
-                          style="max-height: 80px;">
+                    <div v-if="matrizDetalles.funcionario_d">
+                      <p><strong>Funcionario (D):</strong> {{ matrizDetalles.funcionario_d }}</p>
+                      <div v-if="matrizDetalles.firma_d" class="text-center mb-3">
+                        <img :src="matrizDetalles.firma_d" class="img-fluid border rounded" style="max-height: 80px;">
                         <p class="small text-muted mt-1">Firma Funcionario D</p>
                       </div>
                     </div>
 
                     <!-- Funcionario E (condicional) -->
-                    <div v-if="matrizSeleccionada.funcionario_e">
-                      <p><strong>Funcionario (E):</strong> {{ matrizSeleccionada.funcionario_e }}</p>
-                      <div v-if="matrizSeleccionada.firma_e" class="text-center mb-3">
-                        <img :src="matrizSeleccionada.firma_e" class="img-fluid border rounded"
-                          style="max-height: 80px;">
+                    <div v-if="matrizDetalles.funcionario_e">
+                      <p><strong>Funcionario (E):</strong> {{ matrizDetalles.funcionario_e }}</p>
+                      <div v-if="matrizDetalles.firma_e" class="text-center mb-3">
+                        <img :src="matrizDetalles.firma_e" class="img-fluid border rounded" style="max-height: 80px;">
                         <p class="small text-muted mt-1">Firma Funcionario E</p>
                       </div>
                     </div>
@@ -245,29 +242,29 @@
             <!-- Sección de Verificadores -->
             <h6>
               <i class="fas fa-chart-pie me-2"></i>
-              Resumen de Verificadores (Total: {{ getTotalNC(matrizSeleccionada) + getTotalNA(matrizSeleccionada) +
-                getTotalC(matrizSeleccionada) }})
+              Resumen de Verificadores (Total: {{ getTotalNC(matrizDetalles) + getTotalNA(matrizDetalles) +
+                getTotalC(matrizDetalles) }})
             </h6>
             <div class="card border-0 shadow-sm mb-3">
               <div class="card-body">
                 <div class="d-flex gap-3 mb-3">
                   <span class="badge bg-danger">
-                    {{ getTotalNC(matrizSeleccionada) }} No Conformes
+                    {{ getTotalNC(matrizDetalles) }} No Conformes
                   </span>
                   <span class="badge bg-warning text-dark">
-                    {{ getTotalNA(matrizSeleccionada) }} No Aplica
+                    {{ getTotalNA(matrizDetalles) }} No Aplica
                   </span>
                   <span class="badge bg-success">
-                    {{ getTotalC(matrizSeleccionada) }} Cumple
+                    {{ getTotalC(matrizDetalles) }} Cumple
                   </span>
                 </div>
 
                 <!-- Acordeón para Verificadores No Conformes -->
-                <div v-if="getTotalNC(matrizSeleccionada) > 0">
+                <div v-if="getTotalNC(matrizDetalles) > 0">
                   <h6 class="mt-3"><i class="fas fa-exclamation-triangle text-danger me-2"></i>Verificadores No
                     Conformes</h6>
                   <div class="accordion">
-                    <div v-for="(nc, index) in getEvaluacionesNC(matrizSeleccionada)" :key="'nc-' + index"
+                    <div v-for="(nc, index) in getEvaluacionesNC(matrizDetalles)" :key="'nc-' + index"
                       class="accordion-item mb-2">
                       <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
@@ -290,10 +287,10 @@
                 </div>
 
                 <!-- Acordeón para Verificadores No Aplica -->
-                <div v-if="getTotalNA(matrizSeleccionada) > 0" class="mt-4">
+                <div v-if="getTotalNA(matrizDetalles) > 0" class="mt-4">
                   <h6><i class="fas fa-question-circle text-warning me-2"></i>Verificadores No Aplica</h6>
                   <div class="accordion">
-                    <div v-for="(na, index) in getEvaluacionesNA(matrizSeleccionada)" :key="'na-' + index"
+                    <div v-for="(na, index) in getEvaluacionesNA(matrizDetalles)" :key="'na-' + index"
                       class="accordion-item mb-2">
                       <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
@@ -316,10 +313,10 @@
                 </div>
 
                 <!-- Acordeón para Verificadores Cumple -->
-                <div v-if="getTotalC(matrizSeleccionada) > 0" class="mt-4">
+                <div v-if="getTotalC(matrizDetalles) > 0" class="mt-4">
                   <h6><i class="fas fa-check-circle text-success me-2"></i>Verificadores Cumple</h6>
                   <div class="accordion">
-                    <div v-for="(c, index) in getEvaluacionesC(matrizSeleccionada)" :key="'c-' + index"
+                    <div v-for="(c, index) in getEvaluacionesC(matrizDetalles)" :key="'c-' + index"
                       class="accordion-item mb-2">
                       <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
@@ -340,6 +337,7 @@
                     </div>
                   </div>
                 </div>
+
                 <div v-else class="alert alert-info">
                   No hay verificadores no conformes asociados a esta matriz
                 </div>
@@ -347,8 +345,8 @@
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="matrizSeleccionada = null">Cerrar</button>
-            <button type="button" class="btn btn-primary" @click="exportarPDF(matrizSeleccionada.id)">
+            <button type="button" class="btn btn-secondary" @click="cerrarModales">Cerrar</button>
+            <button type="button" class="btn btn-primary" @click="exportarPDF(matrizDetalles.id)">
               <i class="fas fa-file-pdf me-2"></i> Exportar PDF
             </button>
           </div>
@@ -356,12 +354,116 @@
       </div>
     </div>
 
-    
+    <!-- Modal de Seguimientos -->
+    <div v-if="showSeguimientosModal" class="modal fade show d-block"
+      style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Seguimientos - {{ getEstablecimiento(matrizDetalles) }}</h5>
+            <button type="button" class="btn-close" @click="cerrarModales"></button>
+          </div>
+          <div class="modal-body">
+            <div v-if="loadingSeguimientos" class="text-center py-4">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+            </div>
+            <div v-else>
+              <h6>
+                <i class="fas fa-history me-2"></i>
+                Historial de Seguimientos (Total: {{ matrizSeguimientos.seguimientos?.length || 0 }})
+              </h6>
+
+              <div v-if="matrizSeguimientos.length > 0">
+                <div class="accordion">
+                  <div v-for="(seguimiento, index) in matrizSeguimientos" :key="'seg-' + index"
+                    class="accordion-item mb-2">
+                    <h2 class="accordion-header">
+                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        :data-bs-target="'#collapseSeg-' + index">
+                        Seguimiento #{{ index + 1 }} - {{ formatDate(seguimiento.fecha_seguimiento) }}
+                        <span class="badge ms-2" :class="getEstadoSeguimientoClass(seguimiento.estado)">
+                          {{ getEstadoSeguimientoDisplay(seguimiento.estado) }}
+                        </span>
+                      </button>
+                    </h2>
+                    <div :id="'collapseSeg-' + index" class="accordion-collapse collapse">
+                      <div class="accordion-body">
+                        <p><strong>Análisis/Acción:</strong></p>
+                        <p class="text-muted">{{ seguimiento.analisis_accion }}</p>
+                        <p><strong>Fecha registro:</strong> {{ formatDateTime(seguimiento.fecha_creacion) }}</p>
+                        <button @click="editarSeguimiento(seguimiento)" class="btn btn-sm btn-outline-primary me-2">
+                          <i class="fas fa-edit"></i> Editar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div v-else class="alert alert-info">
+                No hay seguimientos registrados para esta matriz
+              </div>
+              <button @click="nuevoSeguimiento(matrizSeguimientos.id)" class="btn btn-primary mt-3">
+                <i class="fas fa-plus me-2"></i> Agregar Seguimiento
+              </button>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="cerrarModales">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para Editar/Crear Seguimiento -->
+    <div v-if="showEditarSeguimientoModal" class="modal fade show d-block"
+      style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">{{ seguimientoEditando?.isNew ? 'Nuevo Seguimiento' : 'Editar Seguimiento' }}</h5>
+            <button type="button" class="btn-close" @click="cerrarModales"></button>
+          </div>
+          <div class="modal-body">
+            <form @submit.prevent="guardarSeguimiento">
+              <div class="mb-3">
+                <label class="form-label">Fecha de Seguimiento</label>
+                <input v-model="formSeguimiento.fecha_seguimiento" type="date" class="form-control" required>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Estado</label>
+                <select v-model="formSeguimiento.estado" class="form-select" required>
+                  <option value="P">Pendiente</option>
+                  <option value="EP">En Progreso</option>
+                  <option value="C">Completado</option>
+                  <option value="A">Aprobado</option>
+                  <option value="R">Rechazado</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Análisis/Acción</label>
+                <textarea v-model="formSeguimiento.analisis_accion" class="form-control" rows="5" required></textarea>
+              </div>
+
+              <div class="d-flex justify-content-end gap-2">
+                <button type="button" class="btn btn-secondary" @click="cerrarModales">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 </template>
 
+
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import { api } from '@/components/services/auth_axios'
 import { useToast } from 'vue-toast-notification'
 import 'vue-toast-notification/dist/theme-sugar.css'
@@ -371,10 +473,26 @@ const $toast = useToast()
 // Estados
 const loading = ref(true)
 const matrices = ref([])
-const matrizSeleccionada = ref(null)
 const filtroEstablecimiento = ref('')
 const filtroCodigo = ref('')
 const filtroCategoria = ref('')
+
+// Estados para los modales
+const showDetallesModal = ref(false)
+const showSeguimientosModal = ref(false)
+const showEditarSeguimientoModal = ref(false)
+
+// Matrices separadas
+const matrizDetalles = ref(null)
+const matrizSeguimientos = ref(null)
+
+// Seguimiento
+const seguimientoEditando = ref(null)
+const formSeguimiento = reactive({
+  fecha_seguimiento: new Date().toISOString().split('T')[0],
+  estado: 'P',
+  analisis_accion: ''
+})
 
 // Métodos para acceder a datos anidados de forma segura
 const getEstablecimiento = (matriz) => {
@@ -384,20 +502,12 @@ const getEstablecimiento = (matriz) => {
 }
 
 const getCodigo = (matriz) => {
-  // Primero verifica si hay datos directos en la matriz
   if (matriz?.codigo) return matriz.codigo;
-
-  // Luego verifica evaluacion_data (expandido)
   if (matriz?.evaluacion_data?.codigo) return matriz.evaluacion_data.codigo;
-
-  // Luego verifica la relación evaluacion (no expandida)
   if (matriz?.evaluacion?.codigo) return matriz.evaluacion.codigo;
-
-  // Finalmente verifica en evaluacion si es un objeto (a veces la API devuelve el ID como string)
   if (typeof matriz?.evaluacion === 'object' && matriz.evaluacion?.codigo) {
     return matriz.evaluacion.codigo;
   }
-
   return 'N/A';
 }
 
@@ -405,6 +515,149 @@ const getCategoria = (matriz) => {
   return matriz?.evaluacion_data?.categoria ||
     matriz?.evaluacion?.categoria ||
     'N/A'
+}
+
+// Métodos para manejar estados de seguimiento
+const getEstadoSeguimientoDisplay = (estado) => {
+  const estados = {
+    'P': 'Pendiente',
+    'EP': 'En Progreso',
+    'C': 'Completado',
+    'A': 'Aprobado',
+    'R': 'Rechazado'
+  }
+  return estados[estado] || estado
+}
+
+const getEstadoSeguimientoClass = (estado) => {
+  const clases = {
+    'P': 'bg-secondary',
+    'EP': 'bg-warning text-dark',
+    'C': 'bg-info',
+    'A': 'bg-success',
+    'R': 'bg-danger'
+  }
+  return clases[estado] || 'bg-secondary'
+}
+
+// Métodos para ver detalles
+const verDetalles = (matriz) => {
+  matrizDetalles.value = matriz
+  showDetallesModal.value = true
+}
+
+// Métodos para seguimientos
+const verSeguimientos = async (matrizId) => {
+  try {
+    loading.value = true
+    const response = await api.get(`ficha/seguimiento-matriz/`, {
+      params: {
+        matriz_id: matrizId,
+                expand: 'matriz.evaluacion'  // Asegurarnos de traer datos relacionados
+
+      }
+    })
+    matrizSeguimientos.value = response.data ,// Asegúrate de que esto esté correcto
+    
+    showSeguimientosModal.value = true
+  } catch (error) {
+    console.error('Error al cargar seguimientos:', error)
+    $toast.error('Error al cargar los datos de los seguimientos')
+  } finally {
+    loading.value = false
+  }
+}
+
+
+
+const nuevoSeguimiento = (matrizId) => {
+  formSeguimiento.fecha_seguimiento = new Date().toISOString().split('T')[0]
+  formSeguimiento.estado = 'P'
+  formSeguimiento.analisis_accion = ''
+
+  seguimientoEditando.value = {
+    matrizId,
+    isNew: true
+  }
+  showEditarSeguimientoModal.value = true
+  showSeguimientosModal.value = false
+}
+
+const editarSeguimiento = async (seguimientoId) => {
+  try {
+    loading.value = true
+    const response = await api.get(`ficha/seguimiento-matriz/${seguimientoId}/`)
+    formSeguimiento.fecha_seguimiento = response.data.fecha_seguimiento
+    formSeguimiento.estado = response.data.estado
+    formSeguimiento.analisis_accion = response.data.analisis_accion
+
+    seguimientoEditando.value = {
+      seguimientoId,
+      isNew: false
+    }
+    showEditarSeguimientoModal.value = true
+  } catch (error) {
+    console.error('Error al cargar seguimiento:', error)
+    $toast.error('Error al cargar el seguimiento')
+  } finally {
+    loading.value = false
+  }
+}
+
+const cerrarModales = () => {
+  showDetallesModal.value = false
+  showSeguimientosModal.value = false
+  showEditarSeguimientoModal.value = false
+  matrizDetalles.value = null
+  matrizSeguimientos.value = null
+  seguimientoEditando.value = null
+}
+
+const cargarSeguimientos = async (matrizId) => {
+  try {
+    const response = await api.get(`ficha/matriz-compromiso/${matrizId}/`, {
+      params: {
+        expand: 'seguimientos'
+      }
+    })
+    if (matrizSeguimientos.value?.id === matrizId) {
+      matrizSeguimientos.value.seguimientos = response.data.seguimientos
+    }
+    if (matrizDetalles.value?.id === matrizId) {
+      matrizDetalles.value.seguimientos = response.data.seguimientos
+    }
+  } catch (error) {
+    console.error('Error al cargar seguimientos:', error)
+  }
+}
+
+const guardarSeguimiento = async () => {
+  try {
+    if (seguimientoEditando.value.isNew) {
+      await api.post('ficha/seguimiento-matriz/', {
+        matriz: seguimientoEditando.value.matrizId,
+        ...formSeguimiento
+      })
+      $toast.success('Seguimiento creado correctamente')
+    } else {
+      await api.put(`ficha/seguimiento-matriz/${seguimientoEditando.value.seguimientoId}/`, formSeguimiento)
+      $toast.success('Seguimiento actualizado correctamente')
+    }
+
+    // Recargar los seguimientos
+    await cargarSeguimientos(seguimientoEditando.value.matrizId ||
+      (seguimientoEditando.value.seguimientoId ? matrizSeguimientos.value.id : null))
+
+    if (seguimientoEditando.value.isNew) {
+      showEditarSeguimientoModal.value = false
+      showSeguimientosModal.value = true
+    } else {
+      cerrarModales()
+    }
+  } catch (error) {
+    console.error('Error al guardar seguimiento:', error)
+    $toast.error('Error al guardar el seguimiento')
+  }
 }
 
 const getMonitorNombre = (matriz) => {
@@ -435,6 +688,7 @@ const getVerificadorNombre = (evaluacion) => {
     evaluacion?.verificador?.descripcion ||
     'Verificador desconocido'
 }
+
 const getEvaluacionesNA = (matriz) => {
   return matriz?.todas_evaluaciones?.filter(e => e.estado === 'NA') || []
 }
@@ -442,6 +696,7 @@ const getEvaluacionesNA = (matriz) => {
 const getEvaluacionesC = (matriz) => {
   return matriz?.todas_evaluaciones?.filter(e => e.estado === 'C') || []
 }
+
 const getSubprocesoNombre = (evaluacion) => {
   return evaluacion?.subproceso_nombre ||
     evaluacion?.verificador?.subproceso?.nombre ||
@@ -470,7 +725,6 @@ onMounted(async () => {
     console.log("Respuesta recibida:", response)
 
     if (response.data) {
-      // Normalizar datos para manejar diferentes formatos de respuesta
       if (Array.isArray(response.data)) {
         matrices.value = response.data
       } else if (response.data.results) {
@@ -478,8 +732,6 @@ onMounted(async () => {
       } else {
         matrices.value = [response.data]
       }
-
-      //console.log("Matrices cargadas:", matrices.value)
     } else {
       console.error("La respuesta no contiene datos:", response)
       $toast.error("No se recibieron datos del servidor")
@@ -560,6 +812,18 @@ const formatDate = (dateString) => {
   return new Date(dateString).toLocaleDateString('es-ES', options)
 }
 
+const formatDateTime = (dateString) => {
+  if (!dateString) return 'N/A'
+  const options = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  }
+  return new Date(dateString).toLocaleDateString('es-ES', options)
+}
+
 const calcularDias = (inicio, fin) => {
   if (!inicio || !fin) return 0
   const start = new Date(inicio)
@@ -588,10 +852,6 @@ const getSemaforoClass = (semaforo) => {
     'Verde': 'bg-success'
   }
   return semaforos[semaforo] || 'bg-secondary'
-}
-
-const verDetalles = (matriz) => {
-  matrizSeleccionada.value = matriz
 }
 
 const exportarPDF = async (matrizId) => {
@@ -666,10 +926,58 @@ const exportarPDF = async (matrizId) => {
 
 .modal-content {
   border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-dialog {
+  max-width: 40%;
+  margin: 1.75rem auto;
+}
+
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 0.5rem auto;
+    max-width: 95%;
+  }
+}
+
+.accordion-button:not(.collapsed) {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #012970;
 }
 
 .img-fluid {
   max-height: 80px;
+}
+
+/* Estilos para los modales */
+.modal-backdrop {
+  z-index: 1050;
+}
+
+.modal {
+  z-index: 1060;
+}
+
+/* Estilos para los estados de seguimiento */
+.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+.bg-warning {
+  background-color: #ffc107 !important;
+}
+
+.bg-info {
+  background-color: #0dcaf0 !important;
+}
+
+.bg-success {
+  background-color: #198754 !important;
+}
+
+.bg-danger {
+  background-color: #dc3545 !important;
 }
 
 /* Responsive adjustments */
@@ -683,7 +991,8 @@ const exportarPDF = async (matrizId) => {
   }
 
   .modal-dialog {
-    margin: 0.5rem;
+    max-width: 95%;
+    margin: 0.5rem auto;
   }
 }
 </style>
