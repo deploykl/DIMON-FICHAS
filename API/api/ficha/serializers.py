@@ -127,6 +127,7 @@ class MatrizCompromisoSerializer(serializers.ModelSerializer):
         }
 
 class SeguimientoMatrizCompromisoSerializer(serializers.ModelSerializer):
+    usuario_nombre = serializers.SerializerMethodField()
     matriz = MatrizCompromisoSerializer(read_only=True)
     matriz_id = serializers.PrimaryKeyRelatedField(
         queryset=MatrizCompromiso.objects.all(), 
@@ -138,7 +139,7 @@ class SeguimientoMatrizCompromisoSerializer(serializers.ModelSerializer):
     class Meta:
         model = SeguimientoMatrizCompromiso
         fields = '__all__'
-        read_only_fields = ['fecha_creacion', 'fecha_actualizacion']
+        read_only_fields = ['fecha_creacion', 'fecha_actualizacion', 'usuario_creacion']  # Añade 'usuario_creacion' aquí
 
     def validate(self, data):
         matriz = data.get('matriz')
@@ -164,3 +165,7 @@ class SeguimientoMatrizCompromisoSerializer(serializers.ModelSerializer):
             'codigo': obj.matriz.evaluacion.codigo,
             'categoria': obj.matriz.evaluacion.categoria
         }
+    def get_usuario_nombre(self, obj):
+        if obj.usuario_creacion:
+            return f"{obj.usuario_creacion.first_name} {obj.usuario_creacion.last_name}"
+        return "N/A"  # Cambiado de "Sistema" a "N/A" para mayor claridad

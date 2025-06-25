@@ -5,7 +5,7 @@
       <nav>
         <ol class="breadcrumb">
           <li class="breadcrumb-item">
-            <router-link to="/">Inicio</router-link>
+            <router-link to="/fichas">Fichas</router-link>
           </li>
           <li class="breadcrumb-item active">Matrices de Compromiso</li>
         </ol>
@@ -285,6 +285,9 @@
                     </div>
                   </div>
                 </div>
+                <div v-else class="alert alert-info">
+                  No hay verificadores no conformes asociados a esta matriz
+                </div>
 
                 <!-- Acordeón para Verificadores No Aplica -->
                 <div v-if="getTotalNA(matrizDetalles) > 0" class="mt-4">
@@ -310,6 +313,9 @@
                       </div>
                     </div>
                   </div>
+                </div>
+                <div v-else-if="getTotalNC(matrizDetalles) === 0" class="alert alert-info mt-4">
+                  No hay verificadores no aplica asociados a esta matriz
                 </div>
 
                 <!-- Acordeón para Verificadores Cumple -->
@@ -337,9 +343,8 @@
                     </div>
                   </div>
                 </div>
-
-                <div v-else class="alert alert-info">
-                  No hay verificadores no conformes asociados a esta matriz
+                <div v-else-if="getTotalNC(matrizDetalles) === 0 && getTotalNA(matrizDetalles) === 0" class="alert alert-info mt-4">
+                  No hay verificadores cumple asociados a esta matriz
                 </div>
               </div>
             </div>
@@ -357,62 +362,189 @@
     <!-- Modal de Seguimientos -->
     <div v-if="showSeguimientosModal" class="modal fade show d-block"
       style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
-      <div class="modal-dialog modal-lg">
+      <div class="modal-dialog modal-xl">
         <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title">Seguimientos - {{ matrizSeguimientos.matrizData ?
-              getEstablecimiento(matrizSeguimientos.matrizData) : 'N/A' }}</h5>
-            <button type="button" class="btn-close" @click="cerrarModales"></button>
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">
+              <i class="fas fa-history me-2"></i>
+              Seguimientos - {{ matrizSeguimientos.matrizData ? getEstablecimiento(matrizSeguimientos.matrizData) :
+              'N/A' }}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" @click="cerrarModales"></button>
           </div>
           <div class="modal-body">
             <div v-if="loadingSeguimientos" class="text-center py-4">
               <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Cargando...</span>
               </div>
+              <p class="mt-2">Cargando información de seguimientos...</p>
             </div>
-            <div v-else>
-              <h6>
-                <i class="fas fa-history me-2"></i>
-                Historial de Seguimientos (Total: {{ matrizSeguimientos.seguimientos?.length || 0 }})
-              </h6>
 
-              <div v-if="matrizSeguimientos.seguimientos?.length > 0">
-                <div class="accordion">
-                  <div v-for="(seguimiento, index) in matrizSeguimientos.seguimientos" :key="'seg-' + index"
-                    class="accordion-item mb-2">
-                    <h2 class="accordion-header">
-                      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-                        :data-bs-target="'#collapseSeg-' + index">
-                        Seguimiento #{{ index + 1 }} - {{ formatDate(seguimiento.fecha_seguimiento) }}
-                        <span class="badge ms-2" :class="getEstadoSeguimientoClass(seguimiento.estado)">
-                          {{ getEstadoSeguimientoDisplay(seguimiento.estado) }}
-                        </span>
-                      </button>
-                    </h2>
-                    <div :id="'collapseSeg-' + index" class="accordion-collapse collapse">
-                      <div class="accordion-body">
-                        <p><strong>Análisis/Acción:</strong></p>
-                        <p class="text-muted">{{ seguimiento.analisis_accion }}</p>
-                        <p><strong>Fecha registro:</strong> {{ formatDateTime(seguimiento.fecha_creacion) }}</p>
-                        <button @click="editarSeguimiento(seguimiento.id)" class="btn btn-sm btn-outline-primary me-2">
-                          <i class="fas fa-edit"></i> Editar
-                        </button>
+            <div v-else>
+              <!-- Sección de Información de la Matriz -->
+              <div class="card mb-4">
+                <div class="card-header bg-light">
+                  <h6 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Información de la Matriz de Compromiso
+                  </h6>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <!-- Columna Izquierda - Información General -->
+                    <div class="col-md-6">
+                      <div class="mb-3">
+                        <label class="fw-bold">Monitor que generó la matriz:</label>
+                        <p>{{ matrizSeguimientos.matrizData?.monitor_nombre || 'N/A' }}</p>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="fw-bold">Fecha de creación:</label>
+                        <p>{{ formatDateTime(matrizSeguimientos.matrizData?.fecha_creacion) }}</p>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="fw-bold">Descripción situacional:</label>
+                        <p class="text-muted">{{ matrizSeguimientos.matrizData?.descripcion_situacional || 'N/A' }}</p>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="fw-bold">Riesgo identificado:</label>
+                        <p class="text-muted">{{ matrizSeguimientos.matrizData?.riesgo_identificado || 'N/A' }}</p>
+                      </div>
+                    </div>
+
+                    <!-- Columna Derecha - Compromisos y Plazos -->
+                    <div class="col-md-6">
+                      <div class="mb-3">
+                        <label class="fw-bold">Medidas correctivas:</label>
+                        <p class="text-muted">{{ matrizSeguimientos.matrizData?.medidas_correctivas || 'N/A' }}</p>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="fw-bold">Hito esperado:</label>
+                        <p class="text-muted">{{ matrizSeguimientos.matrizData?.hito_esperado || 'N/A' }}</p>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="fw-bold">Responsable directo (A):</label>
+                        <p>{{ matrizSeguimientos.matrizData?.responsable_directo || 'N/A' }}</p>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="fw-bold">Plazos:</label>
+                        <div class="ps-3">
+                          <p><strong>Inicio:</strong> {{ formatDate(matrizSeguimientos.matrizData?.plazo_inicio) }}</p>
+                          <p><strong>Fin:</strong> {{ formatDate(matrizSeguimientos.matrizData?.plazo_fin) }}</p>
+                          <p><strong>Duración:</strong>
+                            {{ calcularDias(matrizSeguimientos.matrizData?.plazo_inicio,
+                              matrizSeguimientos.matrizData?.plazo_fin) }} días
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div v-else class="alert alert-info">
-                No hay seguimientos registrados para esta matriz
+              <!-- Sección de Historial de Seguimientos -->
+              <div class="card">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                  <h6 class="mb-0">
+                    <i class="fas fa-list-ol me-2"></i>
+                    Historial de Seguimientos (Total: {{ matrizSeguimientos.seguimientos?.length || 0 }})
+                  </h6>
+                  <button @click="nuevoSeguimiento(matrizSeguimientos.id)" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-1"></i> Nuevo Seguimiento
+                  </button>
+                </div>
+
+                <div class="card-body">
+                  <div v-if="matrizSeguimientos.seguimientos?.length > 0">
+                    <div class="table-responsive">
+                      <table class="table table-hover table-bordered">
+                        <thead class="table-light">
+                          <tr>
+                            <th width="80">#</th>
+                            <th>Fecha Seguimiento</th>
+                            <th>Estado</th>
+                            <th>Registrado por</th>
+                            <th>Fecha Registro</th>
+                            <th width="120">Acciones</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="(seguimiento, index) in matrizSeguimientos.seguimientos" :key="'seg-' + index"
+                            :class="getEstadoSeguimientoBgClass(seguimiento.estado)">
+                            <td class="fw-bold">{{ index + 1 }}</td>
+                            <td>{{ formatDate(seguimiento.fecha_seguimiento) }}</td>
+                            <td>
+                              <span class="badge" :class="getEstadoSeguimientoClass(seguimiento.estado)">
+                                {{ getEstadoSeguimientoDisplay(seguimiento.estado) }}
+                              </span>
+                            </td>
+                            <td>{{ seguimiento.usuario_nombre || 'N/A' }}</td>
+                            <td>{{ formatDateTime(seguimiento.fecha_creacion) }}</td>
+                            <td>
+                              <button @click="editarSeguimiento(seguimiento.id)"
+                                class="btn btn-sm btn-outline-primary me-1" title="Editar">
+                                <i class="fas fa-edit"></i>
+                              </button>
+                              <button class="btn btn-sm btn-outline-info" title="Ver detalles" data-bs-toggle="collapse"
+                                :data-bs-target="'#detailsSeg-' + index">
+                                <i class="fas fa-eye"></i>
+                              </button>
+                            </td>
+                          </tr>
+                          <!-- Fila de detalles expandible -->
+                          <tr v-for="(seguimiento, index) in matrizSeguimientos.seguimientos" :key="'detail-' + index"
+                            class="collapse" :id="'detailsSeg-' + index">
+                            <td colspan="6" class="bg-light">
+                              <div class="p-3">
+                                <div class="row">
+                                  <div class="col-md-6 mb-3">
+                                    <label class="fw-bold">Análisis/Acción:</label>
+                                    <p class="text-muted">{{ seguimiento.analisis_accion || 'Sin descripción' }}</p>
+                                  </div>
+
+                                  <div class="col-md-6 mb-3" v-if="seguimiento.observaciones">
+                                    <label class="fw-bold">Observaciones:</label>
+                                    <p class="text-muted">{{ seguimiento.observaciones }}</p>
+                                  </div>
+
+                                  <div class="col-12" v-if="seguimiento.evidencia_url">
+                                    <label class="fw-bold">Evidencia:</label>
+                                    <div>
+                                      <a :href="seguimiento.evidencia_url" target="_blank"
+                                        class="btn btn-sm btn-outline-success">
+                                        <i class="fas fa-file-download me-1"></i> Descargar evidencia
+                                      </a>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div v-else class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    No hay seguimientos registrados para esta matriz
+                  </div>
+                </div>
               </div>
-              <button @click="nuevoSeguimiento(matrizSeguimientos.id)" class="btn btn-primary mt-3">
-                <i class="fas fa-plus me-2"></i> Agregar Seguimiento
-              </button>
             </div>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" @click="cerrarModales">Cerrar</button>
+            <button type="button" class="btn btn-secondary" @click="cerrarModales">
+              <i class="fas fa-times me-1"></i> Cerrar
+            </button>
+            <button type="button" class="btn btn-primary" @click="exportarPDF(matrizSeguimientos.id)">
+              <i class="fas fa-file-pdf me-1"></i> Exportar PDF
+            </button>
           </div>
         </div>
       </div>
@@ -506,6 +638,16 @@ const getCodigo = (matriz) => {
   }
   return 'N/A';
 }
+const getEstadoSeguimientoBgClass = (estado) => {
+  const clases = {
+    'P': 'bg-light', // Pendiente
+    'EP': 'bg-light', // En Progreso
+    'C': 'bg-light', // Completado
+    'A': 'bg-light', // Aprobado
+    'R': 'bg-light' // Rechazado
+  }
+  return clases[estado] || 'bg-light'
+}
 
 const getCategoria = (matriz) => {
   return matriz?.evaluacion_data?.categoria ||
@@ -547,23 +689,41 @@ const verSeguimientos = async (matrizId) => {
   try {
     loadingSeguimientos.value = true;
     
-    // Forzar la reactividad creando un nuevo objeto
+    // Inicializar correctamente el objeto antes de la llamada API
+    matrizSeguimientos.value = {
+      id: matrizId,
+      seguimientos: [],
+      matrizData: null
+    };
+
     const response = await api.get(`ficha/seguimiento-matriz/`, {
       params: {
         matriz_id: matrizId,
-        expand: 'matriz.evaluacion'
+        expand: 'matriz.evaluacion,usuario'
       }
     });
 
-    matrizSeguimientos.value = {
-      id: matrizId,
-      seguimientos: [...response.data], // Crear nuevo array
-      matrizData: response.data.length > 0 ? {...response.data[0].matriz} : null
-    };
+    // Verificar si hay datos antes de asignarlos
+    if (response.data && response.data.length > 0) {
+      matrizSeguimientos.value = {
+        id: matrizId,
+        seguimientos: [...response.data],
+        matrizData: { ...response.data[0].matriz }
+      };
+    } else {
+      // Si no hay seguimientos, cargar solo los datos de la matriz
+      const matrizResponse = await api.get(`ficha/matriz-compromiso/${matrizId}/`, {
+        params: { expand: 'evaluacion' }
+      });
+      
+      matrizSeguimientos.value = {
+        id: matrizId,
+        seguimientos: [],
+        matrizData: { ...matrizResponse.data }
+      };
+    }
 
     showSeguimientosModal.value = true;
-    showEditarSeguimientoModal.value = false;
-    
   } catch (error) {
     console.error('Error al cargar seguimientos:', error);
     $toast.error('Error al cargar los datos de los seguimientos');
@@ -637,7 +797,7 @@ const cargarSeguimientos = async (matrizId) => {
       matrizSeguimientos.value = {
         ...matrizSeguimientos.value,
         seguimientos: [...response.data],
-        matrizData: response.data.length > 0 ? {...response.data[0].matriz} : null
+        matrizData: response.data.length > 0 ? { ...response.data[0].matriz } : null
       };
     }
   } catch (error) {
@@ -657,17 +817,17 @@ const guardarSeguimiento = async () => {
     };
 
     let response;
-    
+
     if (seguimientoEditando.value.isNew) {
       // Para creación: incluir matriz_id
       const datosCompletos = {
         ...datosBase,
         matriz_id: seguimientoEditando.value.matrizId
       };
-      
+
       response = await api.post('ficha/seguimiento-matriz/', datosCompletos);
       $toast.success('Seguimiento creado correctamente');
-      
+
       // Actualización optimista para nuevo seguimiento
       if (matrizSeguimientos.value) {
         const nuevoSeguimiento = {
@@ -678,7 +838,7 @@ const guardarSeguimiento = async () => {
             evaluacion: matrizSeguimientos.value.matrizData?.evaluacion
           }
         };
-        
+
         matrizSeguimientos.value.seguimientos = [
           nuevoSeguimiento,
           ...matrizSeguimientos.value.seguimientos
@@ -687,17 +847,17 @@ const guardarSeguimiento = async () => {
     } else {
       // Para actualización: solo enviar campos modificables
       response = await api.put(
-        `ficha/seguimiento-matriz/${seguimientoEditando.value.seguimientoId}/`, 
+        `ficha/seguimiento-matriz/${seguimientoEditando.value.seguimientoId}/`,
         datosBase
       );
       $toast.success('Seguimiento actualizado correctamente');
-      
+
       // Actualizar el seguimiento en la lista
       if (matrizSeguimientos.value) {
         const index = matrizSeguimientos.value.seguimientos.findIndex(
           s => s.id === seguimientoEditando.value.seguimientoId
         );
-        
+
         if (index !== -1) {
           const updatedSeguimientos = [...matrizSeguimientos.value.seguimientos];
           updatedSeguimientos[index] = {
@@ -720,10 +880,10 @@ const guardarSeguimiento = async () => {
 
   } catch (error) {
     console.error('Error al guardar seguimiento:', error);
-    
+
     // Mostrar mensaje de error detallado
     let errorMessage = 'Error al guardar el seguimiento';
-    
+
     if (error.response) {
       // Manejar errores de validación del backend
       if (error.response.data) {
@@ -736,12 +896,12 @@ const guardarSeguimiento = async () => {
     } else {
       errorMessage += ': ' + error.message;
     }
-    
+
     $toast.error(errorMessage);
-    
+
     // Revertir cambios si hubo actualización optimista
     if (matrizSeguimientos.value && seguimientoEditando.value.isNew) {
-      matrizSeguimientos.value.seguimientos = 
+      matrizSeguimientos.value.seguimientos =
         matrizSeguimientos.value.seguimientos.filter(
           s => s.id !== seguimientoEditando.value.seguimientoId
         );
@@ -803,15 +963,12 @@ const getSubprocesoCodigo = (evaluacion) => {
 onMounted(async () => {
   try {
     loading.value = true
-    console.log("Iniciando carga de matrices...")
 
     const response = await api.get('ficha/matriz-compromiso/', {
       params: {
         expand: 'evaluacion,evaluacion.usuario,evaluaciones_nc.verificador.subproceso.proceso'
       }
     })
-
-    console.log("Respuesta recibida:", response)
 
     if (response.data) {
       if (Array.isArray(response.data)) {
@@ -1016,6 +1173,56 @@ const exportarPDF = async (matrizId) => {
 .modal-content {
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* Estilos para el modal de seguimientos */
+.modal-xl {
+  max-width: 1200px;
+}
+
+.accordion-button {
+  transition: all 0.3s ease;
+}
+
+.accordion-button:not(.collapsed) {
+  transform: none;
+  box-shadow: none;
+}
+
+.accordion-item {
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+/* Mejora visual para los estados */
+.bg-estado-pendiente {
+  background-color: rgba(108, 117, 125, 0.1);
+}
+
+.bg-estado-progreso {
+  background-color: rgba(255, 193, 7, 0.1);
+}
+
+.bg-estado-completado {
+  background-color: rgba(13, 202, 240, 0.1);
+}
+
+.bg-estado-aprobado {
+  background-color: rgba(25, 135, 84, 0.1);
+}
+
+.bg-estado-rechazado {
+  background-color: rgba(220, 53, 69, 0.1);
+}
+
+/* Mejora visual para las cards */
+.card {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: none;
+}
+
+.card-header {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .modal-dialog {

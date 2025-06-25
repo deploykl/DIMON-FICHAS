@@ -192,7 +192,15 @@ class SeguimientoMatrizCompromiso(models.Model):
     # Fechas de registro
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
-
+    # Agrega esta relación
+    usuario_creacion = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='seguimientos_creados',
+        verbose_name="Usuario que registró"
+    )
     class Meta:
         verbose_name = "Seguimiento de Matriz de Compromiso"
         verbose_name_plural = "Seguimientos de Matrices de Compromiso"

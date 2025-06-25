@@ -110,10 +110,11 @@ class MatrizCompromisoViewSet(viewsets.ModelViewSet):
         if evaluacion_id:
             queryset = queryset.filter(evaluacion_id=evaluacion_id)
             
-        # Filtrar por usuario si no es superusuario
-        if not self.request.user.is_superuser:
-            queryset = queryset.filter(evaluacion__usuario=self.request.user)
-            
+        ## Filtrar por usuario si no es superusuario
+        #CONDICIONAL PARA VER TODOS LOS REGISTROS SOLO VEIA SI ES SUPERUSUARIO
+        #if not self.request.user.is_superuser:
+        #    queryset = queryset.filter(evaluacion__usuario=self.request.user)
+        #    
         return queryset
     
     @action(detail=False, methods=['get'])
@@ -350,21 +351,23 @@ class SeguimientoMatrizCompromisoViewSet(viewsets.ModelViewSet):
         if matriz_id:
             queryset = queryset.filter(matriz_id=matriz_id)
             
-        # Filtrar por usuario si no es superusuario
-        if not self.request.user.is_superuser:
-            queryset = queryset.filter(matriz__evaluacion__usuario=self.request.user)
+        ## Filtrar por usuario si no es superusuario   SOLO ERA PARA SUPERUSUARIO
+        #if not self.request.user.is_superuser:
+        #    queryset = queryset.filter(matriz__evaluacion__usuario=self.request.user)
             
         return queryset.order_by('-fecha_seguimiento')
     
     def perform_create(self, serializer):
         # Asegúrate que matriz_id esté en los datos validados
+        serializer.save(usuario_creacion=self.request.user)
+
         if 'matriz' not in serializer.validated_data:
             raise serializers.ValidationError({"matriz_id": "Este campo es requerido."})
         
         # Verificación de permisos
         matriz = serializer.validated_data['matriz']
-        if not self.request.user.is_superuser and matriz.evaluacion.usuario != self.request.user:
-            raise PermissionDenied("No tienes permiso para crear seguimientos en esta matriz")
+        #if not self.request.user.is_superuser and matriz.evaluacion.usuario != self.request.user:
+        #    raise PermissionDenied("No tienes permiso para crear seguimientos en esta matriz")
         
         serializer.save()
         

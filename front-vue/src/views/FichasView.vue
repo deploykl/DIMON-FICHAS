@@ -37,6 +37,11 @@
                 </div>
             </div>
         </div>
+        <small>
+            <p>Resolución de Secretaría de Gestión Pública N° 002-2025-PCM - SGP del 23.02.2025 que aprueba la Norma Técnica
+            N° 002-2025-PCM/SGP, Norma Técnica para la Gestón por procesos en las entidades de la Administración Pública
+            y que deja sin efeceto la RSGP N° 006-2018-PCM-SGP que aprueba la NT N° 001-2018-PCM/SGP</p>
+        </small>
     </main>
     <FloatingChat />
 
