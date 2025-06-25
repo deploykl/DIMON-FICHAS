@@ -203,3 +203,15 @@ MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+#---- SERVICIOS ----- 
+# Configuración para Telegram Bot
+TELEGRAM_BOT_TOKEN = '7330411663:AAHYMEZibTRBrQl-SLd3fECZPlIOBPsXc68'
+TELEGRAM_CHAT_ID = '-4959493418'
+
+# Configuración para correo electrónico
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'system.deploykl@gmail.com'
+EMAIL_HOST_PASSWORD = 'vmjn ramq vviw qwiz'

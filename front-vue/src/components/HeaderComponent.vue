@@ -5,7 +5,7 @@
       <div class="d-flex align-items-center">
         <a href="#" class="logo d-flex align-items-center">
           <img :src="require('@/assets/img/logo1.png')" alt="logo" class="logo-img">
-          <span class="logo-text d-none d-lg-block">OBS-Salud</span>
+          <span class="logo-text">OBS-Salud</span>
         </a>
       </div>
 
@@ -13,7 +13,9 @@
       <nav class="header-nav ms-auto">
         <ul class="d-flex align-items-center gap-3">
           <!-- Clock Component -->
+          <li class="nav-item">
             <clock-component-vue />
+          </li>
 
           <!-- User Profile -->
           <li class="nav-item dropdown">
@@ -21,7 +23,7 @@
               <div class="avatar-container">
                 <img :src="userImage" alt="Profile" class="avatar-img">
               </div>
-              <span class="user-name d-none d-md-block">{{ userName }} {{ userLastName }}</span>
+              <span class="user-name">{{ userName }} {{ userLastName }}</span>
             </a>
           </li>
 
@@ -29,7 +31,7 @@
           <li class="nav-item">
             <button class="logout-btn" @click="logout">
               <i class="fas fa-sign-out-alt"></i>
-              <span class="d-none d-md-inline">Salir</span>
+              <span class="logout-text">Salir</span>
             </button>
           </li>
         </ul>
@@ -61,13 +63,44 @@ const fetchUserProfile = async () => {
       });
       userName.value = response.data.first_name || '';
       userLastName.value = response.data.last_name || '';
-      //userImage.value = response.data.image ? `http://127.0.0.1:8000${response.data.image}` : 'http://127.0.0.1:8000/media/img/empty.png';
-      userImage.value = response.data.image ? `${imgServerURL}${response.data.image}` : `${imgServerURL}media/img/empty.png`;
+      
+      // Manejo seguro de la imagen
+      if (response.data.image) {
+        // Si la imagen ya incluye la ruta completa
+        if (response.data.image.startsWith('http')) {
+          userImage.value = response.data.image;
+        } else {
+          // Si es una ruta relativa
+          userImage.value = joinUrl(imgServerURL, response.data.image);
+        }
+      } else {
+        // Imagen por defecto
+        userImage.value = joinUrl(imgServerURL, 'img/empty.png');
+      }
     } catch (error) {
       console.error('Error al obtener el perfil:', error);
+      // Imagen por defecto en caso de error
+      userImage.value = joinUrl(imgServerURL, 'img/empty.png');
     }
+  } else {
+    // Imagen por defecto si no hay token
+    userImage.value = joinUrl(imgServerURL, 'img/empty.png');
   }
 };
+
+function joinUrl(base, path) {
+  // Elimina barras finales del base y barras iniciales del path
+  const cleanBase = base.replace(/\/+$/, '');
+  const cleanPath = path.replace(/^\/+/, '');
+  
+  // Si el path ya incluye 'media', no lo dupliques
+  if (cleanPath.startsWith('media/') || cleanPath.startsWith('/media/')) {
+    return `${cleanBase}/${cleanPath}`;
+  }
+  
+  // Construye la URL final
+  return `${cleanBase}/media/${cleanPath}`;
+}
 
 onMounted(() => {
   fetchUserProfile();
@@ -127,6 +160,7 @@ const logout = async () => {
 .logo:hover {
   transform: scale(1.03);
 }
+
 /* Agrega esto al inicio de tus estilos para resetear las listas */
 .header-nav ul {
   list-style: none;
@@ -136,8 +170,10 @@ const logout = async () => {
 
 .header-nav li {
   list-style: none;
-  display: inline-block; /* o flex, según necesites */
+  display: inline-block;
+  /* o flex, según necesites */
 }
+
 .logo-img {
   height: 40px;
   width: auto;
@@ -226,22 +262,45 @@ const logout = async () => {
   border-radius: 50px;
 }
 
-/* Responsive Adjustments */
+/* Estilos existentes... */
+
+/* Ajustes para móvil */
 @media (max-width: 768px) {
   .header {
-    padding: 0 1rem;
+    padding: 0 0.5rem;
   }
-  
+
   .logo-text {
-    font-size: 1.1rem;
+    font-size: 1rem;
+    margin-left: 5px;
   }
-  
-  .logout-btn span {
+
+  .user-name {
+    font-size: 0.8rem;
+    margin-left: 5px;
+    max-width: 100px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .logout-text {
     display: none;
   }
-  
-  .nav-profile {
-    padding: 0.3rem;
+
+  .logout-btn i {
+    font-size: 1.2rem;
+  }
+
+  .avatar-container {
+    width: 32px;
+    height: 32px;
+  }
+
+  /* Asegúrate que el reloj sea legible */
+  .clock-container {
+    font-size: 0.8rem;
+    padding: 0.3rem 0.5rem;
   }
 }
 </style>
