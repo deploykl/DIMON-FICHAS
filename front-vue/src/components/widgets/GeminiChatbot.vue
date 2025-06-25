@@ -7,7 +7,7 @@
 
     <div class="chatbot-window" v-if="isOpen">
       <div class="chatbot-header">
-        <h3>Gemini Assistant</h3>
+        <h3>ChatBot</h3>
       </div>
 
       <div class="chatbot-messages" ref="messagesContainer">
@@ -56,7 +56,7 @@ const inputField = ref(null);
 
 // Mover mounted a onMounted
 onMounted(() => {
-  addMessage('assistant', '¡Hola! Soy tu asistente especializado en procesos empresariales. ¿En qué puedo ayudarte hoy?');
+  addMessage('assistant', '¡Hola! Soy tu asistente especializado. ¿En qué puedo ayudarte hoy?');
 });
 // Add this inside your <script setup> section
 const formatMessage = (content) => {

@@ -744,18 +744,23 @@ const formatDate = (dateString) => {
 }
 
 const dataURLtoBlob = (dataURL) => {
-  const arr = dataURL.split(',')
-  const mime = arr[0].match(/:(.*?);/)[1]
-  const bstr = atob(arr[1])
-  let n = bstr.length
-  const u8arr = new Uint8Array(n)
-
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n)
+  try {
+    const arr = dataURL.split(',');
+    const mime = arr[0].match(/:(.*?);/)[1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    
+    return new Blob([u8arr], { type: mime });
+  } catch (e) {
+    console.error('Error converting dataURL to Blob:', e);
+    return null;
   }
-
-  return new Blob([u8arr], { type: mime })
-}
+};
 
 // Métodos para manejar firmas
 const mostrarPadFirma = async (tipo) => {
@@ -780,18 +785,28 @@ const guardarFirmaDesdeModal = () => {
 }
 
 const guardarFirmaReemplazo = (firma) => {
-  if (!firma || !firmaActual.value) return
-
-  const firmaProp = `firma_${firmaActual.value.toLowerCase()}`
-  const firmaRef = `firma${firmaActual.value}`
-
-  if (firmaRef in { firmaM, firmaA, firmaB, firmaC, firmaD, firmaE }) {
-    eval(`${firmaRef}.value = firma`)
+  if (!firma || !firmaActual.value) {
+    $toast.warning('No se capturó ninguna firma');
+    return;
   }
-  matriz.value[firmaProp] = firma
 
-  showSignatureModal.value = false
-}
+  // Actualizar la referencia reactiva
+  const firmaProp = `firma_${firmaActual.value.toLowerCase()}`;
+  matriz.value[firmaProp] = firma;
+
+  // Actualizar la referencia reactiva específica
+  switch(firmaActual.value) {
+    case 'M': setFirmaM(firma); break;
+    case 'A': setFirmaA(firma); break;
+    case 'B': setFirmaB(firma); break;
+    case 'C': setFirmaC(firma); break;
+    case 'D': setFirmaD(firma); break;
+    case 'E': setFirmaE(firma); break;
+  }
+
+  showSignatureModal.value = false;
+  $toast.success('Firma actualizada correctamente');
+};
 
 const setFirmaM = (firma) => {
   firmaM.value = firma
@@ -1016,93 +1031,119 @@ const fetchData = async () => {
 
 const guardarMatriz = async () => {
   try {
-    saving.value = true
+    saving.value = true;
 
-    // Validación básica
-    if (!matriz.value.descripcion_situacional ||
-      !matriz.value.riesgo_identificado ||
-      !matriz.value.medidas_correctivas ||
-      !matriz.value.hito_esperado ||
-      !matriz.value.plazo_inicio ||
-      !matriz.value.plazo_fin ||
-      !matriz.value.responsable_directo ||
-      !matriz.value.funcionario_depen_directo ||
-      !matriz.value.funcionario_depen_indirecto) {
-      $toast.warning('Por favor complete todos los campos requeridos')
-      return
+    // Validación básica mejorada
+    const camposRequeridos = [
+      'descripcion_situacional',
+      'riesgo_identificado',
+      'medidas_correctivas',
+      'hito_esperado',
+      'plazo_inicio',
+      'plazo_fin',
+      'responsable_directo',
+      'funcionario_depen_directo',
+      'funcionario_depen_indirecto'
+    ];
+
+    const camposFaltantes = camposRequeridos.filter(campo => !matriz.value[campo]);
+    if (camposFaltantes.length > 0) {
+      $toast.warning(`Complete los campos requeridos: ${camposFaltantes.join(', ')}`);
+      saving.value = false;
+      return;
     }
 
-    // Validar fechas
-    const inicio = new Date(matriz.value.plazo_inicio)
-    const fin = new Date(matriz.value.plazo_fin)
-
+    // Validación de fechas
+    const inicio = new Date(matriz.value.plazo_inicio);
+    const fin = new Date(matriz.value.plazo_fin);
     if (fin < inicio) {
-      $toast.warning('La fecha de fin no puede ser anterior a la fecha de inicio')
-      return
+      $toast.warning('La fecha de fin no puede ser anterior a la fecha de inicio');
+      saving.value = false;
+      return;
     }
 
-    // Validar firmas obligatorias
-    if (!matriz.value.firma_a || !matriz.value.firma_b || !matriz.value.firma_c) {
-      $toast.warning('Debe registrar las firmas obligatorias (A, B y C)')
-      return
-    }
+    // Crear FormData
+    const formData = new FormData();
 
-    // Crear FormData para enviar archivos
-    const formData = new FormData()
-
-    // Agregar todos los campos de la matriz
-    for (const key in matriz.value) {
-      if (key.startsWith('firma_')) continue
-      if (matriz.value[key] !== null && matriz.value[key] !== undefined) {
-        formData.append(key, matriz.value[key])
+    // Agregar campos normales (excepto firmas)
+    Object.entries(matriz.value).forEach(([key, value]) => {
+      if (!key.startsWith('firma_') && value !== null && value !== undefined) {
+        formData.append(key, value);
       }
-    }
+    });
 
-    // Agregar las firmas como archivos
-    const firmas = {
-      'firma_m': firmaM.value,
-      'firma_a': firmaA.value,
-      'firma_b': firmaB.value,
-      'firma_c': firmaC.value,
-      'firma_d': firmaD.value,
-      'firma_e': firmaE.value
-    }
+    // Función para procesar cada firma
+ const procesarFirma = (tipo) => {
+  const firmaKey = `firma_${tipo}`;
+  const firmaValue = matriz.value[firmaKey];
 
-    for (const [key, value] of Object.entries(firmas)) {
-      if (value) {
-        if (typeof value === 'string' && (value.startsWith('http') || value.startsWith('/'))) {
-          formData.append(key, value)
-        } else {
-          const blob = dataURLtoBlob(value)
-          formData.append(key, blob, `${key}.png`)
-        }
-      } else {
-        formData.append(key, '')
-      }
-    }
-
-    const config = {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    }
-
-    if (matriz.value.id) {
-      await api.put(`ficha/matriz-compromiso/${matriz.value.id}/`, formData, config)
-      $toast.success('Matriz actualizada correctamente')
-    } else {
-      const response = await api.post('ficha/matriz-compromiso/', formData, config)
-      matriz.value.id = response.data.id
-      $toast.success('Matriz creada correctamente')
-    }
-
-    // Recargar datos para asegurar consistencia
-    await fetchData()
-  } catch (error) {
-    console.error('Error al guardar la matriz:', error)
-    $toast.error(error.response?.data?.message || 'Error al guardar la matriz')
-  } finally {
-    saving.value = false
+  if (firmaValue === null) {
+    formData.append(firmaKey, 'null'); // Marca para eliminar firma en backend
+    return;
   }
-}
+
+  if (typeof firmaValue === 'string') {
+    if (firmaValue.startsWith('http') || firmaValue.startsWith('/')) {
+      // Firma ya almacenada, no enviar
+      return;
+    } else if (firmaValue.startsWith('data:image')) {
+      const blob = dataURLtoBlob(firmaValue);
+      if (blob) {
+        formData.append(firmaKey, blob, `firma_${tipo}.png`);
+      }
+      return;
+    }
+  }
+
+  if (firmaValue instanceof Blob) {
+    formData.append(firmaKey, firmaValue, `firma_${tipo}.png`);
+  }
+};
+
+
+    // Procesar todas las firmas
+    ['a', 'b', 'c', 'd', 'e', 'm'].forEach(procesarFirma);
+
+    // Configuración de headers
+    const config = {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      }
+    };
+
+    // Enviar solicitud
+    const url = matriz.value.id 
+      ? `ficha/matriz-compromiso/${matriz.value.id}/`
+      : 'ficha/matriz-compromiso/';
+
+    const method = matriz.value.id ? 'put' : 'post';
+
+    const response = await api[method](url, formData, config);
+    $toast.success('Matriz guardada correctamente');
+    
+    // Actualizar datos si es necesario
+    if (matriz.value.id) await fetchData();
+    else matriz.value.id = response.data.id;
+
+  } catch (error) {
+    console.error('Error al guardar:', error);
+    
+    // Mostrar mensaje de error detallado del servidor
+    const serverError = error.response?.data;
+    if (serverError) {
+      let errorMsg = '';
+      for (const [field, messages] of Object.entries(serverError)) {
+        errorMsg += `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}\n`;
+      }
+      $toast.error(errorMsg.trim() || 'Error al guardar la matriz');
+    } else {
+      $toast.error(error.message || 'Error al guardar la matriz');
+    }
+  } finally {
+    saving.value = false;
+  }
+};
+
 
 const exportarPDF = async () => {
   try {
