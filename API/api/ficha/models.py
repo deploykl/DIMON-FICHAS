@@ -172,56 +172,56 @@ class MatrizCompromiso(models.Model):
             'categoria': self.evaluacion.categoria
         }
         
-#class SeguimientoMatrizCompromiso(models.Model):
-#    ESTADO_SEGUIMIENTO_CHOICES = [
-#        ('P', 'Pendiente'),
-#        ('EP', 'En Progreso'),
-#        ('C', 'Completado'),
-#        ('A', 'Aprobado'),
-#        ('R', 'Rechazado'),
-#    ]
-#    
-#    # Relación con la matriz original (con acceso a todos sus campos)
-#    matriz = models.ForeignKey(MatrizCompromiso, on_delete=models.CASCADE, related_name='seguimientos')
-#        
-#    # Campos específicos del seguimiento
-#    fecha_seguimiento = models.DateField(verbose_name="Fecha de seguimiento")
-#    estado = models.CharField(max_length=2, choices=ESTADO_SEGUIMIENTO_CHOICES, default='P',verbose_name="Estado del seguimiento")
-#    analisis_accion = models.TextField(verbose_name="Análisis/Acción realizada")
-#    
-#    # Fechas de registro
-#    fecha_creacion = models.DateTimeField(auto_now_add=True)
-#    fecha_actualizacion = models.DateTimeField(auto_now=True)
-#
-#    class Meta:
-#        verbose_name = "Seguimiento de Matriz de Compromiso"
-#        verbose_name_plural = "Seguimientos de Matrices de Compromiso"
-#        ordering = ['-fecha_seguimiento', 'matriz']
-#
-#    def __str__(self):
-#        return f"Seguimiento {self.get_estado_display()} para {self.matriz.evaluacion.establecimiento} ({self.fecha_seguimiento})"
-#    
-#    # Propiedades para acceder a los datos relacionados sin duplicarlos
-#    @property
-#    def datos_ipress(self):
-#        """Accede a los datos de IPRESS a través de la relación con EvaluacionVerificador"""
-#        return {
-#            'establecimiento': self.matriz.evaluacion.establecimiento,
-#            'codigo': self.matriz.evaluacion.codigo,
-#            'tipo': self.matriz.evaluacion.get_tipo_display(),
-#            'categoria': self.matriz.evaluacion.categoria,
-#            'departamento': self.matriz.evaluacion.departamento,
-#            'provincia': self.matriz.evaluacion.provincia,
-#            'distrito': self.matriz.evaluacion.distrito
-#        }
-#    
-#    @property
-#    def compromisos_originales(self):
-#        """Accede a los datos de compromisos de la matriz original"""
-#        return {
-#            'medidas_correctivas': self.matriz.medidas_correctivas,
-#            'hito_esperado': self.matriz.hito_esperado,
-#            'plazo_inicio': self.matriz.plazo_inicio,
-#            'plazo_fin': self.matriz.plazo_fin,
-#            'responsable': self.matriz.responsable_directo
-#        }
+class SeguimientoMatrizCompromiso(models.Model):
+    ESTADO_SEGUIMIENTO_CHOICES = [
+        ('P', 'Pendiente'),
+        ('EP', 'En Progreso'),
+        ('C', 'Completado'),
+        ('A', 'Aprobado'),
+        ('R', 'Rechazado'),
+    ]
+    
+    # Relación con la matriz original (con acceso a todos sus campos)
+    matriz = models.ForeignKey(MatrizCompromiso, on_delete=models.CASCADE, related_name='seguimientos')
+        
+    # Campos específicos del seguimiento
+    fecha_seguimiento = models.DateField(verbose_name="Fecha de seguimiento")
+    estado = models.CharField(max_length=2, choices=ESTADO_SEGUIMIENTO_CHOICES, default='P',verbose_name="Estado del seguimiento")
+    analisis_accion = models.TextField(verbose_name="Análisis/Acción realizada")
+    
+    # Fechas de registro
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Seguimiento de Matriz de Compromiso"
+        verbose_name_plural = "Seguimientos de Matrices de Compromiso"
+        ordering = ['-fecha_seguimiento', 'matriz']
+
+    def __str__(self):
+        return f"Seguimiento {self.get_estado_display()} para {self.matriz.evaluacion.establecimiento} ({self.fecha_seguimiento})"
+    
+    # Propiedades para acceder a los datos relacionados sin duplicarlos
+    @property
+    def datos_ipress(self):
+        """Accede a los datos de IPRESS a través de la relación con EvaluacionVerificador"""
+        return {
+            'establecimiento': self.matriz.evaluacion.establecimiento,
+            'codigo': self.matriz.evaluacion.codigo,
+            'tipo': self.matriz.evaluacion.get_tipo_display(),
+            'categoria': self.matriz.evaluacion.categoria,
+            'departamento': self.matriz.evaluacion.departamento,
+            'provincia': self.matriz.evaluacion.provincia,
+            'distrito': self.matriz.evaluacion.distrito
+        }
+    
+    @property
+    def compromisos_originales(self):
+        """Accede a los datos de compromisos de la matriz original"""
+        return {
+            'medidas_correctivas': self.matriz.medidas_correctivas,
+            'hito_esperado': self.matriz.hito_esperado,
+            'plazo_inicio': self.matriz.plazo_inicio,
+            'plazo_fin': self.matriz.plazo_fin,
+            'responsable': self.matriz.responsable_directo
+        }

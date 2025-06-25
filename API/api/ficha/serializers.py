@@ -68,6 +68,7 @@ class MatrizCompromisoSerializer(serializers.ModelSerializer):
     monitor_nombre = serializers.SerializerMethodField()  # Nuevo campo
     todas_evaluaciones = serializers.SerializerMethodField()
     codigo = serializers.CharField(source='evaluacion.codigo', read_only=True)
+    contadores_evaluaciones = serializers.SerializerMethodField()
 
     class Meta:
         model = MatrizCompromiso
@@ -113,3 +114,28 @@ class MatrizCompromisoSerializer(serializers.ModelSerializer):
         # Obtener todas las evaluaciones asociadas a esta matriz
         evaluaciones = list(obj.evaluaciones_nc.all())
         return EvaluacionVerificadorSerializer(evaluaciones, many=True).data
+    
+    def get_contadores_evaluaciones(self, obj):
+        # Obtener todas las evaluaciones asociadas a esta matriz
+        evaluaciones = obj.evaluaciones_nc.all()
+        
+        return {
+            'total_nc': evaluaciones.filter(estado='NC').count(),
+            'total_na': evaluaciones.filter(estado='NA').count(),
+            'total_c': evaluaciones.filter(estado='C').count(),
+            'total': evaluaciones.count()
+        }
+
+class SeguimientoMatrizCompromisoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SeguimientoMatrizCompromiso
+        fields = '__all__'
+        read_only_fields = ['fecha_creacion', 'fecha_actualizacion']
+
+    def validate(self, data):
+        # Validar que la fecha de seguimiento no sea anterior a la creación de la matriz
+        if data['fecha_seguimiento'] < data['matriz'].fecha_creacion.date():
+            raise serializers.ValidationError(
+                "La fecha de seguimiento no puede ser anterior a la creación de la matriz."
+            )
+        return data

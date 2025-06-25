@@ -333,6 +333,27 @@ class MatrizCompromisoViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
+class SeguimientoMatrizCompromisoViewSet(viewsets.ModelViewSet):
+    queryset = SeguimientoMatrizCompromiso.objects.all()
+    serializer_class = SeguimientoMatrizCompromisoSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = ['matriz']
+    ordering_fields = ['fecha_seguimiento', 'fecha_creacion']
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        matriz_id = self.request.query_params.get('matriz_id')
+        
+        if matriz_id:
+            queryset = queryset.filter(matriz_id=matriz_id)
+            
+        # Filtrar por usuario si no es superusuario
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(matriz__evaluacion__usuario=self.request.user)
+            
+        return queryset.order_by('-fecha_seguimiento')
+    
 class RenipressViewSet(ViewSet):
     permission_classes = [AllowAny]
     
