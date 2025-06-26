@@ -9,9 +9,10 @@ from django.db.models import Prefetch
 from urllib.parse import urlencode
 from django.core.exceptions import PermissionDenied
 from rest_framework.exceptions import ValidationError
-
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from rest_framework.response import Response
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.viewsets import ViewSet
 from rest_framework.views import APIView
 from django.utils import timezone
@@ -19,8 +20,8 @@ from rest_framework import viewsets, status, mixins
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend  # type: ignore
 from rest_framework.filters import OrderingFilter, SearchFilter
-from services.notifications import send_email_alert, send_matriz_alerts, send_telegram_alert
 from api.ficha.serializers import *
+from .telegram_bot import send_telegram_notification
 
 class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
@@ -389,6 +390,61 @@ class SeguimientoMatrizCompromisoViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.data)
     
+    @action(detail=True, methods=['post'])
+    def send_alert(self, request, pk=None):
+        seguimiento = self.get_object()
+        
+        try:
+            message = seguimiento.get_telegram_message()
+            success = send_telegram_notification(message)
+            
+            if success:
+                return Response(
+                    {'status': 'success', 'message': 'Alerta enviada a Telegram'},
+                    status=status.HTTP_200_OK
+                )
+            return Response(
+                {'status': 'error', 'message': 'Error al enviar a Telegram'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+                
+        except Exception as e:
+            return Response(
+                {'status': 'error', 'message': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    def get_telegram_message(self):
+            return f"""
+    <b>NUEVO SEGUIMIENTO REGISTRADO</b>
+
+    📅 <b>Fecha seguimiento:</b> {self.fecha_seguimiento.strftime('%d/%m/%Y')}
+    🏥 <b>IPRESS:</b> {self.datos_ipress['establecimiento']}
+    📋 <b>Código:</b> {self.datos_ipress['codigo']}
+    🔄 <b>Estado:</b> {self.get_estado_display()}
+
+    📝 <b>Análisis/Acción:</b>
+    {self.analisis_accion}
+
+    🔗 <b>Compromisos originales:</b>
+    {self.compromisos_originales['medidas_correctivas']}
+
+    👤 <b>Registrado por:</b> {self.usuario_creacion.get_full_name() if self.usuario_creacion else 'Sistema'}
+    ⏱ <b>Fecha registro:</b> {timezone.localtime(self.fecha_creacion).strftime('%d/%m/%Y %H:%M')}
+    """
+
+# Señal para enviar notificaciones automáticas (opcional)
+@receiver(post_save, sender=SeguimientoMatrizCompromiso)
+def enviar_notificacion_telegram(sender, instance, created, **kwargs):
+    if created and not kwargs.get('raw', False):  # raw=True durante fixtures
+        try:
+            message = instance.get_telegram_message()
+            send_telegram_notification(message)
+        except Exception as e:
+            # Registrar el error pero no interrumpir el flujo
+            print(f"Error enviando notificación a Telegram: {e}")
+        
+
 class RenipressViewSet(ViewSet):
     permission_classes = [AllowAny]
     
@@ -441,5 +497,3 @@ class RenipressViewSet(ViewSet):
                 'success': False,
                 'error': str(e)
             }, status=500)
-            
-            
