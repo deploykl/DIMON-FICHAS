@@ -13,11 +13,13 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.viewsets import ViewSet
-
+from rest_framework.views import APIView
+from django.utils import timezone
 from rest_framework import viewsets, status, mixins
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend  # type: ignore
 from rest_framework.filters import OrderingFilter, SearchFilter
+from services.notifications import send_email_alert, send_matriz_alerts, send_telegram_alert
 from api.ficha.serializers import *
 
 class CategoriaViewSet(viewsets.ModelViewSet):
@@ -439,3 +441,5 @@ class RenipressViewSet(ViewSet):
                 'success': False,
                 'error': str(e)
             }, status=500)
+            
+            

@@ -42,6 +42,32 @@
             N° 002-2025-PCM/SGP, Norma Técnica para la Gestón por procesos en las entidades de la Administración Pública
             y que deja sin efeceto la RSGP N° 006-2018-PCM-SGP que aprueba la NT N° 001-2018-PCM/SGP</p>
         </small>
+        <!-- Botón para abrir modal -->
+        <button @click="abrirModalAlertas" class="btn btn-warning position-fixed" 
+                style="bottom: 20px; right: 20px; z-index: 1000;">
+            <i class="fas fa-bell me-2"></i>
+            Alertas
+            <span v-if="alertasPendientes > 0" class="badge bg-danger ms-1">
+                {{ alertasPendientes }}
+            </span>
+        </button>
+
+        <!-- Modal de alertas -->
+        <div v-if="modalAlertasAbierto" class="modal-backdrop fade show"></div>
+        <div v-if="modalAlertasAbierto" class="modal fade show d-block" tabindex="-1">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title">Alertas de Matrices</h5>
+                        <button type="button" class="btn-close btn-close-white" @click="cerrarModalAlertas"></button>
+                    </div>
+                    <div class="modal-body">
+                        <MatrizAlertas @update-count="updateAlertasCount" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </main>
     <FloatingChat />
 
@@ -55,6 +81,7 @@ const categorias = ref([]);
 const procesos = ref([]);
 const loading = ref(true);
 const error = ref(null);
+import MatrizAlertas from '@/components/widgets/MatrizAlertas.vue';
 
 // Obtener color según categoría
 const getCategoryColor = (category) => {
@@ -91,6 +118,24 @@ onMounted(async () => {
         loading.value = false;
     }
 });
+
+
+
+
+const modalAlertasAbierto = ref(false);
+const alertasPendientes = ref(0);
+
+const abrirModalAlertas = () => {
+  modalAlertasAbierto.value = true;
+};
+
+const cerrarModalAlertas = () => {
+  modalAlertasAbierto.value = false;
+};
+
+const updateAlertasCount = (count) => {
+  alertasPendientes.value = count;
+};
 </script>
 
 <style scoped>

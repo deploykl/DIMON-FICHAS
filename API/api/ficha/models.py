@@ -1,3 +1,4 @@
+from time import timezone
 from django.db import models
 # Por esta:
 from django.conf import settings
@@ -154,6 +155,23 @@ class MatrizCompromiso(models.Model):
         null=True,
         blank=True
     )
+    ultima_alerta_enviada = models.DateField(null=True, blank=True)
+    proxima_alerta = models.DateField(null=True, blank=True)
+    alertas_enviadas = models.PositiveIntegerField(default=0)
+    
+    def calcular_proxima_alerta(self):
+        hoy = timezone.now().date()
+        dias_restantes = (self.plazo_fin - hoy).days
+        
+        if dias_restantes <= 0:
+            return None  # Plazo vencido, no más alertas
+        
+        if dias_restantes <= 3:
+            return hoy + timedelta(days=1)  # Alerta diaria
+        elif dias_restantes <= 7:
+            return hoy + timedelta(days=3)  # Cada 3 días
+        else:
+            return hoy + timedelta(days=7)  # Semanal
 
     class Meta:
         verbose_name = "Matriz de Compromiso"
