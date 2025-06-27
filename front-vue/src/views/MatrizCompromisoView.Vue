@@ -1,5 +1,5 @@
 <template>
-  <main id="main" class="main">
+  <main id="main" class="container">
     <div class="pagetitle">
       <h1>Matriz de Compromiso</h1>
       <nav>
@@ -406,160 +406,208 @@
                     </div>
 
                     <!-- Firmas principales -->
-                    <div class="row mb-3">
-                      <div class="col-md-12">
-                        <label class="form-label">Firmas obligatorias <span class="text-danger">*</span></label>
-                        <div class="row">
-                          <!-- Monitor (M) -->
-                          <div class="col-md-4">
-                            <div class="mb-3">
-                              <label class="form-label">Monitor (M) <span
-                                  class="text-danger">*</span></label>
-                              <input v-model="matriz.monitor_nombre" type="text" class="form-control mb-2" required
-                                placeholder="Nombre del responsable">
-                            </div>
-                            <div v-if="matriz.firma_m" class="mb-3">
-                              <img :src="matriz.firma_m" class="img-fluid border rounded" style="max-height: 150px;" />
-                              <div class="d-flex mt-2">
-                                <button @click="mostrarPadFirma('M')" class="btn btn-sm btn-outline-primary me-2">
-                                  <i class="fas fa-edit me-1"></i> Reemplazar
-                                </button>
-                                <button @click="limpiarFirma('M')" class="btn btn-sm btn-outline-danger">
-                                  <i class="fas fa-trash me-1"></i> Eliminar
-                                </button>
-                              </div>
-                            </div>
-                            <signature-pad v-else @save="setFirmaM" />
-                          </div>
-                          <!-- Responsable directo (A) -->
-                          <div class="col-md-4">
-                            <div class="mb-3">
-                              <label class="form-label">Responsable directo (A) <span
-                                  class="text-danger">*</span></label>
-                              <input v-model="matriz.responsable_directo" type="text" class="form-control mb-2" required
-                                placeholder="Nombre del responsable">
-                            </div>
-                            <div v-if="matriz.firma_a" class="mb-3">
-                              <img :src="matriz.firma_a" class="img-fluid border rounded" style="max-height: 150px;" />
-                              <div class="d-flex mt-2">
-                                <button @click="mostrarPadFirma('A')" class="btn btn-sm btn-outline-primary me-2">
-                                  <i class="fas fa-edit me-1"></i> Reemplazar
-                                </button>
-                                <button @click="limpiarFirma('A')" class="btn btn-sm btn-outline-danger">
-                                  <i class="fas fa-trash me-1"></i> Eliminar
-                                </button>
-                              </div>
-                            </div>
-                            <signature-pad v-else @save="setFirmaA" />
-                          </div>
+                    <div class="signatures-section">
+                      <div class="row mb-4">
+                        <div class="col-12">
+                          <h5 class="fw-bold mb-3">Firmas obligatorias <span class="text-danger">*</span></h5>
+                          <div class="row g-3">
+                            <!-- Monitor (M) -->
+                            <div class="col-md-6 col-lg-4">
+                              <div class="signature-card card h-100">
+                                <div class="card-body">
+                                  <label class="form-label fw-semibold">Monitor (M) <span
+                                      class="text-danger">*</span></label>
+                                  <input v-model="matriz.monitor_nombre" type="text" class="form-control mb-3" required
+                                    placeholder="Nombre del responsable">
 
-                          <!-- Funcionario (B) -->
-                          <div class="col-md-4">
-                            <div class="mb-3">
-                              <label class="form-label">Funcionario del que depende directamente (B) <span
-                                  class="text-danger">*</span></label>
-                              <input v-model="matriz.funcionario_depen_directo" type="text" class="form-control mb-2"
-                                required placeholder="Nombre del funcionario">
-                            </div>
-                            <div v-if="matriz.firma_b" class="mb-3">
-                              <img :src="matriz.firma_b" class="img-fluid border rounded" style="max-height: 150px;" />
-                              <div class="d-flex mt-2">
-                                <button @click="mostrarPadFirma('B')" class="btn btn-sm btn-outline-primary me-2">
-                                  <i class="fas fa-edit me-1"></i> Reemplazar
-                                </button>
-                                <button @click="limpiarFirma('B')" class="btn btn-sm btn-outline-danger">
-                                  <i class="fas fa-trash me-1"></i> Eliminar
-                                </button>
+                                  <div v-if="matriz.firma_m" class="signature-preview">
+                                    <img :src="matriz.firma_m" class="signature-image" alt="Firma Monitor" />
+                                    <div class="signature-actions mt-2">
+                                      <button @click="mostrarPadFirma('M')" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fas fa-edit me-1"></i> Cambiar
+                                      </button>
+                                      <button @click="limpiarFirma('M')" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash me-1"></i> Eliminar
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <signature-pad v-else @save="setFirmaM" class="mt-2" />
+                                </div>
                               </div>
                             </div>
-                            <signature-pad v-else @save="setFirmaB" />
-                          </div>
 
-                          <!-- Funcionario (C) -->
-                          <div class="col-md-4">
-                            <div class="mb-3">
-                              <label class="form-label">Funcionario del que depende indirectamente (C) <span
-                                  class="text-danger">*</span></label>
-                              <input v-model="matriz.funcionario_depen_indirecto" type="text" class="form-control mb-2"
-                                required placeholder="Nombre del funcionario">
-                            </div>
-                            <div v-if="matriz.firma_c" class="mb-3">
-                              <img :src="matriz.firma_c" class="img-fluid border rounded" style="max-height: 150px;" />
-                              <div class="d-flex mt-2">
-                                <button @click="mostrarPadFirma('C')" class="btn btn-sm btn-outline-primary me-2">
-                                  <i class="fas fa-edit me-1"></i> Reemplazar
-                                </button>
-                                <button @click="limpiarFirma('C')" class="btn btn-sm btn-outline-danger">
-                                  <i class="fas fa-trash me-1"></i> Eliminar
-                                </button>
+                            <!-- Responsable directo (A) -->
+                            <div class="col-md-6 col-lg-4">
+                              <div class="signature-card card h-100">
+                                <div class="card-body">
+                                  <label class="form-label fw-semibold">Responsable directo (A) <span
+                                      class="text-danger">*</span></label>
+                                  <input v-model="matriz.responsable_directo" type="text" class="form-control mb-3"
+                                    required placeholder="Nombre del responsable">
+
+                                  <div v-if="matriz.firma_a" class="signature-preview">
+                                    <img :src="matriz.firma_a" class="signature-image" alt="Firma Responsable" />
+                                    <div class="signature-actions mt-2">
+                                      <button @click="mostrarPadFirma('A')" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fas fa-edit me-1"></i> Cambiar
+                                      </button>
+                                      <button @click="limpiarFirma('A')" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash me-1"></i> Eliminar
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <signature-pad v-else @save="setFirmaA" class="mt-2" />
+                                </div>
                               </div>
                             </div>
-                            <signature-pad v-else @save="setFirmaC" />
+
+                            <!-- Funcionario (B) -->
+                            <div class="col-md-6 col-lg-4">
+                              <div class="signature-card card h-100">
+                                <div class="card-body">
+                                  <label class="form-label fw-semibold">Funcionario dependiente directo (B) <span
+                                      class="text-danger">*</span></label>
+                                  <input v-model="matriz.funcionario_depen_directo" type="text"
+                                    class="form-control mb-3" required placeholder="Nombre del funcionario">
+
+                                  <div v-if="matriz.firma_b" class="signature-preview">
+                                    <img :src="matriz.firma_b" class="signature-image" alt="Firma Funcionario B" />
+                                    <div class="signature-actions mt-2">
+                                      <button @click="mostrarPadFirma('B')" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fas fa-edit me-1"></i> Cambiar
+                                      </button>
+                                      <button @click="limpiarFirma('B')" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash me-1"></i> Eliminar
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <signature-pad v-else @save="setFirmaB" class="mt-2" />
+                                </div>
+                              </div>
+                            </div>
+
+                            <!-- Funcionario (C) -->
+                            <div class="col-md-6 col-lg-4">
+                              <div class="signature-card card h-100">
+                                <div class="card-body">
+                                  <label class="form-label fw-semibold">Funcionario dependiente indirecto (C) <span
+                                      class="text-danger">*</span></label>
+                                  <input v-model="matriz.funcionario_depen_indirecto" type="text"
+                                    class="form-control mb-3" required placeholder="Nombre del funcionario">
+
+                                  <div v-if="matriz.firma_c" class="signature-preview">
+                                    <img :src="matriz.firma_c" class="signature-image" alt="Firma Funcionario C" />
+                                    <div class="signature-actions mt-2">
+                                      <button @click="mostrarPadFirma('C')" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fas fa-edit me-1"></i> Cambiar
+                                      </button>
+                                      <button @click="limpiarFirma('C')" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash me-1"></i> Eliminar
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <signature-pad v-else @save="setFirmaC" class="mt-2" />
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
 
-                    <!-- Firmas adicionales -->
-                    <div class="row mb-3">
-                      <div class="col-md-12">
-                        <label class="form-label">Firmas adicionales (máx. 5)</label>
-                        <textarea v-model="matriz.firmas_adicionales" class="form-control" rows="2"
-                          placeholder="Ingrese nombres completos separados por comas"></textarea>
+                      <!-- Firmas adicionales -->
+                      <div class="row mb-4">
+                        <div class="col-12">
+                          <h5 class="fw-bold mb-3">Firmas adicionales</h5>
 
-                        <button v-if="!showFuncionarioD && !matriz.funcionario_d" @click="showFuncionarioD = true"
-                          type="button" class="btn btn-sm btn-outline-primary mt-2">
-                          <i class="fas fa-plus me-1"></i> Agregar Funcionario D
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Funcionario D -->
-                    <div v-if="showFuncionarioD || matriz.funcionario_d" class="row mb-3">
-                      <div class="col-md-6">
-                        <label class="form-label">Funcionario (D)</label>
-                        <input v-model="matriz.funcionario_d" type="text" class="form-control"
-                          placeholder="Nombre del funcionario">
-                      </div>
-                      <div class="col-md-6">
-                        <h6>Firma Funcionario (D)</h6>
-                        <div v-if="matriz.firma_d" class="mb-3">
-                          <img :src="matriz.firma_d" class="img-fluid border rounded" style="max-height: 150px;" />
-                          <button @click="mostrarPadFirma('D')" class="btn btn-sm btn-outline-primary mt-2 me-2">
-                            <i class="fas fa-edit me-1"></i> Reemplazar
-                          </button>
-                          <button @click="limpiarFirma('D')" class="btn btn-sm btn-outline-danger mt-2">
-                            <i class="fas fa-trash me-1"></i> Eliminar
+                          <button v-if="!showFuncionarioD && !matriz.funcionario_d" @click="showFuncionarioD = true"
+                            type="button" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i> Agregar Funcionario D
                           </button>
                         </div>
-                        <signature-pad v-else @save="setFirmaD" />
-
-                        <button v-if="!showFuncionarioE && !matriz.funcionario_e" @click="showFuncionarioE = true"
-                          type="button" class="btn btn-sm btn-outline-primary mt-2">
-                          <i class="fas fa-plus me-1"></i> Agregar Funcionario E
-                        </button>
                       </div>
-                    </div>
 
-                    <!-- Funcionario E -->
-                    <div v-if="showFuncionarioE || matriz.funcionario_e" class="row mb-3">
-                      <div class="col-md-6">
-                        <label class="form-label">Funcionario (E)</label>
-                        <input v-model="matriz.funcionario_e" type="text" class="form-control"
-                          placeholder="Nombre del funcionario">
-                      </div>
-                      <div class="col-md-6">
-                        <h6>Firma Funcionario (E)</h6>
-                        <div v-if="matriz.firma_e" class="mb-3">
-                          <img :src="matriz.firma_e" class="img-fluid border rounded" style="max-height: 150px;" />
-                          <button @click="mostrarPadFirma('E')" class="btn btn-sm btn-outline-primary mt-2 me-2">
-                            <i class="fas fa-edit me-1"></i> Reemplazar
-                          </button>
-                          <button @click="limpiarFirma('E')" class="btn btn-sm btn-outline-danger mt-2">
-                            <i class="fas fa-trash me-1"></i> Eliminar
-                          </button>
+                      <!-- Funcionario D -->
+                      <div v-if="showFuncionarioD || matriz.funcionario_d" class="row mb-3">
+                        <div class="col-12">
+                          <div class="signature-card card">
+                            <div class="card-body">
+                              <div class="row align-items-center">
+                                <div class="col-md-6">
+                                  <label class="form-label fw-semibold">Funcionario (D)</label>
+                                  <div class="input-group">
+                                    <input v-model="matriz.funcionario_d" type="text" class="form-control"
+                                      placeholder="Nombre del funcionario">
+                                    <button
+                                      @click="showFuncionarioD = false; matriz.funcionario_d = ''; limpiarFirma('D')"
+                                      class="btn btn-outline-danger" type="button">
+                                      <i class="fas fa-times"></i>
+                                    </button>
+                                  </div>
+                                </div>
+                                <div class="col-md-6 mt-3 mt-md-0">
+                                  <label class="form-label fw-semibold">Firma Funcionario (D)</label>
+                                  <div v-if="matriz.firma_d" class="signature-preview">
+                                    <img :src="matriz.firma_d" class="signature-image" alt="Firma Funcionario D" />
+                                    <div class="signature-actions mt-2">
+                                      <button @click="mostrarPadFirma('D')" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fas fa-edit me-1"></i> Cambiar
+                                      </button>
+                                      <button @click="limpiarFirma('D')" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash me-1"></i> Eliminar
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <signature-pad v-else @save="setFirmaD" class="mt-2" />
+
+                                  <button v-if="!showFuncionarioE && !matriz.funcionario_e"
+                                    @click="showFuncionarioE = true" type="button"
+                                    class="btn btn-outline-primary btn-sm mt-3">
+                                    <i class="fas fa-plus me-1"></i> Agregar Funcionario E
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <signature-pad v-else @save="setFirmaE" />
+                      </div>
+
+                      <!-- Funcionario E -->
+                      <div v-if="showFuncionarioE || matriz.funcionario_e" class="row mb-3">
+                        <div class="col-12">
+                          <div class="signature-card card">
+                            <div class="card-body">
+                              <div class="row align-items-center">
+                                <div class="col-md-6">
+                                  <label class="form-label fw-semibold">Funcionario (E)</label>
+                                  <div class="input-group">
+                                    <input v-model="matriz.funcionario_e" type="text" class="form-control"
+                                      placeholder="Nombre del funcionario">
+                                    <button
+                                      @click="showFuncionarioE = false; matriz.funcionario_e = ''; limpiarFirma('E')"
+                                      class="btn btn-outline-danger" type="button">
+                                      <i class="fas fa-times"></i>
+                                    </button>
+                                  </div>
+                                </div>
+                                <div class="col-md-6 mt-3 mt-md-0">
+                                  <label class="form-label fw-semibold">Firma Funcionario (E)</label>
+                                  <div v-if="matriz.firma_e" class="signature-preview">
+                                    <img :src="matriz.firma_e" class="signature-image" alt="Firma Funcionario E" />
+                                    <div class="signature-actions mt-2">
+                                      <button @click="mostrarPadFirma('E')" class="btn btn-sm btn-outline-primary me-2">
+                                        <i class="fas fa-edit me-1"></i> Cambiar
+                                      </button>
+                                      <button @click="limpiarFirma('E')" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash me-1"></i> Eliminar
+                                      </button>
+                                    </div>
+                                  </div>
+                                  <signature-pad v-else @save="setFirmaE" class="mt-2" />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -586,9 +634,9 @@
               </div>
 
               <!-- Modal para reemplazar firmas -->
-              <div v-if="showSignatureModal" class="modal fade show d-block" tabindex="-1"
-                style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
-                <div class="modal-dialog">
+              <div v-if="showSignatureModal" class="modal" tabindex="-1"
+                style="display: block; background-color: rgba(0,0,0,0.5); z-index: 1060;">
+                <div class="modal-dialog modal-dialog-centered">
                   <div class="modal-content">
                     <div class="modal-header">
                       <h5 class="modal-title">Reemplazar Firma {{ firmaActual }}</h5>
@@ -599,8 +647,6 @@
                     </div>
                     <div class="modal-footer">
                       <button type="button" class="btn btn-secondary" @click="cerrarModalFirma">Cancelar</button>
-                      <button type="button" class="btn btn-primary" @click="guardarFirmaDesdeModal">Guardar
-                        Firma</button>
                     </div>
                   </div>
                 </div>
@@ -750,11 +796,11 @@ const dataURLtoBlob = (dataURL) => {
     const bstr = atob(arr[1]);
     let n = bstr.length;
     const u8arr = new Uint8Array(n);
-    
+
     while (n--) {
       u8arr[n] = bstr.charCodeAt(n);
     }
-    
+
     return new Blob([u8arr], { type: mime });
   } catch (e) {
     console.error('Error converting dataURL to Blob:', e);
@@ -795,7 +841,7 @@ const guardarFirmaReemplazo = (firma) => {
   matriz.value[firmaProp] = firma;
 
   // Actualizar la referencia reactiva específica
-  switch(firmaActual.value) {
+  switch (firmaActual.value) {
     case 'M': setFirmaM(firma); break;
     case 'A': setFirmaA(firma); break;
     case 'B': setFirmaB(firma); break;
@@ -1073,32 +1119,32 @@ const guardarMatriz = async () => {
     });
 
     // Función para procesar cada firma
- const procesarFirma = (tipo) => {
-  const firmaKey = `firma_${tipo}`;
-  const firmaValue = matriz.value[firmaKey];
+    const procesarFirma = (tipo) => {
+      const firmaKey = `firma_${tipo}`;
+      const firmaValue = matriz.value[firmaKey];
 
-  if (firmaValue === null) {
-    formData.append(firmaKey, 'null'); // Marca para eliminar firma en backend
-    return;
-  }
-
-  if (typeof firmaValue === 'string') {
-    if (firmaValue.startsWith('http') || firmaValue.startsWith('/')) {
-      // Firma ya almacenada, no enviar
-      return;
-    } else if (firmaValue.startsWith('data:image')) {
-      const blob = dataURLtoBlob(firmaValue);
-      if (blob) {
-        formData.append(firmaKey, blob, `firma_${tipo}.png`);
+      if (firmaValue === null) {
+        formData.append(firmaKey, 'null'); // Marca para eliminar firma en backend
+        return;
       }
-      return;
-    }
-  }
 
-  if (firmaValue instanceof Blob) {
-    formData.append(firmaKey, firmaValue, `firma_${tipo}.png`);
-  }
-};
+      if (typeof firmaValue === 'string') {
+        if (firmaValue.startsWith('http') || firmaValue.startsWith('/')) {
+          // Firma ya almacenada, no enviar
+          return;
+        } else if (firmaValue.startsWith('data:image')) {
+          const blob = dataURLtoBlob(firmaValue);
+          if (blob) {
+            formData.append(firmaKey, blob, `firma_${tipo}.png`);
+          }
+          return;
+        }
+      }
+
+      if (firmaValue instanceof Blob) {
+        formData.append(firmaKey, firmaValue, `firma_${tipo}.png`);
+      }
+    };
 
 
     // Procesar todas las firmas
@@ -1112,7 +1158,7 @@ const guardarMatriz = async () => {
     };
 
     // Enviar solicitud
-    const url = matriz.value.id 
+    const url = matriz.value.id
       ? `ficha/matriz-compromiso/${matriz.value.id}/`
       : 'ficha/matriz-compromiso/';
 
@@ -1120,14 +1166,14 @@ const guardarMatriz = async () => {
 
     const response = await api[method](url, formData, config);
     $toast.success('Matriz guardada correctamente');
-    
+
     // Actualizar datos si es necesario
     if (matriz.value.id) await fetchData();
     else matriz.value.id = response.data.id;
 
   } catch (error) {
     console.error('Error al guardar:', error);
-    
+
     // Mostrar mensaje de error detallado del servidor
     const serverError = error.response?.data;
     if (serverError) {
@@ -1334,5 +1380,34 @@ onMounted(() => {
     padding: 8px 12px;
     font-size: 14px;
   }
+}
+.signature-card {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.signature-card:hover {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.signature-preview {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.signature-image {
+  max-height: 100%;
+  max-width: 100%;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  background: white;
+  padding: 1px;
+}
+
+.signature-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: center;
 }
 </style>
