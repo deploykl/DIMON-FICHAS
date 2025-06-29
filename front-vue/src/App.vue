@@ -9,6 +9,7 @@
         />
         <main class="content-area" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
           <router-view />
+          
         <footer-component-vue />
 
         </main>

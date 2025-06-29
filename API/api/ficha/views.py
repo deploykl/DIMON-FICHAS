@@ -6,19 +6,13 @@ from rest_framework.parsers import JSONParser, MultiPartParser, FormParser
 import requests
 from django.db.models import Prefetch
 from urllib.parse import urlencode
-from django.core.exceptions import PermissionDenied
-from rest_framework.exceptions import ValidationError
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from rest_framework.response import Response
 from rest_framework.decorators import action, api_view
 from rest_framework.viewsets import ViewSet
-from rest_framework.views import APIView
-from django.utils import timezone
-from rest_framework import viewsets, status, mixins
+from rest_framework import viewsets, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend  # type: ignore
-from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.filters import OrderingFilter
 from api.ficha.serializers import *
 
 class CategoriaViewSet(viewsets.ModelViewSet):

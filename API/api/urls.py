@@ -16,6 +16,7 @@ urlpatterns = [
     path('', include(router.urls)),
     path('user/', include('api.user.urls')),  
     path('ficha/', include('api.ficha.urls')),  
+    path('enlace/', include('api.enlaces.urls')),  
 
 ]
 
