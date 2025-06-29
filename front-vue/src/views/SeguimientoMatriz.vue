@@ -85,7 +85,7 @@
                               {{ matriz.semaforo }}
                             </span>
                           </td>
-                          <td>{{ formatDate(matriz.fecha_creacion) }}</td>
+                          <td>{{ formatDateTime(matriz.fecha_creacion) }}</td>
                           <td>
                             <div class="d-flex gap-1">
                               <span class="badge bg-danger" title="No Conformes">
@@ -153,7 +153,7 @@
                         {{ matrizDetalles.semaforo }}
                       </span>
                     </p>
-                    <p><strong>Fecha Creación:</strong> {{ formatDate(matrizDetalles.fecha_creacion) }}</p>
+                    <p><strong>Fecha Creación:</strong> {{ formatDateTime(matrizDetalles.fecha_creacion) }}</p>
                   </div>
                 </div>
 
@@ -180,8 +180,8 @@
                 <h6><i class="fas fa-calendar-alt me-2"></i>Plazos</h6>
                 <div class="card border-0 shadow-sm mb-3">
                   <div class="card-body">
-                    <p><strong>Inicio:</strong> {{ formatDate(matrizDetalles.plazo_inicio) }}</p>
-                    <p><strong>Fin:</strong> {{ formatDate(matrizDetalles.plazo_fin) }}</p>
+                    <p><strong>Inicio:</strong> {{ formatDateTime(matrizDetalles.plazo_inicio) }}</p>
+                    <p><strong>Fin:</strong> {{ formatDateTime(matrizDetalles.plazo_fin) }}</p>
                     <p><strong>Duración:</strong> {{ calcularDias(matrizDetalles.plazo_inicio,
                       matrizDetalles.plazo_fin) }} días</p>
                   </div>
@@ -434,8 +434,8 @@
                       <div class="mb-3">
                         <label class="fw-bold">Plazos:</label>
                         <div class="ps-3">
-                          <p><strong>Inicio:</strong> {{ formatDate(matrizSeguimientos.matrizData?.plazo_inicio) }}</p>
-                          <p><strong>Fin:</strong> {{ formatDate(matrizSeguimientos.matrizData?.plazo_fin) }}</p>
+                          <p><strong>Inicio:</strong> {{ formatDateTime(matrizSeguimientos.matrizData?.plazo_inicio) }}</p>
+                          <p><strong>Fin:</strong> {{ formatDateTime(matrizSeguimientos.matrizData?.plazo_fin) }}</p>
                           <p><strong>Duración:</strong>
                             {{ calcularDias(matrizSeguimientos.matrizData?.plazo_inicio,
                               matrizSeguimientos.matrizData?.plazo_fin) }} días
@@ -477,7 +477,7 @@
                           <tr v-for="(seguimiento, index) in matrizSeguimientos.seguimientos" :key="'seg-' + index"
                             :class="getEstadoSeguimientoBgClass(seguimiento.estado)">
                             <td class="fw-bold">{{ index + 1 }}</td>
-                            <td>{{ formatDate(seguimiento.fecha_seguimiento) }}</td>
+                            <td>{{ formatDateTime(seguimiento.fecha_seguimiento) }}</td>
                             <td>
                               <span class="badge" :class="getEstadoSeguimientoClass(seguimiento.estado)">
                                 {{ getEstadoSeguimientoDisplay(seguimiento.estado) }}
@@ -1051,23 +1051,22 @@ const categoriasUnicas = computed(() => {
   return Array.from(categorias).sort()
 })
 
-// Métodos utilitarios
-const formatDate = (dateString) => {
-  if (!dateString) return 'N/A'
-  const options = { year: 'numeric', month: 'long', day: 'numeric' }
-  return new Date(dateString).toLocaleDateString('es-ES', options)
-}
-
 const formatDateTime = (dateString) => {
   if (!dateString) return 'N/A'
-  const options = {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  }
-  return new Date(dateString).toLocaleDateString('es-ES', options)
+  
+  const date = new Date(dateString)
+  
+  // Obtener día, mes, año
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0') // Los meses van de 0-11
+  const year = date.getFullYear()
+  
+  // Obtener horas, minutos, segundos
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  
+  return `${day}/${month}/${year}, ${hours}:${minutes}:${seconds}`
 }
 
 const calcularDias = (inicio, fin) => {

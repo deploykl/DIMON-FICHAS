@@ -9,6 +9,8 @@
         />
         <main class="content-area" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
           <router-view />
+        <footer-component-vue />
+
         </main>
       </div>
     </template>
@@ -23,6 +25,7 @@
 import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import HeaderComponentVue from './components/HeaderComponent.vue';
+import FooterComponentVue from './components/FooterComponent.vue';
 import SidebarComponentVue from './components/SidebarComponent.vue';
 
 const route = useRoute();

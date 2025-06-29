@@ -5,7 +5,8 @@ import NotFoundView from "../views/NotFoundView.vue";
 import LoginView from "../views/fichas/login/LoginView.vue";
 import EvaluarFichaView from "../views/EvaluarFichaView.vue";
 import MatrizCompromisoView from "../views/MatrizCompromisoView.vue";
-import TestLineView from "../views/TestLineView.vue";
+import UrlsView from "../views/menu/UrlsView.vue";
+import SeguimientoMatrizView from "../views/SeguimientoMatriz.vue";
 
 const routes = [
   {
@@ -19,7 +20,7 @@ const routes = [
   {
     path: "/matriz-list",
     name: "matriz-list",
-    component: TestLineView,
+    component: SeguimientoMatrizView,
     meta: {
       title: "DIMON APP",
     },
@@ -50,6 +51,16 @@ const routes = [
     props: true,
     meta: {
       title: "Matriz de Compromiso",
+      requiresAuth: true,
+    },
+  },
+   {
+    path: '/url',
+    name: "enlaces",
+    component: UrlsView,
+    props: true,
+    meta: {
+      title: "Enlaces de información",
       requiresAuth: true,
     },
   },

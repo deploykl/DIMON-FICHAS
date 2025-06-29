@@ -96,6 +96,15 @@ const menuItems = ref([
     path: '/dashboard',
     submenu: null
   },
+    {
+    title: 'Emergencia',
+    icon: 'fa-user-injured',
+    path: '/patients',
+    submenu: [
+      { title: 'Fichas de Monitoreo', icon: 'fa-chart-bar', path: '/fichas' },
+      { title: 'Matriz de compromiso', icon: 'fa-book', path: '/matriz-list' },
+    ]
+  },
   {
     title: 'Fichas de Monitoreo',
     icon: 'fa-chart-bar',
@@ -104,8 +113,20 @@ const menuItems = ref([
   },
   {
     title: 'Matriz de compromiso',
-    icon: 'fa-chart-bar',
+    icon: 'fa-book',
     path: '/matriz-list',
+    submenu: null
+  },
+  {
+    title: 'Alertas',
+    icon: 'fa-chart-bar',
+    path: '/reports',
+    submenu: null
+  },
+  {
+    title: 'Enlaces',
+    icon: 'fa-globe',
+    path: '/url',
     submenu: null
   },
   {
@@ -127,12 +148,7 @@ const menuItems = ref([
       { title: 'Calendario', icon: 'fa-calendar-alt', path: '/appointments/calendar' }
     ]
   },
-  {
-    title: 'Alertas',
-    icon: 'fa-chart-bar',
-    path: '/reports',
-    submenu: null
-  },
+
   {
     title: 'Configuración',
     icon: 'fa-cog',

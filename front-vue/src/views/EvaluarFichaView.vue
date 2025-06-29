@@ -56,131 +56,160 @@
                 </div>
             </div>
 
-  <!-- Formulario de IPRESS -->
-  <div class="card mb-4 shadow-sm">
-    <div class="card-body">
-      <h2 class="card-title h4 mb-4">Datos de la IPRESS</h2>
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Tipo de IPRESS:</label>
-          <select v-model="evaluacionData.tipo" class="form-select" required>
-            <option value="EESS">Establecimiento de Salud</option>
-            <option value="DIRIS">Dirección de Red Integrada de Salud</option>
-            <option value="DIRESA">Dirección Regional de Salud</option>
-            <option value="GERESA">Gerencia Regional de Salud</option>
-          </select>
-        </div>
+            <!-- Formulario de IPRESS -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="card-title h4 mb-0">Datos de la IPRESS</h2>
+    <button @click="toggleEdicionCampos" class="btn btn-sm" 
+            :class="camposEditables ? 'btn-primary' : 'btn-danger'"
+            :title="camposEditables ? 'Bloquear campos' : 'Editar manualmente'">
+        <i class="fas me-1" :class="camposEditables ? 'fa-unlock' : 'fa-lock'"></i>
+        {{ camposEditables ? 'Campos Activados' : 'Campos Bloqueada' }}
+    </button>
+</div>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Tipo de IPRESS:</label>
+                            <select v-model="evaluacionData.tipo" class="form-select" required>
+                                <option value="EESS">Establecimiento de Salud</option>
+                                <option value="DIRIS">Dirección de Red Integrada de Salud</option>
+                                <option value="DIRESA">Dirección Regional de Salud</option>
+                                <option value="GERESA">Gerencia Regional de Salud</option>
+                            </select>
+                        </div>
 
-        <!-- Búsqueda por Nombre -->
-        <div class="col-md-3 position-relative">
-          <label class="form-label">Nombre de la IPRESS:</label>
-          <input 
-            v-model="evaluacionData.establecimiento" 
-            type="text" 
-            class="form-control" 
-            required
-            @input="(e) => handleIpressSearch('nombre', e)"
-            @focus="showNameSuggestions = true"
-            @blur="hideNameSuggestions"
-          >
-          <div v-if="isSearchingByName" class="position-absolute top-50 end-0 translate-middle-y me-2">
-            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          </div>
-          <div v-if="showNameSuggestions && nameResults.length > 0" class="suggestions-dropdown">
-            <div 
-              v-for="item in nameResults" 
-              :key="item.COD_IPRESS" 
-              class="suggestion-item"
-              @mousedown="selectIpress(item)"
-            >
-              <div class="fw-bold">{{ item.NOMBRE }}</div>
-              <div class="small text-muted">
-                <span>Código: {{ item.COD_IPRESS }}</span> |
-                <span>Categoría: {{ item.CATEGORIA }}</span>
-              </div>
-              <div class="small text-muted">
-                {{ item.DEPARTAMENTO }} > {{ item.PROVINCIA }} > {{ item.DISTRITO }} - {{ item.DISA }} - {{ item.INSTITUCION }}
-              </div>
+                        <!-- Búsqueda por Nombre -->
+                        <div class="col-md-3 position-relative">
+                            <label class="form-label">Nombre de la IPRESS:</label>
+                            <input v-model="evaluacionData.establecimiento" type="text" class="form-control"
+                                placeholder="Buscar por nombre" required @input="(e) => handleIpressSearch('nombre', e)"
+                                @focus="showNameSuggestions = true" @blur="hideNameSuggestions">
+                            <div v-if="isSearchingByName"
+                                class="position-absolute top-50 end-0 translate-middle-y me-2">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            </div>
+                            <div v-if="showNameSuggestions && nameResults.length > 0" class="suggestions-dropdown">
+                                <div v-for="item in nameResults" :key="item.COD_IPRESS" class="suggestion-item"
+                                    @mousedown="selectIpress(item)">
+                                    <div class="fw-bold">{{ item.NOMBRE }}</div>
+                                    <div class="small text-muted">
+                                        <span>Código: {{ item.COD_IPRESS }}</span> |
+                                        <span>Categoría: {{ item.CATEGORIA }}</span>
+                                    </div>
+                                    <div class="small text-muted">
+                                        {{ item.DEPARTAMENTO }} > {{ item.PROVINCIA }} > {{ item.DISTRITO }} - {{
+                                            item.DISA }} - {{ item.INSTITUCION }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="showNameSuggestions && nameResults.length === 0 && !isSearchingByName"
+                                class="suggestions-dropdown">
+                                <div class="p-3 text-muted">No se encontraron resultados</div>
+                            </div>
+                        </div>
+
+                        <!-- Búsqueda por Código -->
+                        <div class="col-md-3 position-relative">
+                            <label class="form-label">Código de la IPRESS:</label>
+                            <input v-model="evaluacionData.codigo" type="text" class="form-control"
+                                placeholder="Buscar por código" required @keypress="soloNumeros"
+                                @input="(e) => handleIpressSearch('codigo', e)" @focus="showCodeSuggestions = true"
+                                @blur="hideCodeSuggestions">
+                            <div v-if="isSearchingByCode"
+                                class="position-absolute top-50 end-0 translate-middle-y me-2">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            </div>
+                            <div v-if="showCodeSuggestions && codeResults.length > 0" class="suggestions-dropdown">
+                                <div v-for="item in codeResults" :key="item.COD_IPRESS" class="suggestion-item"
+                                    @mousedown="selectIpress(item)">
+                                    <div class="fw-bold">{{ item.NOMBRE }}</div>
+                                    <div class="small text-muted">
+                                        <span>Código: {{ item.COD_IPRESS }}</span> |
+                                        <span>Categoría: {{ item.CATEGORIA }}</span>
+                                    </div>
+                                    <div class="small text-muted">
+                                        {{ item.DEPARTAMENTO }} > {{ item.PROVINCIA }} > {{ item.DISTRITO }} - {{
+                                            item.DISA }} - {{ item.INSTITUCION }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-if="showCodeSuggestions && codeResults.length === 0 && !isSearchingByCode"
+                                class="suggestions-dropdown">
+                                <div class="p-3 text-muted">No se encontraron resultados</div>
+                            </div>
+                        </div>
+
+                        <!-- Resto de campos (se autocompletarán) -->
+                        <!-- Campos editables con badges -->
+                        <div class="col-md-3">
+                            <label class="form-label">Categoría:</label>
+                            <input v-model="evaluacionData.categoria" type="text" class="form-control"
+                                :readonly="!camposEditables" required>
+                            <div class="mt-1">
+                                <span class="badge" :class="camposEditables ? 'bg-primary' : 'bg-danger'">
+                                    {{ camposEditables ? 'Activado' : 'Bloqueado' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Departamento:</label>
+                            <input v-model="evaluacionData.departamento" type="text" class="form-control"
+                                :readonly="!camposEditables">
+                            <div class="mt-1">
+                                <span class="badge" :class="camposEditables ? 'bg-primary' : 'bg-danger'">
+                                    {{ camposEditables ? 'Activado' : 'Bloqueado' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Provincia:</label>
+                            <input v-model="evaluacionData.provincia" type="text" class="form-control"
+                                :readonly="!camposEditables">
+                            <div class="mt-1">
+                                <span class="badge" :class="camposEditables ? 'bg-primary' : 'bg-danger'">
+                                    {{ camposEditables ? 'Activado' : 'Bloqueado' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Distrito:</label>
+                            <input v-model="evaluacionData.distrito" type="text" class="form-control"
+                                :readonly="!camposEditables">
+                            <div class="mt-1">
+                                <span class="badge" :class="camposEditables ? 'bg-primary' : 'bg-danger'">
+                                    {{ camposEditables ? 'Activado' : 'Bloqueado' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">DISA:</label>
+                            <input v-model="evaluacionData.disa" type="text" class="form-control"
+                                :readonly="!camposEditables">
+                            <div class="mt-1">
+                                <span class="badge" :class="camposEditables ? 'bg-primary' : 'bg-danger'">
+                                    {{ camposEditables ? 'Activado' : 'Bloqueado' }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">Institución:</label>
+                            <input v-model="evaluacionData.institucion" type="text" class="form-control"
+                                :readonly="!camposEditables">
+                            <div class="mt-1">
+                                <span class="badge" :class="camposEditables ? 'bg-primary' : 'bg-danger'">
+                                    {{ camposEditables ? 'Activado' : 'Bloqueado' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-          </div>
-          <div v-if="showNameSuggestions && nameResults.length === 0 && !isSearchingByName" 
-               class="suggestions-dropdown">
-            <div class="p-3 text-muted">No se encontraron resultados</div>
-          </div>
-        </div>
-
-        <!-- Búsqueda por Código -->
-        <div class="col-md-3 position-relative">
-          <label class="form-label">Código de la IPRESS:</label>
-          <input 
-            v-model="evaluacionData.codigo" 
-            type="text" 
-            class="form-control" 
-            required
-            @keypress="soloNumeros"
-            @input="(e) => handleIpressSearch('codigo', e)"
-            @focus="showCodeSuggestions = true"
-            @blur="hideCodeSuggestions"
-          >
-          <div v-if="isSearchingByCode" class="position-absolute top-50 end-0 translate-middle-y me-2">
-            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-          </div>
-          <div v-if="showCodeSuggestions && codeResults.length > 0" class="suggestions-dropdown">
-            <div 
-              v-for="item in codeResults" 
-              :key="item.COD_IPRESS" 
-              class="suggestion-item"
-              @mousedown="selectIpress(item)"
-            >
-              <div class="fw-bold">{{ item.NOMBRE }}</div>
-              <div class="small text-muted">
-                <span>Código: {{ item.COD_IPRESS }}</span> |
-                <span>Categoría: {{ item.CATEGORIA }}</span>
-              </div>
-              <div class="small text-muted">
-                {{ item.DEPARTAMENTO }} > {{ item.PROVINCIA }} > {{ item.DISTRITO }} - {{ item.DISA }} - {{ item.INSTITUCION }}
-              </div>
-            </div>
-          </div>
-          <div v-if="showCodeSuggestions && codeResults.length === 0 && !isSearchingByCode" 
-               class="suggestions-dropdown">
-            <div class="p-3 text-muted">No se encontraron resultados</div>
-          </div>
-        </div>
-
-        <!-- Resto de campos (se autocompletarán) -->
-        <div class="col-md-3">
-          <label class="form-label">Categoría:</label>
-          <input v-model="evaluacionData.categoria" type="text" class="form-control" required readonly>
-        </div>
-
-        <div class="col-md-3">
-          <label class="form-label">Departamento:</label>
-          <input v-model="evaluacionData.departamento" type="text" class="form-control" readonly>
-        </div>
-
-        <div class="col-md-3">
-          <label class="form-label">Provincia:</label>
-          <input v-model="evaluacionData.provincia" type="text" class="form-control" readonly>
-        </div>
-
-        <div class="col-md-3">
-          <label class="form-label">Distrito:</label>
-          <input v-model="evaluacionData.distrito" type="text" class="form-control" readonly>
-        </div>
-
-        <div class="col-md-3">
-          <label class="form-label">DISA:</label>
-          <input v-model="evaluacionData.disa" type="text" class="form-control" readonly>
-        </div>
-        
-        <div class="col-md-3">
-          <label class="form-label">Institución:</label>
-          <input v-model="evaluacionData.institucion" type="text" class="form-control" readonly>
-        </div>
-      </div>
-    </div>
-  </div>
 
             <!-- Tabla de Subprocesos con Verificadores -->
             <div class="card mb-4 shadow-sm">
@@ -438,10 +467,9 @@ const showNameSuggestions = ref(false);
 const showCodeSuggestions = ref(false);
 const isSearchingByName = ref(false);
 const isSearchingByCode = ref(false);
-const ipressResults = ref([]);
-// Variables reactivas adicionales
-const showSuggestions = ref(false);
-const isSearching = ref(false);
+
+
+const camposEditables = ref(false);
 // Datos de evaluación
 const evaluacionData = ref({
     tipo: 'EESS',
@@ -455,13 +483,13 @@ const evaluacionData = ref({
     institucion: ''
 });
 const soloNumeros = (event) => {
-  const charCode = event.keyCode || event.which;
-  const charStr = String.fromCharCode(charCode);
-  
-  // Permitir solo dígitos (0-9) y teclas de control (backspace, delete, etc.)
-  if (!/^\d+$/.test(charStr)) {
-    event.preventDefault();
-  }
+    const charCode = event.keyCode || event.which;
+    const charStr = String.fromCharCode(charCode);
+
+    // Permitir solo dígitos (0-9) y teclas de control (backspace, delete, etc.)
+    if (!/^\d+$/.test(charStr)) {
+        event.preventDefault();
+    }
 };
 const generatePdf = () => {
     if (pdfGenerator.value) {
@@ -478,21 +506,21 @@ let matrizModal = null;
 // Método para buscar IPRESS por nombre o código
 const searchIpress = async (type, inputValue) => {
     if (!inputValue) return [];
-    
+
     if (type === 'nombre') isSearchingByName.value = true;
     else isSearchingByCode.value = true;
 
     try {
         const params = new URLSearchParams();
         params.append('limit', '10');
-        
+
         if (type === 'nombre') {
             params.append('q', inputValue);
         } else {
             // Validar que sea un número válido
             const codigo = parseInt(inputValue);
             if (isNaN(codigo)) return [];
-            
+
             // Enviar como filtro exacto
             params.append('COD_IPRESS', codigo.toString());
         }
@@ -504,7 +532,7 @@ const searchIpress = async (type, inputValue) => {
 
         // Verificar respuesta y mapear resultados
         if (!response.data?.result?.records) return [];
-        
+
         return response.data.result.records.map(item => ({
             ...item,
             COD_IPRESS: item.COD_IPRESS?.toString() || '',
@@ -538,6 +566,7 @@ const selectIpress = (item) => {
         disa: item.DISA || '',
         institucion: item.INSTITUCION || ''
     };
+    camposEditables.value = false; // Asegurarse de bloquear los campos al seleccionar
     showNameSuggestions.value = false;
     showCodeSuggestions.value = false;
 };
@@ -545,7 +574,7 @@ const selectIpress = (item) => {
 // Manejar búsqueda con debounce
 const handleIpressSearch = debounce(async (type, event) => {
     const inputValue = event.target.value.trim();
-    
+
     if (type === 'codigo' && inputValue.length < 1) {
         codeResults.value = [];
         return;
@@ -556,14 +585,23 @@ const handleIpressSearch = debounce(async (type, event) => {
     }
 
     const results = await searchIpress(type, inputValue);
-    
+
     if (type === 'nombre') {
         nameResults.value = results;
     } else {
         codeResults.value = results;
     }
 }, 300);
+const toggleEdicionCampos = () => {
+    camposEditables.value = !camposEditables.value;
 
+    if (!camposEditables.value) {
+        // Cuando se desactiva la edición, puedes agregar lógica adicional si es necesario
+        $toast.info('Campos bloqueados para edición');
+    } else {
+        $toast.warning('Modo edición manual activado');
+    }
+};
 // Ocultar sugerencias con retraso
 const hideNameSuggestions = () => {
     setTimeout(() => {
@@ -717,6 +755,8 @@ const resetForm = () => {
         disa: '',
         institucion: ''
     };
+    camposEditables.value = false;
+
     initializeEvaluaciones();
 };
 
@@ -916,5 +956,43 @@ onMounted(async () => {
 
 .position-relative {
     position: relative;
+}
+
+.btn-toggle-edit {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.btn-toggle-edit i {
+    margin: 0;
+}
+
+/* Opcional: efecto hover para mejor feedback */
+.btn-toggle-edit:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s ease;
+}
+.badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    font-weight: 500;
+    letter-spacing: 0.05rem;
+}
+
+/* Estilo para inputs cuando están bloqueados */
+input:read-only {
+    background-color: #f8f9fa;
+    border-color: #e9ecef;
+}
+
+/* Estilo para inputs cuando están editables */
+input:not(:read-only) {
+    background-color: #fff;
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 </style>
