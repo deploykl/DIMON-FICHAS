@@ -6,6 +6,7 @@ class Enlace(models.Model):
     descripcion = models.TextField(blank=True, verbose_name="Descripción")
     fecha_creacion = models.DateTimeField(auto_now_add=True, verbose_name="Fecha de creación")
     fecha_actualizacion = models.DateTimeField(auto_now=True, verbose_name="Fecha de actualización")
+    imagen = models.ImageField(upload_to='enlaces/', blank=True, null=True)
 
     def __str__(self):
         return f"{self.titulo} - {self.url}"

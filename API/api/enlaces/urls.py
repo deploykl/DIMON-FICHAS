@@ -4,7 +4,7 @@ from api.enlaces.views import *
 
 router = DefaultRouter()
 
-router.register(r'enlaces', EnlaceViewSet)
+router.register(r'urls', EnlaceViewSet)
 
 
 urlpatterns = router.urls
