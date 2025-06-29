@@ -1,4 +1,5 @@
 import { createStore } from 'vuex'
+import offlineModule from './offline'
 
 export default createStore({
   state: {
@@ -10,5 +11,7 @@ export default createStore({
   actions: {
   },
   modules: {
+        offline: offlineModule
+
   }
 })

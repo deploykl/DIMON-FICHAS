@@ -133,7 +133,7 @@
     <div v-if="showDetallesModal" class="modal fade show d-block" tabindex="-1"
       style="background-color: rgba(0,0,0,0.5); z-index: 1060;">
       <div class="modal-dialog modal-lg">
-        <div class="modal-content">
+    <div class="modal-content" ref="modalContent">
           <div class="modal-header">
             <h5 class="modal-title">Detalles de Matriz de Compromiso</h5>
             <button type="button" class="btn-close" @click="cerrarModales"></button>
@@ -351,7 +351,7 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="cerrarModales">Cerrar</button>
-            <button type="button" class="btn btn-primary" @click="exportarPDF(matrizDetalles.id)">
+            <button type="button" class="btn btn-primary" @click="exportarPDFDesdeModal">
               <i class="fas fa-file-pdf me-2"></i> Exportar PDF
             </button>
           </div>
@@ -596,11 +596,11 @@
 
 
 <script setup>
-import { ref, computed, onMounted, reactive } from 'vue'
+import { ref, computed, onMounted, reactive , nextTick } from 'vue'
 import { api } from '@/components/services/auth_axios'
 import { useToast } from 'vue-toast-notification'
 import 'vue-toast-notification/dist/theme-sugar.css'
-
+import html2pdf from 'html2pdf.js';
 const $toast = useToast()
 
 // Estados
@@ -958,7 +958,74 @@ const getSubprocesoCodigo = (evaluacion) => {
       `PS${evaluacion.verificador.subproceso.proceso.id}.${evaluacion.verificador.subproceso.id}` :
       'Código desconocido')
 }
+const exportarPDFDesdeModal = async () => {
+  try {
+    $toast.info('Preparando PDF...', { timeout: false });
+    await nextTick();
 
+    const element = document.querySelector('.modal.show.d-block .modal-content');
+    if (!element) throw new Error('Modal no encontrado');
+
+    const clonedElement = element.cloneNode(true);
+    
+    // 1. Preparar imágenes
+    const images = clonedElement.querySelectorAll('img');
+    await Promise.all(Array.from(images).map(img => {
+      if (!img.complete) {
+        return new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+      }
+      return Promise.resolve();
+    }));
+
+    // 2. Ajustar estilos
+    clonedElement.style.width = '210mm';
+    clonedElement.style.padding = '15mm';
+    clonedElement.style.backgroundColor = '#ffffff';
+    
+    // Eliminar footer
+    const footer = clonedElement.querySelector('.modal-footer');
+    if (footer) footer.remove();
+
+    // Ajustar textos grises
+    clonedElement.querySelectorAll('.text-muted').forEach(el => {
+      el.style.color = '#000000';
+    });
+
+    // 3. Configuración PDF
+    const opt = {
+      margin: 10,
+      filename: `matriz_${matrizDetalles.value?.id || 'detalle'}_${new Date().toISOString().split('T')[0]}.pdf`,
+      image: { type: 'jpeg', quality: 1 },
+      html2canvas: {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        logging: true,
+        letterRendering: true,
+        timeout: 30000
+      },
+      jsPDF: {
+        unit: 'mm',
+        format: 'a4',
+        orientation: 'portrait'
+      },
+      pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+    };
+
+    $toast.info('Generando PDF...', { timeout: false });
+    await html2pdf().set(opt).from(clonedElement).save();
+    $toast.success('PDF generado correctamente');
+
+  } catch (error) {
+    console.error('Error PDF:', error);
+    $toast.error(`Error: ${error.message}`);
+  } finally {
+    $toast.clear();
+  }
+};
 // Obtener matrices al montar el componente
 onMounted(async () => {
   try {
