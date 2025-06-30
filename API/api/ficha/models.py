@@ -1,6 +1,6 @@
 from time import timezone
 from django.db import models
-# Por esta:
+import uuid
 from django.conf import settings
 from django.contrib.auth import get_user_model
 User = get_user_model()  # Esto usará el modelo definido en AUTH_USER_MODEL
@@ -198,7 +198,6 @@ class SeguimientoMatrizCompromiso(models.Model):
         ('A', 'Aprobado'),
         ('R', 'Rechazado'),
     ]
-    
     # Relación con la matriz original (con acceso a todos sus campos)
     matriz = models.ForeignKey(MatrizCompromiso, on_delete=models.CASCADE, related_name='seguimientos')
         
@@ -251,3 +250,51 @@ class SeguimientoMatrizCompromiso(models.Model):
             'plazo_fin': self.matriz.plazo_fin,
             'responsable': self.matriz.responsable_directo
         }
+        
+# Create your models here.
+class Alertas(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    codigo = models.CharField(
+        max_length=50, 
+        verbose_name="Código", 
+        unique=True,
+        editable=False,  # No se puede editar manualmente
+        default=uuid.uuid4  # Genera un UUID por defecto
+    )    
+    tipo = models.CharField(max_length=500, verbose_name="Tipo")
+    descripcion = models.CharField(max_length=500, verbose_name="Descripción")
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Si es un nuevo registro y no tiene código asignado
+        if not self.codigo:
+            self.codigo = f"ALERT-{uuid.uuid4().hex[:8].upper()}"  # Formato más legible
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.usuario} - {self.tipo} - {self.codigo}"
+    
+    
+# Create your models here.
+class SeguimientoAlertas(models.Model):
+    # Campos específicos del seguimiento
+    fecha_seguimiento = models.DateField(verbose_name="Fecha de seguimiento")
+    estado = models.TextField(verbose_name="Estado")
+    analisis_accion = models.TextField(verbose_name="Análisis/Acción realizada")
+    alerta = models.ForeignKey(Alertas, on_delete=models.CASCADE, related_name='seguimientos')
+
+    # Fechas de registro
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    # Agrega esta relación
+    usuario_creacion = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='seguimientos_alertas_creados',
+        verbose_name="Usuario que registró"
+    )
+    def __str__(self):
+        return f"{self.fecha_seguimiento} - {self.usuario_creacion}"
+

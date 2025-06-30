@@ -17,14 +17,12 @@ class ProcesoSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class SubprocesoSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Subproceso
         fields = "__all__"
 
 
 class VerificadorSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = Verificador
         fields = "__all__"
@@ -169,3 +167,75 @@ class SeguimientoMatrizCompromisoSerializer(serializers.ModelSerializer):
         if obj.usuario_creacion:
             return f"{obj.usuario_creacion.first_name} {obj.usuario_creacion.last_name}"
         return "N/A"  # Cambiado de "Sistema" a "N/A" para mayor claridad
+    
+
+class AlertasSerializer(serializers.ModelSerializer):
+    usuario = serializers.StringRelatedField(read_only=True)
+    fecha_creacion = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
+    seguimientos = serializers.SerializerMethodField()
+    usuario_nombre = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Alertas
+        fields = ['id', 'codigo', 'tipo', 'descripcion', 'fecha_creacion', 
+                 'usuario', 'usuario_nombre', 'seguimientos']
+        read_only_fields = ('id', 'codigo', 'fecha_creacion', 'usuario', 'usuario_nombre')
+
+    def get_seguimientos(self, obj):
+        seguimientos = obj.seguimientos.all().order_by('-fecha_seguimiento')
+        return SeguimientoAlertasSerializer(seguimientos, many=True).data
+
+    def get_usuario_nombre(self, obj):
+        if obj.usuario:
+            return f"{obj.usuario.first_name} {obj.usuario.last_name}"
+        return "N/A"
+
+    def create(self, validated_data):
+        validated_data['usuario'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class SeguimientoAlertasSerializer(serializers.ModelSerializer):
+    usuario_nombre = serializers.SerializerMethodField()
+    alerta = AlertasSerializer(read_only=True)
+    alerta_id = serializers.PrimaryKeyRelatedField(
+        queryset=Alertas.objects.all(), 
+        source='alertas',
+        write_only=True,
+        required=False  # Cambiado a requerido
+    )
+
+    class Meta:
+        model = SeguimientoAlertas
+        fields = '__all__'
+        read_only_fields = ['fecha_creacion', 'fecha_actualizacion', 'usuario_creacion']
+
+    def validate(self, data):
+        alerta_data = data.get('alerta_data')
+        
+        # Para actualizaciones, usa la matriz existente
+        if self.instance and not alerta_data:
+            alerta_data = self.instance.alerta_data
+            
+        if not alerta_data:
+            raise serializers.ValidationError("Se requiere una matriz para el seguimiento.")
+            
+        # Solo valida la fecha si está en los datos
+        if 'fecha_seguimiento' in data and data['fecha_seguimiento'] < matriz.fecha_creacion.date():
+            raise serializers.ValidationError(
+                "La fecha de seguimiento no puede ser anterior a la creación de la matriz."
+            )
+            
+        return data
+
+    def get_alerta_data(self, obj):
+        return {
+            'codigo': obj.alertas.codigo,
+            'tipo': obj.alertas.tipo,
+            'descripcion': obj.alertas.descripcion
+        }
+        
+    def get_usuario_nombre(self, obj):
+        if obj.usuario_creacion:
+            return f"{obj.usuario_creacion.first_name} {obj.usuario_creacion.last_name}"
+        return "N/A"

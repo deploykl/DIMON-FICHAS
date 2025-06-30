@@ -6,7 +6,7 @@
         <h1 class="mb-0 header-title">Lista de enlaces de información</h1>
         <p class="mb-0 header-subtitle">Acceso rápido a recursos digitales</p>
       </div>
-      <router-link to="/fichas" class="btn btn-outline-light">
+      <router-link to="/fichas" class="btn btn-outline-secondary">
         <i class="fas fa-arrow-left me-2"></i> Volver
       </router-link>
     </div>
@@ -171,18 +171,15 @@ onMounted(() => {
   --dark-color: #1d3557;
   --text-color: #333;
   --text-light: #6c757d;
-  --white: #ffffff;
 }
 
 .main {
   padding: 20px;
   min-height: 100vh;
-  background-color: #f8f9fa;
 }
 
 /* Header Styles */
 .header-container {
-  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-light) 100%);
   border-radius: 12px;
   padding: 15px 20px;
   margin-bottom: 20px;
@@ -193,13 +190,11 @@ onMounted(() => {
 .header-title {
   font-size: 1.8rem;
   font-weight: 700;
-  color: var(--white);
   margin-bottom: 0.2rem;
 }
 
 .header-subtitle {
   font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.8);
 }
 
 /* Search and Filter */
@@ -211,7 +206,6 @@ onMounted(() => {
 
 .search-container .input-group-text,
 .filter-container .input-group-text {
-  background-color: var(--white);
   color: var(--primary-color);
   border-right: none;
 }
@@ -224,7 +218,6 @@ onMounted(() => {
 
 /* Cards */
 .dashboard-card {
-  background: var(--white);
   border-radius: 12px;
   padding: 20px;
   height: 100%;
@@ -247,7 +240,6 @@ onMounted(() => {
 .card-icon-container {
   width: 80px;
   height: 80px;
-  background: var(--white);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -306,7 +298,6 @@ onMounted(() => {
 
 .type-badge {
   background-color: var(--primary-color);
-  color: white;
   align-self: center;
   margin-top: auto;
   padding: 5px 10px;
@@ -315,7 +306,6 @@ onMounted(() => {
 
 /* States */
 .loading-container {
-  background: var(--white);
   border-radius: 12px;
   padding: 40px 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -327,7 +317,6 @@ onMounted(() => {
 }
 
 .empty-container {
-  background: var(--white);
   border-radius: 12px;
   padding: 40px 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);

@@ -120,13 +120,13 @@ const menuItems = ref([
   {
     title: 'Alertas',
     icon: 'fa-chart-bar',
-    path: '/reports',
+    path: '/alertas',
     submenu: null
   },
   {
     title: 'Enlaces',
     icon: 'fa-globe',
-    path: '/url',
+    path: '/urls',
     submenu: null
   },
   {

@@ -6,6 +6,7 @@ import LoginView from "../views/fichas/login/LoginView.vue";
 import EvaluarFichaView from "../views/EvaluarFichaView.vue";
 import MatrizCompromisoView from "../views/MatrizCompromisoView.vue";
 import UrlsView from "../views/menu/UrlsView.vue";
+import AlertasView from "../views/AlertasView.vue";
 import SeguimientoMatrizView from "../views/SeguimientoMatriz.vue";
 
 const routes = [
@@ -45,7 +46,7 @@ const routes = [
     },
   },
   {
-    path: '/matriz-compromiso/matriz/:id',
+    path: "/matriz-compromiso/matriz/:id",
     name: "matriz-compromiso",
     component: MatrizCompromisoView,
     props: true,
@@ -54,8 +55,17 @@ const routes = [
       requiresAuth: true,
     },
   },
-   {
-    path: '/url',
+    {
+    path: "/alertas",
+    name: "ALERTAS",
+    component: AlertasView,
+    meta: {
+      title: "ALERTAS",
+      requiresAuth: true,
+    },
+  },
+  {
+    path: "/urls",
     name: "enlaces",
     component: UrlsView,
     props: true,

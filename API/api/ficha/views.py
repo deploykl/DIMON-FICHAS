@@ -14,6 +14,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend  # type: ignore
 from rest_framework.filters import OrderingFilter
 from api.ficha.serializers import *
+from django.core.exceptions import PermissionDenied
 
 class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
@@ -382,7 +383,61 @@ class SeguimientoMatrizCompromisoViewSet(viewsets.ModelViewSet):
         
         return Response(serializer.data)
     
+class AlertasViewSet(viewsets.ModelViewSet):
+    serializer_class = AlertasSerializer
+    permission_classes = [IsAuthenticated]
+    ordering = ["-fecha_creacion"]
+    ordering_fields = "__all__"
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    
+    def get_queryset(self):
+        queryset = Alertas.objects.select_related('usuario').prefetch_related('seguimientos')
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(usuario=self.request.user)
+        return queryset
+        
+    def perform_create(self, serializer):
+        serializer.save(usuario=self.request.user)
+        
+class SeguimientoAlertasViewSet(viewsets.ModelViewSet):
+    queryset = SeguimientoAlertas.objects.all()
+    serializer_class = SeguimientoAlertasSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
+    filterset_fields = ['alertas']  # Usar 'alertas' en lugar de 'alerta'
+    ordering_fields = ['fecha_seguimiento', 'fecha_creacion']
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        alerta_id = self.request.query_params.get('alerta', None)
+        if alerta_id:
+            queryset = queryset.filter(alertas_id=alerta_id)  # Changed from alerta_id to alertas_id
+        return queryset.order_by('-fecha_seguimiento')
+
+    def perform_create(self, serializer):
+        # Verificar que alertas está en los datos validados
+        if 'alertas' not in serializer.validated_data:
+            raise serializers.ValidationError({"alerta_id": "Este campo es requerido."})
+            
+        serializer.save(usuario_creacion=self.request.user)
+        
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # Verifica permisos
+        if not request.user.is_superuser and instance.alertas.usuario != request.user:
+            return Response(
+                {'error': 'No tienes permiso para editar este seguimiento'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        serializer = self.get_serializer(instance, data=request.data, partial=False)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        
+        return Response(serializer.data)
+    
+    
 class RenipressViewSet(ViewSet):
     permission_classes = [AllowAny]
     
@@ -435,3 +490,4 @@ class RenipressViewSet(ViewSet):
                 'success': False,
                 'error': str(e)
             }, status=500)
+            

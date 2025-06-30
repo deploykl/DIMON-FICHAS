@@ -11,7 +11,9 @@ router.register(r'verificador', VerificadorViewSet)
 router.register(r'evaluaciones', EvaluacionVerificadorViewSet)  # Añade esta línea
 router.register(r'matriz-compromiso', MatrizCompromisoViewSet, basename='matriz-compromiso')
 router.register(r'seguimiento-matriz', SeguimientoMatrizCompromisoViewSet, basename='seguimiento-matriz')
-router.register(r'renipress', RenipressViewSet, basename='renipress')  # Nueva ruta
+router.register(r'renipress', RenipressViewSet, basename='renipress')  
+router.register(r'alertas', AlertasViewSet, basename='alertas')  
+router.register(r'seguimiento-alertas', SeguimientoAlertasViewSet, basename='seg-alertas')  
 
 
 urlpatterns = router.urls
