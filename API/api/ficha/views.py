@@ -404,19 +404,19 @@ class SeguimientoAlertasViewSet(viewsets.ModelViewSet):
     serializer_class = SeguimientoAlertasSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['alertas']  # Usar 'alertas' en lugar de 'alerta'
+    filterset_fields = ['alerta']  # Usar 'alertas' en lugar de 'alerta'
     ordering_fields = ['fecha_seguimiento', 'fecha_creacion']
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        alerta_id = self.request.query_params.get('alerta', None)
+        alerta_id = self.request.query_params.get('alerta')  # Usa 'alerta' aquí también
         if alerta_id:
-            queryset = queryset.filter(alertas_id=alerta_id)  # Changed from alerta_id to alertas_id
+            queryset = queryset.filter(alerta_id=alerta_id)  # Filtra por 'alerta_id'
         return queryset.order_by('-fecha_seguimiento')
 
     def perform_create(self, serializer):
         # Verificar que alertas está en los datos validados
-        if 'alertas' not in serializer.validated_data:
+        if 'alerta' not in serializer.validated_data:
             raise serializers.ValidationError({"alerta_id": "Este campo es requerido."})
             
         serializer.save(usuario_creacion=self.request.user)
@@ -425,7 +425,7 @@ class SeguimientoAlertasViewSet(viewsets.ModelViewSet):
         instance = self.get_object()
         
         # Verifica permisos
-        if not request.user.is_superuser and instance.alertas.usuario != request.user:
+        if not request.user.is_superuser and instance.alerta.usuario != request.user:
             return Response(
                 {'error': 'No tienes permiso para editar este seguimiento'},
                 status=status.HTTP_403_FORBIDDEN

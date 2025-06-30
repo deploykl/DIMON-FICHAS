@@ -278,7 +278,7 @@ class Alertas(models.Model):
 # Create your models here.
 class SeguimientoAlertas(models.Model):
     # Campos específicos del seguimiento
-    fecha_seguimiento = models.DateField(verbose_name="Fecha de seguimiento")
+    fecha_seguimiento = models.DateTimeField(verbose_name="Fecha y hora de seguimiento")
     estado = models.TextField(verbose_name="Estado")
     analisis_accion = models.TextField(verbose_name="Análisis/Acción realizada")
     alerta = models.ForeignKey(Alertas, on_delete=models.CASCADE, related_name='seguimientos')

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import *
+from datetime import datetime
+from django.utils.timezone import make_aware
 
 
 class CategoriaSerializer(serializers.ModelSerializer):
@@ -172,18 +174,13 @@ class SeguimientoMatrizCompromisoSerializer(serializers.ModelSerializer):
 class AlertasSerializer(serializers.ModelSerializer):
     usuario = serializers.StringRelatedField(read_only=True)
     fecha_creacion = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
-    seguimientos = serializers.SerializerMethodField()
     usuario_nombre = serializers.SerializerMethodField()
 
     class Meta:
         model = Alertas
         fields = ['id', 'codigo', 'tipo', 'descripcion', 'fecha_creacion', 
-                 'usuario', 'usuario_nombre', 'seguimientos']
+                 'usuario', 'usuario_nombre']
         read_only_fields = ('id', 'codigo', 'fecha_creacion', 'usuario', 'usuario_nombre')
-
-    def get_seguimientos(self, obj):
-        seguimientos = obj.seguimientos.all().order_by('-fecha_seguimiento')
-        return SeguimientoAlertasSerializer(seguimientos, many=True).data
 
     def get_usuario_nombre(self, obj):
         if obj.usuario:
@@ -200,7 +197,7 @@ class SeguimientoAlertasSerializer(serializers.ModelSerializer):
     alerta = AlertasSerializer(read_only=True)
     alerta_id = serializers.PrimaryKeyRelatedField(
         queryset=Alertas.objects.all(), 
-        source='alertas',
+        source='alerta',
         write_only=True,
         required=False  # Cambiado a requerido
     )
@@ -211,20 +208,29 @@ class SeguimientoAlertasSerializer(serializers.ModelSerializer):
         read_only_fields = ['fecha_creacion', 'fecha_actualizacion', 'usuario_creacion']
 
     def validate(self, data):
-        alerta_data = data.get('alerta_data')
+        alerta = data.get('alerta')
         
-        # Para actualizaciones, usa la matriz existente
-        if self.instance and not alerta_data:
-            alerta_data = self.instance.alerta_data
+        if self.instance and not alerta:
+            alerta = self.instance.alerta
             
-        if not alerta_data:
-            raise serializers.ValidationError("Se requiere una matriz para el seguimiento.")
+        if not alerta:
+            raise serializers.ValidationError("Se requiere una alerta para el seguimiento.")
             
-        # Solo valida la fecha si está en los datos
-        if 'fecha_seguimiento' in data and data['fecha_seguimiento'] < matriz.fecha_creacion.date():
-            raise serializers.ValidationError(
-                "La fecha de seguimiento no puede ser anterior a la creación de la matriz."
-            )
+        if 'fecha_seguimiento' in data:
+            # Convertir a zona horaria local si es necesario
+            if isinstance(data['fecha_seguimiento'], str):
+                try:
+                    fecha_naive = datetime.strptime(data['fecha_seguimiento'], '%Y-%m-%dT%H:%M:%S')
+                    data['fecha_seguimiento'] = make_aware(fecha_naive)
+                except ValueError:
+                    raise serializers.ValidationError(
+                        {"fecha_seguimiento": "Formato de fecha inválido. Use YYYY-MM-DDTHH:MM:SS"}
+                    )
+            
+            if data['fecha_seguimiento'] < alerta.fecha_creacion:
+                raise serializers.ValidationError(
+                    {"fecha_seguimiento": "La fecha de seguimiento no puede ser anterior a la creación de la alerta."}
+                )
             
         return data
 

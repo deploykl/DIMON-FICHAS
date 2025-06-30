@@ -34,7 +34,7 @@
                         </span>
                       </td>
                       <td>{{ alerta.descripcion }}</td>
-                      <td>{{ formatDate(alerta.fecha_creacion) }}</td>
+                      <td>{{ formatDateTime(alerta.fecha_creacion) }}</td>
                       <td>
                         <button @click="verSeguimientos(alerta.id)" class="btn btn-sm btn-info me-1">
                           <i class="fas fa-history"></i> Seguimientos
@@ -57,7 +57,8 @@
     </section>
 
     <!-- Modal para Crear Alerta -->
-    <div class="modal fade" :class="{ 'show': showCreateModal }" tabindex="-1" style="display: block;" v-if="showCreateModal">
+    <div class="modal fade" :class="{ 'show': showCreateModal }" tabindex="-1" style="display: block;"
+      v-if="showCreateModal">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -94,7 +95,8 @@
     <div class="modal-backdrop fade show" v-if="showCreateModal"></div>
 
     <!-- Modal para Editar Alerta -->
-    <div class="modal fade" :class="{ 'show': showEditModal }" tabindex="-1" style="display: block;" v-if="showEditModal">
+    <div class="modal fade" :class="{ 'show': showEditModal }" tabindex="-1" style="display: block;"
+      v-if="showEditModal">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -138,7 +140,8 @@
     <div class="modal-backdrop fade show" v-if="showEditModal"></div>
 
     <!-- Modal para Eliminar Alerta -->
-    <div class="modal fade" :class="{ 'show': showDeleteModal }" tabindex="-1" style="display: block;" v-if="showDeleteModal">
+    <div class="modal fade" :class="{ 'show': showDeleteModal }" tabindex="-1" style="display: block;"
+      v-if="showDeleteModal">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -247,17 +250,19 @@
                         <thead class="table-light">
                           <tr>
                             <th width="80">#</th>
-                            <th>Fecha Seguimiento</th>
+                            <th>Fecha creación</th>
+                            <th>Plazo Seguimiento</th>
                             <th>Estado</th>
                             <th>Registrado por</th>
-                            <th>Fecha Registro</th>
+                            <th>Descripción</th>
                             <th width="120">Acciones</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr v-for="(seguimiento, index) in alertaSeguimientos.seguimientos" :key="'seg-alerta-' + index"
-                            :class="getEstadoSeguimientoBgClass(seguimiento.estado)">
+                          <tr v-for="(seguimiento, index) in alertaSeguimientos.seguimientos"
+                            :key="'seg-alerta-' + index" :class="getEstadoSeguimientoBgClass(seguimiento.estado)">
                             <td class="fw-bold">{{ index + 1 }}</td>
+                            <td>{{ formatDateTime(seguimiento.fecha_creacion) }}</td>
                             <td>{{ formatDateTime(seguimiento.fecha_seguimiento) }}</td>
                             <td>
                               <span class="badge" :class="getEstadoSeguimientoClass(seguimiento.estado)">
@@ -265,21 +270,23 @@
                               </span>
                             </td>
                             <td>{{ seguimiento.usuario_nombre || 'N/A' }}</td>
-                            <td>{{ formatDateTime(seguimiento.fecha_creacion) }}</td>
+                            <!-- Por esto: -->
+                            <td>
+                              <div>
+                                {{ seguimiento.analisis_accion || 'Sin descripción' }}
+                              </div>
+                            </td>
                             <td>
                               <button @click="editarSeguimientoAlerta(seguimiento.id)"
                                 class="btn btn-sm btn-outline-primary me-1" title="Editar">
                                 <i class="fas fa-edit"></i>
                               </button>
-                              <button class="btn btn-sm btn-outline-info" title="Ver detalles" data-bs-toggle="collapse"
-                                :data-bs-target="'#detailsSegAlerta-' + index">
-                                <i class="fas fa-eye"></i>
-                              </button>
+
                             </td>
                           </tr>
                           <!-- Fila de detalles expandible -->
-                          <tr v-for="(seguimiento, index) in alertaSeguimientos.seguimientos" :key="'detail-alerta-' + index"
-                            class="collapse" :id="'detailsSegAlerta-' + index">
+                          <tr v-for="(seguimiento, index) in alertaSeguimientos.seguimientos"
+                            :key="'detail-alerta-' + index" class="collapse" :id="'detailsSegAlerta-' + index">
                             <td colspan="6" class="bg-light">
                               <div class="p-3">
                                 <div class="row">
@@ -324,14 +331,23 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">{{ seguimientoAlertaEditando?.isNew ? 'Nuevo Seguimiento' : 'Editar Seguimiento' }}</h5>
+            <h5 class="modal-title">{{ seguimientoAlertaEditando?.isNew ? 'Nuevo Seguimiento' : 'Editar Seguimiento' }}
+            </h5>
             <button type="button" class="btn-close" @click="cerrarModalesAlerta"></button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="guardarSeguimientoAlerta">
-              <div class="mb-3">
-                <label class="form-label">Fecha de Seguimiento</label>
-                <input v-model="formSeguimientoAlerta.fecha_seguimiento" type="date" class="form-control" required>
+              <!-- Por este componente personalizado -->
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Fecha</label>
+                  <input v-model="fechaPart" type="date" class="form-control" required
+                    :min="new Date().toISOString().split('T')[0]">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Hora</label>
+                  <input v-model="horaPart" type="time" class="form-control" required>
+                </div>
               </div>
 
               <div class="mb-3">
@@ -347,7 +363,8 @@
 
               <div class="mb-3">
                 <label class="form-label">Análisis/Acción</label>
-                <textarea v-model="formSeguimientoAlerta.analisis_accion" class="form-control" rows="5" required></textarea>
+                <textarea v-model="formSeguimientoAlerta.analisis_accion" class="form-control" rows="5"
+                  required></textarea>
               </div>
 
               <div class="d-flex justify-content-end gap-2">
@@ -362,8 +379,9 @@
   </main>
 </template>
 
+
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { api } from '@/components/services/auth_axios';
 import { useToast } from 'vue-toast-notification';
 
@@ -381,6 +399,40 @@ const showSeguimientosAlertaModal = ref(false);
 const showEditarSeguimientoAlertaModal = ref(false);
 const loadingSeguimientosAlerta = ref(false);
 const alertaSeguimientos = ref(null);
+
+// Datos para fecha y hora separados
+const fechaPart = ref(new Date().toISOString().split('T')[0]);
+const horaPart = ref('12:00');
+
+// Propiedades computadas
+const fechaHoraCompleta = computed(() => {
+  if (!fechaPart.value || !horaPart.value) return null;
+
+  // Formato: YYYY-MM-DDTHH:MM:SS
+  return `${fechaPart.value}T${horaPart.value}:00`;
+});
+
+// Función para formatear fecha y hora
+const formatDateTime = (dateString) => {
+  if (!dateString) return 'N/A';
+
+  try {
+    const date = new Date(dateString);
+    // Ajustar a zona horaria local
+    return date.toLocaleString('es-PE', {
+      timeZone: 'America/Lima',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  } catch (error) {
+    return 'Fecha inválida';
+  }
+};
 
 // Datos para los formularios
 const nuevaAlerta = reactive({
@@ -404,7 +456,6 @@ const alertaAEliminar = reactive({
 
 // Formulario para seguimientos
 const formSeguimientoAlerta = reactive({
-  fecha_seguimiento: new Date().toISOString().split('T')[0],
   estado: 'P',
   analisis_accion: ''
 });
@@ -419,16 +470,6 @@ const getBadgeColor = (tipo) => {
     'Informativa': 'info'
   };
   return colors[tipo] || 'primary';
-};
-
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleString();
-};
-
-const formatDateTime = (dateString) => {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  return date.toLocaleString();
 };
 
 // Métodos para estados de seguimiento
@@ -545,8 +586,7 @@ const eliminarAlerta = async () => {
 const verSeguimientos = async (alertaId) => {
   try {
     loadingSeguimientosAlerta.value = true;
-    
-    // Obtener datos en paralelo
+
     const [alertaResponse, seguimientosResponse] = await Promise.all([
       api.get(`ficha/alertas/${alertaId}/`),
       api.get(`ficha/seguimiento-alertas/`, {
@@ -574,7 +614,9 @@ const verSeguimientos = async (alertaId) => {
 };
 
 const nuevoSeguimientoAlerta = (alertaId) => {
-  formSeguimientoAlerta.fecha_seguimiento = new Date().toISOString().split('T')[0];
+  // Resetear valores
+  fechaPart.value = new Date().toISOString().split('T')[0];
+  horaPart.value = '12:00';
   formSeguimientoAlerta.estado = 'P';
   formSeguimientoAlerta.analisis_accion = '';
 
@@ -589,7 +631,12 @@ const editarSeguimientoAlerta = async (seguimientoId) => {
   try {
     loadingSeguimientosAlerta.value = true;
     const response = await api.get(`ficha/seguimiento-alertas/${seguimientoId}/`);
-    formSeguimientoAlerta.fecha_seguimiento = response.data.fecha_seguimiento;
+
+    // Parsear la fecha existente
+    const fecha = new Date(response.data.fecha_seguimiento);
+    fechaPart.value = fecha.toISOString().split('T')[0];
+    horaPart.value = `${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')}`;
+
     formSeguimientoAlerta.estado = response.data.estado;
     formSeguimientoAlerta.analisis_accion = response.data.analisis_accion;
 
@@ -608,60 +655,73 @@ const editarSeguimientoAlerta = async (seguimientoId) => {
 
 const guardarSeguimientoAlerta = async () => {
   try {
-    if (!seguimientoAlertaEditando.value?.alertaId) {
-      throw new Error('ID de alerta no definido');
+    loadingSeguimientosAlerta.value = true;
+
+    if (!seguimientoAlertaEditando.value) {
+      throw new Error('No hay seguimiento en edición');
     }
 
-    // Estructura CORRECTA - usar 'alerta_id' que espera el backend
+    // Asegurar el formato YYYY-MM-DD
+    const fechaHora = new Date(`${fechaPart.value}T${horaPart.value}`);
+    const fechaHoraISO = fechaHora.toISOString(); // Esto envía en UTC
+
     const payload = {
-      fecha_seguimiento: formSeguimientoAlerta.fecha_seguimiento,
+      fecha_seguimiento: fechaHoraISO, // Formato ISO con hora UTC
       estado: formSeguimientoAlerta.estado,
       analisis_accion: formSeguimientoAlerta.analisis_accion,
-  alerta: seguimientoAlertaEditando.value.alertaId  // Cambiado de 'alerta_id' a 'alerta'
     };
+
+    // Resto del código permanece igual...
+    if (seguimientoAlertaEditando.value.isNew) {
+      if (!seguimientoAlertaEditando.value.alertaId) {
+        throw new Error('ID de alerta no definido para nuevo seguimiento');
+      }
+      payload.alerta_id = seguimientoAlertaEditando.value.alertaId;
+    }
 
     let response;
     if (seguimientoAlertaEditando.value.isNew) {
       response = await api.post('ficha/seguimiento-alertas/', payload);
       toast.success('Seguimiento creado correctamente');
-      
+
       if (alertaSeguimientos.value) {
-        alertaSeguimientos.value.seguimientos.unshift({
-          ...response.data,
-          id: response.data.id,
-          usuario_nombre: "Tú"
-        });
+        alertaSeguimientos.value.seguimientos.unshift(response.data);
       }
     } else {
+      if (!seguimientoAlertaEditando.value.seguimientoId) {
+        throw new Error('ID de seguimiento no definido para edición');
+      }
+
       response = await api.put(
         `ficha/seguimiento-alertas/${seguimientoAlertaEditando.value.seguimientoId}/`,
         payload
       );
       toast.success('Seguimiento actualizado correctamente');
-      
-      const index = alertaSeguimientos.value.seguimientos.findIndex(
-        s => s.id === seguimientoAlertaEditando.value.seguimientoId
-      );
-      if (index !== -1) {
-        alertaSeguimientos.value.seguimientos[index] = response.data;
+
+      if (alertaSeguimientos.value) {
+        const index = alertaSeguimientos.value.seguimientos.findIndex(
+          s => s.id === seguimientoAlertaEditando.value.seguimientoId
+        );
+        if (index !== -1) {
+          alertaSeguimientos.value.seguimientos[index] = response.data;
+        }
       }
     }
 
     showEditarSeguimientoAlertaModal.value = false;
-  } catch (error) {
-    console.error('Error:', {
-      message: error.message,
-      response: error.response?.data,
-      config: error.config
-    });
+    seguimientoAlertaEditando.value = null;
 
-    let errorMsg = 'Error al guardar';
+  } catch (error) {
+    console.error('Error al guardar seguimiento:', error);
+    let errorMsg = 'Error al guardar el seguimiento';
     if (error.response?.data) {
       errorMsg = Object.entries(error.response.data)
         .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
         .join(' | ');
+    } else if (error.message) {
+      errorMsg = error.message;
     }
-    
+
     toast.error(errorMsg, { position: 'top-right', duration: 5000 });
   } finally {
     loadingSeguimientosAlerta.value = false;
