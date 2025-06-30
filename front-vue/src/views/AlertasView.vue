@@ -37,13 +37,13 @@
                       <td>{{ formatDateTime(alerta.fecha_creacion) }}</td>
                       <td>
                         <button @click="verSeguimientos(alerta.id)" class="btn btn-sm btn-info me-1">
-                          <i class="fas fa-history"></i> Seguimientos
+                          <i class="fas fa-history"></i> 
                         </button>
                         <button @click="openEditModal(alerta)" class="btn btn-sm btn-warning me-1">
-                          <i class="bi bi-pencil"></i> Editar
+                          <i class="bi bi-pencil"></i> 
                         </button>
                         <button @click="openDeleteModal(alerta)" class="btn btn-sm btn-danger">
-                          <i class="bi bi-trash"></i> Eliminar
+                          <i class="bi bi-trash"></i> 
                         </button>
                       </td>
                     </tr>
@@ -251,10 +251,11 @@
                           <tr>
                             <th width="80">#</th>
                             <th>Fecha creación</th>
-                            <th>Plazo Seguimiento</th>
+                            <th>Fecha Seguimiento</th>
                             <th>Estado</th>
                             <th>Registrado por</th>
                             <th>Descripción</th>
+                            <th>Próximo Envío</th>
                             <th width="120">Acciones</th>
                           </tr>
                         </thead>
@@ -270,37 +271,19 @@
                               </span>
                             </td>
                             <td>{{ seguimiento.usuario_nombre || 'N/A' }}</td>
-                            <!-- Por esto: -->
                             <td>
                               <div>
                                 {{ seguimiento.analisis_accion || 'Sin descripción' }}
                               </div>
                             </td>
                             <td>
+                              {{ seguimiento.proximo_envio ? formatDateTime(seguimiento.proximo_envio) : 'No programado' }}
+                            </td>
+                            <td>
                               <button @click="editarSeguimientoAlerta(seguimiento.id)"
                                 class="btn btn-sm btn-outline-primary me-1" title="Editar">
                                 <i class="fas fa-edit"></i>
                               </button>
-
-                            </td>
-                          </tr>
-                          <!-- Fila de detalles expandible -->
-                          <tr v-for="(seguimiento, index) in alertaSeguimientos.seguimientos"
-                            :key="'detail-alerta-' + index" class="collapse" :id="'detailsSegAlerta-' + index">
-                            <td colspan="6" class="bg-light">
-                              <div class="p-3">
-                                <div class="row">
-                                  <div class="col-md-12 mb-3">
-                                    <label class="fw-bold">Análisis/Acción:</label>
-                                    <p class="text-muted">{{ seguimiento.analisis_accion || 'Sin descripción' }}</p>
-                                  </div>
-
-                                  <div class="col-md-12 mb-3" v-if="seguimiento.observaciones">
-                                    <label class="fw-bold">Observaciones:</label>
-                                    <p class="text-muted">{{ seguimiento.observaciones }}</p>
-                                  </div>
-                                </div>
-                              </div>
                             </td>
                           </tr>
                         </tbody>
@@ -337,7 +320,6 @@
           </div>
           <div class="modal-body">
             <form @submit.prevent="guardarSeguimientoAlerta">
-              <!-- Por este componente personalizado -->
               <div class="row">
                 <div class="col-md-6 mb-3">
                   <label class="form-label">Fecha</label>
@@ -367,9 +349,48 @@
                   required></textarea>
               </div>
 
+              <!-- Sección de programación de notificaciones -->
+              <div class="card mb-3">
+                <div class="card-header bg-light">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" v-model="formSeguimientoAlerta.enviar_notificacion" 
+                           id="notificacionesSwitch">
+                    <label class="form-check-label" for="notificacionesSwitch">
+                      Programar notificaciones automáticas
+                    </label>
+                  </div>
+                </div>
+                <div class="card-body" v-if="formSeguimientoAlerta.enviar_notificacion">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Frecuencia de recordatorio</label>
+                      <select v-model="formSeguimientoAlerta.frecuencia_envio" class="form-select" required>
+                        <option value="diario">Diario</option>
+                        <option value="2dias">Cada 2 días</option>
+                        <option value="3dias">Cada 3 días</option>
+                        <option value="semanal">Semanal</option>
+                        <option value="mensual">Mensual</option>
+                        <option value="personalizado">Personalizado</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6 mb-3" v-if="formSeguimientoAlerta.frecuencia_envio === 'personalizado'">
+                      <label class="form-label">Días para recordatorio personalizado</label>
+                      <input v-model="formSeguimientoAlerta.dias_personalizados" type="number" min="1" class="form-control">
+                    </div>
+                  </div>
+                  <div class="alert alert-info mt-2">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Las notificaciones se enviarán por correo y Telegram según la frecuencia seleccionada.
+                  </div>
+                </div>
+              </div>
+
               <div class="d-flex justify-content-end gap-2">
                 <button type="button" class="btn btn-secondary" @click="cerrarModalesAlerta">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="submit" class="btn btn-primary" :disabled="loadingSeguimientosAlerta">
+                  <span v-if="loadingSeguimientosAlerta" class="spinner-border spinner-border-sm"></span>
+                  <span v-else>Guardar</span>
+                </button>
               </div>
             </form>
           </div>
@@ -378,7 +399,6 @@
     </div>
   </main>
 </template>
-
 
 <script setup>
 import { ref, reactive, onMounted, computed } from 'vue';
@@ -407,8 +427,6 @@ const horaPart = ref('12:00');
 // Propiedades computadas
 const fechaHoraCompleta = computed(() => {
   if (!fechaPart.value || !horaPart.value) return null;
-
-  // Formato: YYYY-MM-DDTHH:MM:SS
   return `${fechaPart.value}T${horaPart.value}:00`;
 });
 
@@ -418,7 +436,6 @@ const formatDateTime = (dateString) => {
 
   try {
     const date = new Date(dateString);
-    // Ajustar a zona horaria local
     return date.toLocaleString('es-PE', {
       timeZone: 'America/Lima',
       year: 'numeric',
@@ -457,7 +474,10 @@ const alertaAEliminar = reactive({
 // Formulario para seguimientos
 const formSeguimientoAlerta = reactive({
   estado: 'P',
-  analisis_accion: ''
+  analisis_accion: '',
+  enviar_notificacion: false,
+  frecuencia_envio: 'diario',
+  dias_personalizados: null
 });
 
 const seguimientoAlertaEditando = ref(null);
@@ -592,7 +612,7 @@ const verSeguimientos = async (alertaId) => {
       api.get(`ficha/seguimiento-alertas/`, {
         params: {
           alerta: alertaId,
-          fields: 'id,fecha_seguimiento,estado,analisis_accion,fecha_creacion,usuario_creacion',
+          fields: 'id,fecha_seguimiento,estado,analisis_accion,fecha_creacion,usuario_creacion,proximo_envio,frecuencia_envio,dias_personalizados,enviar_notificacion',
           'usuario_creacion.fields': 'first_name,last_name'
         }
       })
@@ -614,11 +634,16 @@ const verSeguimientos = async (alertaId) => {
 };
 
 const nuevoSeguimientoAlerta = (alertaId) => {
-  // Resetear valores
   fechaPart.value = new Date().toISOString().split('T')[0];
   horaPart.value = '12:00';
-  formSeguimientoAlerta.estado = 'P';
-  formSeguimientoAlerta.analisis_accion = '';
+  
+  Object.assign(formSeguimientoAlerta, {
+    estado: 'P',
+    analisis_accion: '',
+    enviar_notificacion: false,
+    frecuencia_envio: 'diario',
+    dias_personalizados: null
+  });
 
   seguimientoAlertaEditando.value = {
     alertaId,
@@ -632,13 +657,17 @@ const editarSeguimientoAlerta = async (seguimientoId) => {
     loadingSeguimientosAlerta.value = true;
     const response = await api.get(`ficha/seguimiento-alertas/${seguimientoId}/`);
 
-    // Parsear la fecha existente
     const fecha = new Date(response.data.fecha_seguimiento);
     fechaPart.value = fecha.toISOString().split('T')[0];
     horaPart.value = `${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')}`;
 
-    formSeguimientoAlerta.estado = response.data.estado;
-    formSeguimientoAlerta.analisis_accion = response.data.analisis_accion;
+    Object.assign(formSeguimientoAlerta, {
+      estado: response.data.estado,
+      analisis_accion: response.data.analisis_accion,
+      enviar_notificacion: response.data.enviar_notificacion,
+      frecuencia_envio: response.data.frecuencia_envio || 'diario',
+      dias_personalizados: response.data.dias_personalizados
+    });
 
     seguimientoAlertaEditando.value = {
       seguimientoId,
@@ -661,17 +690,20 @@ const guardarSeguimientoAlerta = async () => {
       throw new Error('No hay seguimiento en edición');
     }
 
-    // Asegurar el formato YYYY-MM-DD
     const fechaHora = new Date(`${fechaPart.value}T${horaPart.value}`);
-    const fechaHoraISO = fechaHora.toISOString(); // Esto envía en UTC
+    const fechaHoraISO = fechaHora.toISOString();
 
     const payload = {
-      fecha_seguimiento: fechaHoraISO, // Formato ISO con hora UTC
+      fecha_seguimiento: fechaHoraISO,
       estado: formSeguimientoAlerta.estado,
       analisis_accion: formSeguimientoAlerta.analisis_accion,
+      enviar_notificacion: formSeguimientoAlerta.enviar_notificacion,
+      frecuencia_envio: formSeguimientoAlerta.enviar_notificacion ? formSeguimientoAlerta.frecuencia_envio : null,
+      dias_personalizados: formSeguimientoAlerta.enviar_notificacion && 
+                          formSeguimientoAlerta.frecuencia_envio === 'personalizado' ? 
+                          formSeguimientoAlerta.dias_personalizados : null
     };
 
-    // Resto del código permanece igual...
     if (seguimientoAlertaEditando.value.isNew) {
       if (!seguimientoAlertaEditando.value.alertaId) {
         throw new Error('ID de alerta no definido para nuevo seguimiento');
@@ -785,5 +817,40 @@ onMounted(() => {
 
 .bg-secondary {
   background-color: #6c757d !important;
+}
+
+/* Estilos para el switch de notificaciones */
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Estilos para la sección de programación */
+.card-header {
+  cursor: pointer;
+}
+
+/* Ajustes para los inputs de fecha/hora */
+input[type="date"],
+input[type="time"] {
+  height: 38px;
+}
+
+/* Estilos para el área de texto */
+textarea.form-control {
+  min-height: 120px;
+}
+
+/* Estilos para el modal */
+.modal-content {
+  border-radius: 0.5rem;
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
 }
 </style>
