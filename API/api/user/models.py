@@ -7,7 +7,7 @@ from api.Choises import GENDER_CHOICES
 class User(AbstractUser):
     image = models.ImageField(upload_to='users/%Y/%m/%d',default='img/empty.png', null = True, blank = True)
     genero = models.CharField(max_length=1, choices=GENDER_CHOICES, verbose_name="Género", null=True, blank=True)
-
+    telegram_chat_id = models.BigIntegerField(verbose_name="ID de Chat de Telegram",null=True,blank=True, unique=True,)
     def delete(self, *args, **kwargs):
         try:
             super().delete(*args, **kwargs)

@@ -507,21 +507,45 @@ class SeguimientoAlertas(models.Model):
         
         try:
             url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
-            payload = {
-                'chat_id': settings.TELEGRAM_CHAT_ID,
-                'text': mensaje,
-                'parse_mode': 'Markdown',
-                'disable_web_page_preview': True
-            }
-            response = requests.post(url, data=payload, timeout=10)
-            return response.json()
+            
+            # PRIORIDAD 1: Enviar solo al usuario si tiene chat_id
+            if self.usuario_creacion and self.usuario_creacion.telegram_chat_id:
+                payload = {
+                    'chat_id': self.usuario_creacion.telegram_chat_id,
+                    'text': f"🔔 Notificación personal:\n{mensaje}",
+                    'parse_mode': 'Markdown'
+                }
+                response = requests.post(url, data=payload, timeout=5)
+                return {
+                    'destino': 'usuario',
+                    'chat_id': self.usuario_creacion.telegram_chat_id,
+                    'resultado': response.json()
+                }
+            
+            # PRIORIDAD 2: Enviar al grupo solo si NO hay usuario con chat_id
+            elif hasattr(settings, 'TELEGRAM_CHAT_ID') and settings.TELEGRAM_CHAT_ID:
+                payload = {
+                    'chat_id': settings.TELEGRAM_CHAT_ID,
+                    'text': f"📢 Notificación general:\n{mensaje}",
+                    'parse_mode': 'Markdown'
+                }
+                response = requests.post(url, data=payload, timeout=5)
+                return {
+                    'destino': 'grupo',
+                    'chat_id': settings.TELEGRAM_CHAT_ID,
+                    'resultado': response.json()
+                }
+            
+            return {"ok": False, "error": "No hay destinatarios configurados"}
+            
         except Exception as e:
-            # Registrar el error en logs
+            # Registrar el error
             from django.core import mail
             mail.mail_admins(
-                subject=f"Error enviando Telegram de seguimiento {self.id}",
-                message=f"Error: {str(e)}"
+                subject=f"Error enviando Telegram - Seguimiento {self.id}",
+                message=f"Error: {str(e)}\nDestinatario intentado: {self.usuario_creacion.id if self.usuario_creacion else 'Grupo'}"
             )
+            return {"ok": False, "error": str(e)}
     
     def save(self, *args, **kwargs):
         # Calcular próxima fecha de envío si no está definida
