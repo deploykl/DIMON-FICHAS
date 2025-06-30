@@ -298,3 +298,24 @@ class SeguimientoAlertas(models.Model):
     def __str__(self):
         return f"{self.fecha_seguimiento} - {self.usuario_creacion}"
 
+    def calcular_proximo_envio(self):
+        from datetime import timedelta
+        
+        if self.frecuencia_envio == 'diario':
+            return self.fecha_seguimiento + timedelta(days=1)
+        elif self.frecuencia_envio == '2dias':
+            return self.fecha_seguimiento + timedelta(days=2)
+        elif self.frecuencia_envio == '3dias':
+            return self.fecha_seguimiento + timedelta(days=3)
+        elif self.frecuencia_envio == 'semanal':
+            return self.fecha_seguimiento + timedelta(weeks=1)
+        elif self.frecuencia_envio == 'mensual':
+            return self.fecha_seguimiento + timedelta(days=30)
+        elif self.frecuencia_envio == 'personalizado' and self.dias_personalizados:
+            return self.fecha_seguimiento + timedelta(days=self.dias_personalizados)
+        return None
+    
+    def save(self, *args, **kwargs):
+        if not self.proximo_envio:
+            self.proximo_envio = self.calcular_proximo_envio()
+        super().save(*args, **kwargs)
