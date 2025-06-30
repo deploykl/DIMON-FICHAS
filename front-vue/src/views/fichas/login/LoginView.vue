@@ -110,7 +110,9 @@ const handleSubmit = async () => {
     if (refresh) localStorage.setItem('refreshToken', refresh);
     localStorage.setItem('is_superuser', is_superuser ? 'true' : 'false');
     localStorage.setItem('is_staff', is_staff ? 'true' : 'false');
-
+    //  Obtener perfil del usuario
+    const perfilResponse = await api.get('user/profile/');
+    localStorage.setItem('user', JSON.stringify(perfilResponse.data));
     router.push('/fichas');
     
   } catch (error) {

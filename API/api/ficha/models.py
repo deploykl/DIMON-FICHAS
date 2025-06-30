@@ -8,7 +8,8 @@ from django.dispatch import receiver
 from django.core.mail import send_mail
 import requests
 User = get_user_model()  # Esto usará el modelo definido en AUTH_USER_MODEL
-from datetime import timedelta  # Añadir esto al inicio del archivo models.py
+from datetime import timedelta, datetime
+from django.utils import timezone
 
 # Create your models here.
 class Categoria(models.Model):
@@ -268,7 +269,14 @@ class Alertas(models.Model):
     tipo = models.CharField(max_length=500, verbose_name="Tipo")
     descripcion = models.CharField(max_length=500, verbose_name="Descripción")
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-
+ # Agrega estos nuevos campos
+    hora_envio = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name="Hora de envío programada",
+        help_text="Hora a la que se enviarán los recordatorios"
+    )
+    
     def save(self, *args, **kwargs):
         # Si es un nuevo registro y no tiene código asignado
         if not self.codigo:
@@ -283,6 +291,7 @@ class Alertas(models.Model):
 class SeguimientoAlertas(models.Model):
     # Opciones de frecuencia de envío
     FRECUENCIA_CHOICES = [
+        ('hoy', 'Hoy mismo'),
         ('diario', 'Diario'),
         ('2dias', 'Cada 2 días'),
         ('3dias', 'Cada 3 días'),
@@ -291,11 +300,36 @@ class SeguimientoAlertas(models.Model):
         ('personalizado', 'Personalizado'),
     ]
     
+    # Opciones de estado del seguimiento
+    ESTADO_CHOICES = [
+        ('P', 'Pendiente'),
+        ('EP', 'En Progreso'),
+        ('C', 'Completado'),
+        ('A', 'Aprobado'),
+        ('R', 'Rechazado'),
+    ]
+    
     # Campos específicos del seguimiento
-    fecha_seguimiento = models.DateTimeField(verbose_name="Fecha y hora de seguimiento")
-    estado = models.TextField(verbose_name="Estado")
-    analisis_accion = models.TextField(verbose_name="Análisis/Acción realizada")
-    alerta = models.ForeignKey(Alertas, on_delete=models.CASCADE, related_name='seguimientos')
+    fecha_seguimiento = models.DateTimeField(
+        verbose_name="Fecha y hora de seguimiento",
+        help_text="Fecha y hora en que se realizó el seguimiento"
+    )
+    estado = models.CharField(
+        max_length=2,
+        choices=ESTADO_CHOICES,
+        default='P',
+        verbose_name="Estado del seguimiento"
+    )
+    analisis_accion = models.TextField(
+        verbose_name="Análisis/Acción realizada",
+        help_text="Descripción detallada del análisis y acciones tomadas"
+    )
+    alerta = models.ForeignKey(
+        'Alertas',
+        on_delete=models.CASCADE,
+        related_name='seguimientos',
+        verbose_name="Alerta relacionada"
+    )
     
     # Campos para programación de envíos
     frecuencia_envio = models.CharField(
@@ -303,26 +337,47 @@ class SeguimientoAlertas(models.Model):
         choices=FRECUENCIA_CHOICES, 
         null=True, 
         blank=True,
-        verbose_name="Frecuencia de recordatorio"
+        verbose_name="Frecuencia de recordatorio",
+        help_text="Frecuencia con la que se enviarán recordatorios"
+    )
+    hora_envio = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name="Hora de envío programada",
+        help_text="Hora específica para enviar los recordatorios (formato HH:MM)"
     )
     dias_personalizados = models.PositiveIntegerField(
         null=True, 
         blank=True,
-        verbose_name="Días para recordatorio personalizado"
+        verbose_name="Días para recordatorio personalizado",
+        help_text="Número de días para recordatorios personalizados"
     )
     proximo_envio = models.DateTimeField(
         null=True, 
         blank=True,
-        verbose_name="Próximo envío programado"
+        verbose_name="Próximo envío programado",
+        help_text="Fecha y hora del próximo recordatorio automático"
     )
     enviar_notificacion = models.BooleanField(
         default=True,
-        verbose_name="Enviar notificación"
+        verbose_name="Enviar notificación",
+        help_text="Activar para enviar notificaciones automáticas"
+    )
+    enviar_ahora = models.BooleanField(
+        default=False,
+        verbose_name="Enviar notificación inmediata",
+        help_text="Marcar para enviar notificación inmediatamente al guardar"
     )
     
     # Fechas de registro
-    fecha_creacion = models.DateTimeField(auto_now_add=True)
-    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    fecha_creacion = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Fecha de creación"
+    )
+    fecha_actualizacion = models.DateTimeField(
+        auto_now=True,
+        verbose_name="Fecha de última actualización"
+    )
     
     # Relación con usuario
     usuario_creacion = models.ForeignKey(
@@ -334,23 +389,44 @@ class SeguimientoAlertas(models.Model):
         verbose_name="Usuario que registró"
     )
 
+    class Meta:
+        verbose_name = "Seguimiento de Alerta"
+        verbose_name_plural = "Seguimientos de Alertas"
+        ordering = ['-fecha_seguimiento']
+        indexes = [
+            models.Index(fields=['proximo_envio']),
+            models.Index(fields=['alerta']),
+            models.Index(fields=['usuario_creacion']),
+        ]
+
     def __str__(self):
-        return f"{self.fecha_seguimiento} - {self.usuario_creacion}"
+        return f"Seguimiento #{self.id} - Alerta {self.alerta.codigo} - {self.get_estado_display()}"
 
     def calcular_proximo_envio(self):
+        if not self.frecuencia_envio or not self.hora_envio:
+            return None
+            
+        fecha_actual = timezone.now().date()
+        hora_envio = self.hora_envio
+        
+        # Calcula la fecha base según la frecuencia
         if self.frecuencia_envio == 'diario':
-            return self.fecha_seguimiento + timedelta(days=1)
+            next_date = fecha_actual + timedelta(days=1)
         elif self.frecuencia_envio == '2dias':
-            return self.fecha_seguimiento + timedelta(days=2)
+            next_date = fecha_actual + timedelta(days=2)
         elif self.frecuencia_envio == '3dias':
-            return self.fecha_seguimiento + timedelta(days=3)
+            next_date = fecha_actual + timedelta(days=3)
         elif self.frecuencia_envio == 'semanal':
-            return self.fecha_seguimiento + timedelta(weeks=1)
+            next_date = fecha_actual + timedelta(weeks=1)
         elif self.frecuencia_envio == 'mensual':
-            return self.fecha_seguimiento + timedelta(days=30)
+            next_date = fecha_actual + timedelta(days=30)
         elif self.frecuencia_envio == 'personalizado' and self.dias_personalizados:
-            return self.fecha_seguimiento + timedelta(days=self.dias_personalizados)
-        return None
+            next_date = fecha_actual + timedelta(days=self.dias_personalizados)
+        else:
+            return None
+            
+        # Combina la nueva fecha con la hora programada
+        return datetime.combine(next_date, hora_envio)
     
     def enviar_notificaciones(self):
         if not self.enviar_notificacion:
@@ -363,68 +439,107 @@ class SeguimientoAlertas(models.Model):
         self.enviar_telegram()
     
     def enviar_correo(self):
-        asunto = f"Nuevo seguimiento para alerta {self.alerta.codigo}"
+        asunto = f"[Seguimiento] Alerta {self.alerta.codigo} - {self.get_estado_display()}"
+        
         mensaje = f"""
-        Se ha registrado un nuevo seguimiento para la alerta {self.alerta.codigo}:
+        Detalles del seguimiento:
         
-        - Tipo: {self.alerta.tipo}
-        - Fecha seguimiento: {self.fecha_seguimiento}
-        - Estado: {self.estado}
-        - Análisis/Acción: {self.analisis_accion}
-        - Registrado por: {self.usuario_creacion.get_full_name() if self.usuario_creacion else 'Sistema'}
+        Alerta: {self.alerta.codigo} - {self.alerta.tipo}
+        Estado: {self.get_estado_display()}
+        Fecha seguimiento: {self.fecha_seguimiento.strftime('%d/%m/%Y %H:%M')}
         
-        Próximo recordatorio: {self.proximo_envio if self.proximo_envio else 'No programado'}
+        Análisis/Acción realizada:
+        {self.analisis_accion}
+        
+        Registrado por: {self.usuario_creacion.get_full_name() if self.usuario_creacion else 'Sistema'}
+        Fecha registro: {self.fecha_creacion.strftime('%d/%m/%Y %H:%M')}
         """
         
+        if self.proximo_envio:
+            mensaje += f"\nPróximo recordatorio: {self.proximo_envio.strftime('%d/%m/%Y %H:%M')}"
+        
         try:
+            destinatarios = [self.usuario_creacion.email] if self.usuario_creacion else []
+            
+            # Agregar destinatarios adicionales si están configurados
+            if hasattr(settings, 'ALERTAS_EMAIL_CC'):
+                destinatarios += settings.ALERTAS_EMAIL_CC
+                
             send_mail(
                 asunto,
-                mensaje,
-                settings.EMAIL_HOST_USER,
-                [self.usuario_creacion.email] if self.usuario_creacion else ['destinatario@default.com'],
+                mensaje.strip(),
+                settings.EMAIL_FROM,
+                destinatarios,
                 fail_silently=False,
             )
         except Exception as e:
-            print(f"Error al enviar correo: {e}")
+            # Registrar el error en logs
+            from django.core import mail
+            mail.mail_admins(
+                subject=f"Error enviando notificación de seguimiento {self.id}",
+                message=f"Error: {str(e)}"
+            )
     
     def enviar_telegram(self):
+        estado_emoji = {
+            'P': '⏳',
+            'EP': '🔄',
+            'C': '✅',
+            'A': '👍',
+            'R': '👎'
+        }.get(self.estado, 'ℹ️')
+        
         mensaje = f"""
-        🚨 *Nuevo seguimiento de alerta* 🚨
+        {estado_emoji} *Seguimiento de Alerta* {estado_emoji}
         
         *Alerta*: {self.alerta.codigo} - {self.alerta.tipo}
-        *Fecha*: {self.fecha_seguimiento}
-        *Estado*: {self.estado}
-        *Acción*: {self.analisis_accion[:100]}...
-        *Usuario*: {self.usuario_creacion.get_full_name() if self.usuario_creacion else 'Sistema'}
+        *Estado*: {self.get_estado_display()}
+        *Fecha*: {self.fecha_seguimiento.strftime('%d/%m/%Y %H:%M')}
         
-        Próximo recordatorio: {self.proximo_envio if self.proximo_envio else 'No programado'}
+        *Acción*: 
+        {self.analisis_accion[:200]}...
+        
+        *Usuario*: {self.usuario_creacion.get_full_name() if self.usuario_creacion else 'Sistema'}
         """
+        
+        if self.proximo_envio:
+            mensaje += f"\n*Próximo recordatorio*: {self.proximo_envio.strftime('%d/%m/%Y %H:%M')}"
         
         try:
             url = f"https://api.telegram.org/bot{settings.TELEGRAM_BOT_TOKEN}/sendMessage"
             payload = {
                 'chat_id': settings.TELEGRAM_CHAT_ID,
                 'text': mensaje,
-                'parse_mode': 'Markdown'
+                'parse_mode': 'Markdown',
+                'disable_web_page_preview': True
             }
-            response = requests.post(url, data=payload)
+            response = requests.post(url, data=payload, timeout=10)
             return response.json()
         except Exception as e:
-            print(f"Error al enviar a Telegram: {e}")
+            # Registrar el error en logs
+            from django.core import mail
+            mail.mail_admins(
+                subject=f"Error enviando Telegram de seguimiento {self.id}",
+                message=f"Error: {str(e)}"
+            )
     
     def save(self, *args, **kwargs):
         # Calcular próxima fecha de envío si no está definida
-        if not self.proximo_envio and self.frecuencia_envio:
+        if not self.proximo_envio and self.frecuencia_envio and self.hora_envio:
             self.proximo_envio = self.calcular_proximo_envio()
+            
+        # Si se marca para enviar ahora, establecer próxima fecha como ahora
+        if self.enviar_ahora:
+            self.proximo_envio = timezone.now()
             
         super().save(*args, **kwargs)
         
-        # Enviar notificaciones después de guardar
-        if self.enviar_notificacion:
+        # Si es un nuevo registro y está marcado para enviar ahora, enviar inmediatamente
+        if kwargs.get('created', False) and self.enviar_ahora:
             self.enviar_notificaciones()
 
 # Señal para manejar notificaciones después de guardar
 @receiver(post_save, sender=SeguimientoAlertas)
 def manejar_notificaciones(sender, instance, created, **kwargs):
-    if created and instance.enviar_notificacion:
+    if created and instance.enviar_notificacion and not instance.enviar_ahora:
         instance.enviar_notificaciones()

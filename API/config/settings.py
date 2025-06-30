@@ -208,6 +208,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Configuración para Telegram Bot
 TELEGRAM_BOT_TOKEN = '7330411663:AAHYMEZibTRBrQl-SLd3fECZPlIOBPsXc68'
 TELEGRAM_CHAT_ID = '-4959493418'
+TELEGRAM_ENABLED = True  # <-- Añade esto para activar Telegram
 
 # Configuración para correo electrónico
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -216,5 +217,6 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'bot.reporte.dimon@gmail.com'
 EMAIL_HOST_PASSWORD = 'smhp kikf gbsm nhqr'
+EMAIL_FROM = 'bot.reporte.dimon@gmail.com'  # <-- Añade el remitente
 
 

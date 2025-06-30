@@ -175,12 +175,13 @@ class AlertasSerializer(serializers.ModelSerializer):
     usuario = serializers.StringRelatedField(read_only=True)
     fecha_creacion = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
     usuario_nombre = serializers.SerializerMethodField()
+    total_seguimientos = serializers.SerializerMethodField()
 
     class Meta:
         model = Alertas
         fields = ['id', 'codigo', 'tipo', 'descripcion', 'fecha_creacion', 
-                 'usuario', 'usuario_nombre']
-        read_only_fields = ('id', 'codigo', 'fecha_creacion', 'usuario', 'usuario_nombre')
+                 'usuario', 'usuario_nombre', 'total_seguimientos']
+        read_only_fields = ('id', 'codigo', 'fecha_creacion', 'usuario', 'usuario_nombre', 'total_seguimientos')
 
     def get_usuario_nombre(self, obj):
         if obj.usuario:
@@ -191,7 +192,10 @@ class AlertasSerializer(serializers.ModelSerializer):
         validated_data['usuario'] = self.context['request'].user
         return super().create(validated_data)
 
-
+    def get_total_seguimientos(self, obj):
+        # Usamos len() en lugar de count() porque ya está precargado con prefetch_related
+        return len(obj.seguimientos.all())
+    
 class SeguimientoAlertasSerializer(serializers.ModelSerializer):
     usuario_nombre = serializers.SerializerMethodField()
     alerta = AlertasSerializer(read_only=True)

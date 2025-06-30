@@ -34,16 +34,16 @@
                         </span>
                       </td>
                       <td>{{ alerta.descripcion }}</td>
-                      <td>{{ formatDate(alerta.fecha_creacion) }}</td>
+                      <td>{{ formatDateTime(alerta.fecha_creacion) }}</td>
                       <td>
                         <button @click="verSeguimientos(alerta.id)" class="btn btn-sm btn-info me-1">
-                          <i class="fas fa-history"></i> Seguimientos
+                          <i class="fas fa-history"></i> 
                         </button>
                         <button @click="openEditModal(alerta)" class="btn btn-sm btn-warning me-1">
-                          <i class="bi bi-pencil"></i> Editar
+                          <i class="bi bi-pencil"></i> 
                         </button>
                         <button @click="openDeleteModal(alerta)" class="btn btn-sm btn-danger">
-                          <i class="bi bi-trash"></i> Eliminar
+                          <i class="bi bi-trash"></i> 
                         </button>
                       </td>
                     </tr>
@@ -57,7 +57,8 @@
     </section>
 
     <!-- Modal para Crear Alerta -->
-    <div class="modal fade" :class="{ 'show': showCreateModal }" tabindex="-1" style="display: block;" v-if="showCreateModal">
+    <div class="modal fade" :class="{ 'show': showCreateModal }" tabindex="-1" style="display: block;"
+      v-if="showCreateModal">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -94,7 +95,8 @@
     <div class="modal-backdrop fade show" v-if="showCreateModal"></div>
 
     <!-- Modal para Editar Alerta -->
-    <div class="modal fade" :class="{ 'show': showEditModal }" tabindex="-1" style="display: block;" v-if="showEditModal">
+    <div class="modal fade" :class="{ 'show': showEditModal }" tabindex="-1" style="display: block;"
+      v-if="showEditModal">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -138,7 +140,8 @@
     <div class="modal-backdrop fade show" v-if="showEditModal"></div>
 
     <!-- Modal para Eliminar Alerta -->
-    <div class="modal fade" :class="{ 'show': showDeleteModal }" tabindex="-1" style="display: block;" v-if="showDeleteModal">
+    <div class="modal fade" :class="{ 'show': showDeleteModal }" tabindex="-1" style="display: block;"
+      v-if="showDeleteModal">
       <div class="modal-dialog">
         <div class="modal-content">
           <div class="modal-header">
@@ -247,17 +250,20 @@
                         <thead class="table-light">
                           <tr>
                             <th width="80">#</th>
+                            <th>Fecha creación</th>
                             <th>Fecha Seguimiento</th>
                             <th>Estado</th>
                             <th>Registrado por</th>
-                            <th>Fecha Registro</th>
+                            <th>Descripción</th>
+                            <th>Próximo Envío</th>
                             <th width="120">Acciones</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr v-for="(seguimiento, index) in alertaSeguimientos.seguimientos" :key="'seg-alerta-' + index"
-                            :class="getEstadoSeguimientoBgClass(seguimiento.estado)">
+                          <tr v-for="(seguimiento, index) in alertaSeguimientos.seguimientos"
+                            :key="'seg-alerta-' + index" :class="getEstadoSeguimientoBgClass(seguimiento.estado)">
                             <td class="fw-bold">{{ index + 1 }}</td>
+                            <td>{{ formatDateTime(seguimiento.fecha_creacion) }}</td>
                             <td>{{ formatDateTime(seguimiento.fecha_seguimiento) }}</td>
                             <td>
                               <span class="badge" :class="getEstadoSeguimientoClass(seguimiento.estado)">
@@ -265,35 +271,19 @@
                               </span>
                             </td>
                             <td>{{ seguimiento.usuario_nombre || 'N/A' }}</td>
-                            <td>{{ formatDateTime(seguimiento.fecha_creacion) }}</td>
+                            <td>
+                              <div>
+                                {{ seguimiento.analisis_accion || 'Sin descripción' }}
+                              </div>
+                            </td>
+                            <td>
+                              {{ seguimiento.proximo_envio ? formatDateTime(seguimiento.proximo_envio) : 'No programado' }}
+                            </td>
                             <td>
                               <button @click="editarSeguimientoAlerta(seguimiento.id)"
                                 class="btn btn-sm btn-outline-primary me-1" title="Editar">
                                 <i class="fas fa-edit"></i>
                               </button>
-                              <button class="btn btn-sm btn-outline-info" title="Ver detalles" data-bs-toggle="collapse"
-                                :data-bs-target="'#detailsSegAlerta-' + index">
-                                <i class="fas fa-eye"></i>
-                              </button>
-                            </td>
-                          </tr>
-                          <!-- Fila de detalles expandible -->
-                          <tr v-for="(seguimiento, index) in alertaSeguimientos.seguimientos" :key="'detail-alerta-' + index"
-                            class="collapse" :id="'detailsSegAlerta-' + index">
-                            <td colspan="6" class="bg-light">
-                              <div class="p-3">
-                                <div class="row">
-                                  <div class="col-md-12 mb-3">
-                                    <label class="fw-bold">Análisis/Acción:</label>
-                                    <p class="text-muted">{{ seguimiento.analisis_accion || 'Sin descripción' }}</p>
-                                  </div>
-
-                                  <div class="col-md-12 mb-3" v-if="seguimiento.observaciones">
-                                    <label class="fw-bold">Observaciones:</label>
-                                    <p class="text-muted">{{ seguimiento.observaciones }}</p>
-                                  </div>
-                                </div>
-                              </div>
                             </td>
                           </tr>
                         </tbody>
@@ -324,14 +314,22 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title">{{ seguimientoAlertaEditando?.isNew ? 'Nuevo Seguimiento' : 'Editar Seguimiento' }}</h5>
+            <h5 class="modal-title">{{ seguimientoAlertaEditando?.isNew ? 'Nuevo Seguimiento' : 'Editar Seguimiento' }}
+            </h5>
             <button type="button" class="btn-close" @click="cerrarModalesAlerta"></button>
           </div>
           <div class="modal-body">
             <form @submit.prevent="guardarSeguimientoAlerta">
-              <div class="mb-3">
-                <label class="form-label">Fecha de Seguimiento</label>
-                <input v-model="formSeguimientoAlerta.fecha_seguimiento" type="date" class="form-control" required>
+              <div class="row">
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Fecha</label>
+                  <input v-model="fechaPart" type="date" class="form-control" required
+                    :min="new Date().toISOString().split('T')[0]">
+                </div>
+                <div class="col-md-6 mb-3">
+                  <label class="form-label">Hora</label>
+                  <input v-model="horaPart" type="time" class="form-control" required>
+                </div>
               </div>
 
               <div class="mb-3">
@@ -347,12 +345,52 @@
 
               <div class="mb-3">
                 <label class="form-label">Análisis/Acción</label>
-                <textarea v-model="formSeguimientoAlerta.analisis_accion" class="form-control" rows="5" required></textarea>
+                <textarea v-model="formSeguimientoAlerta.analisis_accion" class="form-control" rows="5"
+                  required></textarea>
+              </div>
+
+              <!-- Sección de programación de notificaciones -->
+              <div class="card mb-3">
+                <div class="card-header bg-light">
+                  <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" v-model="formSeguimientoAlerta.enviar_notificacion" 
+                           id="notificacionesSwitch">
+                    <label class="form-check-label" for="notificacionesSwitch">
+                      Programar notificaciones automáticas
+                    </label>
+                  </div>
+                </div>
+                <div class="card-body" v-if="formSeguimientoAlerta.enviar_notificacion">
+                  <div class="row">
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Frecuencia de recordatorio</label>
+                      <select v-model="formSeguimientoAlerta.frecuencia_envio" class="form-select" required>
+                        <option value="diario">Diario</option>
+                        <option value="2dias">Cada 2 días</option>
+                        <option value="3dias">Cada 3 días</option>
+                        <option value="semanal">Semanal</option>
+                        <option value="mensual">Mensual</option>
+                        <option value="personalizado">Personalizado</option>
+                      </select>
+                    </div>
+                    <div class="col-md-6 mb-3" v-if="formSeguimientoAlerta.frecuencia_envio === 'personalizado'">
+                      <label class="form-label">Días para recordatorio personalizado</label>
+                      <input v-model="formSeguimientoAlerta.dias_personalizados" type="number" min="1" class="form-control">
+                    </div>
+                  </div>
+                  <div class="alert alert-info mt-2">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Las notificaciones se enviarán por correo y Telegram según la frecuencia seleccionada.
+                  </div>
+                </div>
               </div>
 
               <div class="d-flex justify-content-end gap-2">
                 <button type="button" class="btn btn-secondary" @click="cerrarModalesAlerta">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Guardar</button>
+                <button type="submit" class="btn btn-primary" :disabled="loadingSeguimientosAlerta">
+                  <span v-if="loadingSeguimientosAlerta" class="spinner-border spinner-border-sm"></span>
+                  <span v-else>Guardar</span>
+                </button>
               </div>
             </form>
           </div>
@@ -363,7 +401,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { api } from '@/components/services/auth_axios';
 import { useToast } from 'vue-toast-notification';
 
@@ -381,6 +419,37 @@ const showSeguimientosAlertaModal = ref(false);
 const showEditarSeguimientoAlertaModal = ref(false);
 const loadingSeguimientosAlerta = ref(false);
 const alertaSeguimientos = ref(null);
+
+// Datos para fecha y hora separados
+const fechaPart = ref(new Date().toISOString().split('T')[0]);
+const horaPart = ref('12:00');
+
+// Propiedades computadas
+const fechaHoraCompleta = computed(() => {
+  if (!fechaPart.value || !horaPart.value) return null;
+  return `${fechaPart.value}T${horaPart.value}:00`;
+});
+
+// Función para formatear fecha y hora
+const formatDateTime = (dateString) => {
+  if (!dateString) return 'N/A';
+
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleString('es-PE', {
+      timeZone: 'America/Lima',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  } catch (error) {
+    return 'Fecha inválida';
+  }
+};
 
 // Datos para los formularios
 const nuevaAlerta = reactive({
@@ -404,9 +473,11 @@ const alertaAEliminar = reactive({
 
 // Formulario para seguimientos
 const formSeguimientoAlerta = reactive({
-  fecha_seguimiento: new Date().toISOString().split('T')[0],
   estado: 'P',
-  analisis_accion: ''
+  analisis_accion: '',
+  enviar_notificacion: false,
+  frecuencia_envio: 'diario',
+  dias_personalizados: null
 });
 
 const seguimientoAlertaEditando = ref(null);
@@ -419,16 +490,6 @@ const getBadgeColor = (tipo) => {
     'Informativa': 'info'
   };
   return colors[tipo] || 'primary';
-};
-
-const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleString();
-};
-
-const formatDateTime = (dateString) => {
-  if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  return date.toLocaleString();
 };
 
 // Métodos para estados de seguimiento
@@ -545,21 +606,21 @@ const eliminarAlerta = async () => {
 const verSeguimientos = async (alertaId) => {
   try {
     loadingSeguimientosAlerta.value = true;
-    
-    // Obtener primero los datos de la alerta
-    const alertaResponse = await api.get(`ficha/alertas/${alertaId}/`);
-    
-    // Luego obtener los seguimientos específicos para esta alerta
-    const response = await api.get(`ficha/seguimiento-alertas/`, {
-      params: {
-        alerta: alertaId,  // Asegúrate que este parámetro coincide con el esperado por el backend
-        expand: 'alerta,usuario_creacion'
-      }
-    });
+
+    const [alertaResponse, seguimientosResponse] = await Promise.all([
+      api.get(`ficha/alertas/${alertaId}/`),
+      api.get(`ficha/seguimiento-alertas/`, {
+        params: {
+          alerta: alertaId,
+          fields: 'id,fecha_seguimiento,estado,analisis_accion,fecha_creacion,usuario_creacion,proximo_envio,frecuencia_envio,dias_personalizados,enviar_notificacion',
+          'usuario_creacion.fields': 'first_name,last_name'
+        }
+      })
+    ]);
 
     alertaSeguimientos.value = {
       id: alertaId,
-      seguimientos: response.data,
+      seguimientos: seguimientosResponse.data,
       alertaData: alertaResponse.data
     };
 
@@ -573,9 +634,16 @@ const verSeguimientos = async (alertaId) => {
 };
 
 const nuevoSeguimientoAlerta = (alertaId) => {
-  formSeguimientoAlerta.fecha_seguimiento = new Date().toISOString().split('T')[0];
-  formSeguimientoAlerta.estado = 'P';
-  formSeguimientoAlerta.analisis_accion = '';
+  fechaPart.value = new Date().toISOString().split('T')[0];
+  horaPart.value = '12:00';
+  
+  Object.assign(formSeguimientoAlerta, {
+    estado: 'P',
+    analisis_accion: '',
+    enviar_notificacion: false,
+    frecuencia_envio: 'diario',
+    dias_personalizados: null
+  });
 
   seguimientoAlertaEditando.value = {
     alertaId,
@@ -588,9 +656,18 @@ const editarSeguimientoAlerta = async (seguimientoId) => {
   try {
     loadingSeguimientosAlerta.value = true;
     const response = await api.get(`ficha/seguimiento-alertas/${seguimientoId}/`);
-    formSeguimientoAlerta.fecha_seguimiento = response.data.fecha_seguimiento;
-    formSeguimientoAlerta.estado = response.data.estado;
-    formSeguimientoAlerta.analisis_accion = response.data.analisis_accion;
+
+    const fecha = new Date(response.data.fecha_seguimiento);
+    fechaPart.value = fecha.toISOString().split('T')[0];
+    horaPart.value = `${String(fecha.getHours()).padStart(2, '0')}:${String(fecha.getMinutes()).padStart(2, '0')}`;
+
+    Object.assign(formSeguimientoAlerta, {
+      estado: response.data.estado,
+      analisis_accion: response.data.analisis_accion,
+      enviar_notificacion: response.data.enviar_notificacion,
+      frecuencia_envio: response.data.frecuencia_envio || 'diario',
+      dias_personalizados: response.data.dias_personalizados
+    });
 
     seguimientoAlertaEditando.value = {
       seguimientoId,
@@ -604,63 +681,97 @@ const editarSeguimientoAlerta = async (seguimientoId) => {
     loadingSeguimientosAlerta.value = false;
   }
 };
+// Agrupar matrices por monitor
+const matricesAgrupadas = computed(() => {
+  const agrupadas = {}
 
-const guardarSeguimientoAlerta = async () => {
-  try {
-    if (!seguimientoAlertaEditando.value?.alertaId) {
-      throw new Error('ID de alerta no definido');
+  matricesFiltradas.value.forEach(matriz => {
+    const monitor = getMonitorNombre(matriz)
+
+    if (!agrupadas[monitor]) {
+      agrupadas[monitor] = {
+        monitor,
+        matrices: []
+      }
     }
 
-    // Estructura CORRECTA - usar 'alerta_id' que espera el backend
+    agrupadas[monitor].matrices.push(matriz)
+  })
+
+  return Object.values(agrupadas)
+})
+const guardarSeguimientoAlerta = async () => {
+  try {
+    loadingSeguimientosAlerta.value = true;
+
+    if (!seguimientoAlertaEditando.value) {
+      throw new Error('No hay seguimiento en edición');
+    }
+
+    const fechaHora = new Date(`${fechaPart.value}T${horaPart.value}`);
+    const fechaHoraISO = fechaHora.toISOString();
+
     const payload = {
-      fecha_seguimiento: formSeguimientoAlerta.fecha_seguimiento,
+      fecha_seguimiento: fechaHoraISO,
       estado: formSeguimientoAlerta.estado,
       analisis_accion: formSeguimientoAlerta.analisis_accion,
-      alerta_id: seguimientoAlertaEditando.value.alertaId // CAMBIO CLAVE: usar 'alerta_id'
+      enviar_notificacion: formSeguimientoAlerta.enviar_notificacion,
+      frecuencia_envio: formSeguimientoAlerta.enviar_notificacion ? formSeguimientoAlerta.frecuencia_envio : null,
+      dias_personalizados: formSeguimientoAlerta.enviar_notificacion && 
+                          formSeguimientoAlerta.frecuencia_envio === 'personalizado' ? 
+                          formSeguimientoAlerta.dias_personalizados : null
     };
+
+    if (seguimientoAlertaEditando.value.isNew) {
+      if (!seguimientoAlertaEditando.value.alertaId) {
+        throw new Error('ID de alerta no definido para nuevo seguimiento');
+      }
+      payload.alerta_id = seguimientoAlertaEditando.value.alertaId;
+    }
 
     let response;
     if (seguimientoAlertaEditando.value.isNew) {
       response = await api.post('ficha/seguimiento-alertas/', payload);
       toast.success('Seguimiento creado correctamente');
-      
+
       if (alertaSeguimientos.value) {
-        alertaSeguimientos.value.seguimientos.unshift({
-          ...response.data,
-          id: response.data.id,
-          usuario_nombre: "Tú"
-        });
+        alertaSeguimientos.value.seguimientos.unshift(response.data);
       }
     } else {
+      if (!seguimientoAlertaEditando.value.seguimientoId) {
+        throw new Error('ID de seguimiento no definido para edición');
+      }
+
       response = await api.put(
         `ficha/seguimiento-alertas/${seguimientoAlertaEditando.value.seguimientoId}/`,
         payload
       );
       toast.success('Seguimiento actualizado correctamente');
-      
-      const index = alertaSeguimientos.value.seguimientos.findIndex(
-        s => s.id === seguimientoAlertaEditando.value.seguimientoId
-      );
-      if (index !== -1) {
-        alertaSeguimientos.value.seguimientos[index] = response.data;
+
+      if (alertaSeguimientos.value) {
+        const index = alertaSeguimientos.value.seguimientos.findIndex(
+          s => s.id === seguimientoAlertaEditando.value.seguimientoId
+        );
+        if (index !== -1) {
+          alertaSeguimientos.value.seguimientos[index] = response.data;
+        }
       }
     }
 
     showEditarSeguimientoAlertaModal.value = false;
-  } catch (error) {
-    console.error('Error:', {
-      message: error.message,
-      response: error.response?.data,
-      config: error.config
-    });
+    seguimientoAlertaEditando.value = null;
 
-    let errorMsg = 'Error al guardar';
+  } catch (error) {
+    console.error('Error al guardar seguimiento:', error);
+    let errorMsg = 'Error al guardar el seguimiento';
     if (error.response?.data) {
       errorMsg = Object.entries(error.response.data)
         .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(', ') : val}`)
         .join(' | ');
+    } else if (error.message) {
+      errorMsg = error.message;
     }
-    
+
     toast.error(errorMsg, { position: 'top-right', duration: 5000 });
   } finally {
     loadingSeguimientosAlerta.value = false;
@@ -724,5 +835,40 @@ onMounted(() => {
 
 .bg-secondary {
   background-color: #6c757d !important;
+}
+
+/* Estilos para el switch de notificaciones */
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Estilos para la sección de programación */
+.card-header {
+  cursor: pointer;
+}
+
+/* Ajustes para los inputs de fecha/hora */
+input[type="date"],
+input[type="time"] {
+  height: 38px;
+}
+
+/* Estilos para el área de texto */
+textarea.form-control {
+  min-height: 120px;
+}
+
+/* Estilos para el modal */
+.modal-content {
+  border-radius: 0.5rem;
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
 }
 </style>

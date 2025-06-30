@@ -2,8 +2,11 @@
   <main id="main" class="main">
     <div class="pagetitle">
       <h1>Listado de Alertas</h1>
-      <button @click="showCreateModal = true" class="btn btn-primary">
+      <button @click="showCreateModal = true" class="btn btn-primary me-2 mb-2">
         <i class="bi bi-plus-circle"></i> Nueva Alerta
+      </button>
+      <button @click="limpiarFiltros" class="btn btn-outline-secondary mb-2">
+        <i class="bi bi-eraser"></i> Limpiar
       </button>
     </div>
 
@@ -12,44 +15,114 @@
         <div class="col-lg-12">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Alertas Registradas</h5>
+              <!-- Filtros de búsqueda -->
+              <div class="row mb-3">
+                <!-- Buscador general -->
+                <div class="col-md-4">
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                    <input v-model="filtros.busqueda" type="text" class="form-control"
+                      placeholder="Buscar por código, descripción..." @keyup.enter="aplicarFiltros">
+                  </div>
+                </div>
 
-              <div class="table-responsive">
-                <table class="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>Código</th>
-                      <th>Tipo</th>
-                      <th>Descripción</th>
-                      <th>Fecha Creación</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="alerta in alertas" :key="alerta.id">
-                      <td>{{ alerta.codigo }}</td>
-                      <td>
-                        <span :class="`badge bg-${getBadgeColor(alerta.tipo)}`">
-                          {{ alerta.tipo }}
-                        </span>
-                      </td>
-                      <td>{{ alerta.descripcion }}</td>
-                      <td>{{ formatDateTime(alerta.fecha_creacion) }}</td>
-                      <td>
-                        <button @click="verSeguimientos(alerta.id)" class="btn btn-sm btn-info me-1">
-                          <i class="fas fa-history"></i> 
-                        </button>
-                        <button @click="openEditModal(alerta)" class="btn btn-sm btn-warning me-1">
-                          <i class="bi bi-pencil"></i> 
-                        </button>
-                        <button @click="openDeleteModal(alerta)" class="btn btn-sm btn-danger">
-                          <i class="bi bi-trash"></i> 
-                        </button>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+                <!-- Filtro por tipo -->
+                <div class="col-md-2">
+                  <select v-model="filtros.tipo" class="form-select" @change="aplicarFiltros">
+                    <option value="">Todos los tipos</option>
+                    <option value="Urgente">Urgente</option>
+                    <option value="Importante">Importante</option>
+                    <option value="Informativa">Informativa</option>
+                  </select>
+                </div>
+
+                <!-- Template - Selector de monitores -->
+                <div class="col-md-3">
+                  <select v-model="filtros.monitor" class="form-select" @change="aplicarFiltros">
+                    <option value="">Todos los monitores</option>
+                    <option v-for="(nombre, index) in monitoresUnicos" :key="index" :value="nombre">
+                      {{ nombre }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Filtro por fecha -->
+                <div class="col-md-3">
+                  <div class="input-group">
+                    <input v-model="filtros.fecha" type="date" class="form-control" @change="aplicarFiltros">
+                    <button v-if="filtros.fecha" @click="limpiarFiltroFecha" class="btn btn-outline-secondary"
+                      type="button">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
+
+              <!-- Botones de acción de filtros -->
+              <div class="row">
+                <div class="col-12 d-flex justify-content-between">
+                  <div>
+                    <span class="badge bg-info">
+                      Mostrando {{ alertasFiltradas.length }} de {{ alertas.length }} alertas
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <!-- Versión agrupada similar a matricesAgrupadas -->
+              <div v-for="grupo in alertasAgrupadas" :key="grupo.tipo" class="mb-5">
+                <h5 class="card-title border-bottom pb-2 mb-3">
+                  <i class="fas fa-exclamation-circle me-2"></i>
+                  Tipo: <strong>{{ grupo.tipo }}</strong>
+                  <span class="badge" :class="`bg-${getBadgeColor(grupo.tipo)} ms-2`">
+                    {{ grupo.alertas.length }} alerta(s)
+                  </span>
+                </h5>
+
+                <div class="table-responsive">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Código</th>
+                        <th>Descripción</th>
+                        <th>Monitor</th>
+                        <th>Fecha Creación</th>
+                        <th>Seguimientos</th>
+                        <th>Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="alerta in grupo.alertas" :key="alerta.id">
+                        <td>{{ alerta.codigo }}</td>
+                        <td>{{ truncateText(alerta.descripcion, 50) }}</td>
+                        <td>{{ alerta.usuario_nombre || 'N/A' }}</td>
+                        <td>{{ formatDateTime(alerta.fecha_creacion) }}</td>
+                        <td>
+                          <span class="badge bg-secondary">
+                            {{ alerta.total_seguimientos || 0 }} seguimiento(s)
+                          </span>
+
+                        </td>
+                        <td>
+                          <button @click="verSeguimientos(alerta.id)" class="btn btn-sm btn-info me-1"
+                            title="Seguimientos">
+                            <i class="fas fa-history"></i>
+                          </button>
+                          <button @click="openEditModal(alerta)" class="btn btn-sm btn-warning me-1" title="Editar">
+                            <i class="bi bi-pencil"></i>
+                          </button>
+                          <button @click="openDeleteModal(alerta)" class="btn btn-sm btn-danger" title="Eliminar"
+                            v-if="puedeEliminarAlerta(alerta)">
+                            <i class="bi bi-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Mensaje cuando no hay alertas -->
+              <h5 class="card-title" v-if="!alertasAgrupadas.length">No hay alertas registradas</h5>
             </div>
           </div>
         </div>
@@ -277,7 +350,8 @@
                               </div>
                             </td>
                             <td>
-                              {{ seguimiento.proximo_envio ? formatDateTime(seguimiento.proximo_envio) : 'No programado' }}
+                              {{ seguimiento.proximo_envio ? formatDateTime(seguimiento.proximo_envio) : 'No programado'
+                              }}
                             </td>
                             <td>
                               <button @click="editarSeguimientoAlerta(seguimiento.id)"
@@ -350,11 +424,12 @@
               </div>
 
               <!-- Sección de programación de notificaciones -->
+              <!-- Reemplaza la sección de programación de notificaciones con esto: -->
               <div class="card mb-3">
                 <div class="card-header bg-light">
                   <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" v-model="formSeguimientoAlerta.enviar_notificacion" 
-                           id="notificacionesSwitch">
+                    <input class="form-check-input" type="checkbox" v-model="formSeguimientoAlerta.enviar_notificacion"
+                      id="notificacionesSwitch" @change="handleNotificacionChange">
                     <label class="form-check-label" for="notificacionesSwitch">
                       Programar notificaciones automáticas
                     </label>
@@ -364,7 +439,9 @@
                   <div class="row">
                     <div class="col-md-6 mb-3">
                       <label class="form-label">Frecuencia de recordatorio</label>
-                      <select v-model="formSeguimientoAlerta.frecuencia_envio" class="form-select" required>
+                      <select v-model="formSeguimientoAlerta.frecuencia_envio" @change="handleFrecuenciaChange"
+                        class="form-select">
+                        <option value="hoy">Hoy mismo</option>
                         <option value="diario">Diario</option>
                         <option value="2dias">Cada 2 días</option>
                         <option value="3dias">Cada 3 días</option>
@@ -372,15 +449,33 @@
                         <option value="mensual">Mensual</option>
                         <option value="personalizado">Personalizado</option>
                       </select>
+
+                      <small class="text-muted" v-if="formSeguimientoAlerta.frecuencia_envio === 'hoy'">
+                        Hora actual en Lima: {{ getCurrentLimaTime() }}
+                      </small>
                     </div>
+
+                    <!-- Campo para días personalizados -->
                     <div class="col-md-6 mb-3" v-if="formSeguimientoAlerta.frecuencia_envio === 'personalizado'">
                       <label class="form-label">Días para recordatorio personalizado</label>
-                      <input v-model="formSeguimientoAlerta.dias_personalizados" type="number" min="1" class="form-control">
+                      <input v-model="formSeguimientoAlerta.dias_personalizados" type="number" min="1"
+                        class="form-control">
+                    </div>
+
+                    <!-- Campo para hora de envío -->
+                    <div class="col-md-6 mb-3">
+                      <label class="form-label">Hora de envío</label>
+                      <input v-model="formSeguimientoAlerta.hora_envio" type="time" class="form-control" required
+                        :min="minTime" @change="validateTime">
                     </div>
                   </div>
+
                   <div class="alert alert-info mt-2">
                     <i class="bi bi-info-circle me-2"></i>
                     Las notificaciones se enviarán por correo y Telegram según la frecuencia seleccionada.
+                    <span v-if="formSeguimientoAlerta.frecuencia_envio === 'hoy'">
+                      La notificación se enviará hoy a la hora especificada y no se repetirá.
+                    </span>
                   </div>
                 </div>
               </div>
@@ -429,6 +524,150 @@ const fechaHoraCompleta = computed(() => {
   if (!fechaPart.value || !horaPart.value) return null;
   return `${fechaPart.value}T${horaPart.value}:00`;
 });
+// Agregar en las refs/reactive
+const filtros = reactive({
+  busqueda: '',
+  tipo: '',
+  monitor: '',
+  fecha: ''
+});
+// Agrega este método en tu script:
+const puedeEliminarAlerta = (alerta) => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (!user) return false;
+
+    // Depuración - verificar valores
+    console.log('Usuario actual ID:', user.id);
+    console.log('Creador de la alerta ID:', alerta.usuario?.id);
+    console.log('Es superuser?:', user.is_superuser);
+
+    // Superusuarios pueden eliminar cualquier alerta
+    if (user.is_superuser) return true;
+
+    // Verificar si el usuario actual es el creador de la alerta
+    // Asegurándonos de comparar correctamente los IDs (ambos como números o ambos como strings)
+    return alerta.usuario && String(alerta.usuario.id) === String(user.id);
+  } catch (error) {
+    console.error('Error en puedeEliminarAlerta:', error);
+    return false;
+  }
+};
+
+const monitoresDisponibles = ref([]);
+const monitoresUnicos = computed(() => {
+  const nombres = alertas.value
+    .map(alerta => alerta.usuario_nombre)
+    .filter(nombre => nombre && nombre !== 'N/A');
+  return [...new Set(nombres)].sort();
+});
+// Nueva computed para alertas filtradas
+const alertasFiltradas = computed(() => {
+  return alertas.value.filter(alerta => {
+    // Filtro por búsqueda general
+    const coincideBusqueda = filtros.busqueda === '' ||
+      alerta.codigo.toLowerCase().includes(filtros.busqueda.toLowerCase()) ||
+      alerta.descripcion.toLowerCase().includes(filtros.busqueda.toLowerCase());
+
+    // Filtro por tipo
+    const coincideTipo = filtros.tipo === '' || alerta.tipo === filtros.tipo;
+
+    // Filtro por monitor (por nombre)
+    const coincideMonitor = filtros.monitor === '' ||
+      (alerta.usuario_nombre && alerta.usuario_nombre.toLowerCase().includes(filtros.monitor.toLowerCase()));
+
+    // Filtro por fecha
+    let coincideFecha = true;
+    if (filtros.fecha) {
+      const fechaAlerta = new Date(alerta.fecha_creacion).toISOString().split('T')[0];
+      coincideFecha = fechaAlerta === filtros.fecha;
+    }
+
+    return coincideBusqueda && coincideTipo && coincideMonitor && coincideFecha;
+  });
+});
+function handleNotificacionChange() {
+  if (formSeguimientoAlerta.enviar_notificacion) {
+    // Resetear a valores por defecto cuando se activa
+    formSeguimientoAlerta.frecuencia_envio = 'diario';
+    formSeguimientoAlerta.hora_envio = getCurrentLimaTime();
+  }
+}
+
+// Modifica la función handleFrecuenciaChange
+function handleFrecuenciaChange() {
+  if (formSeguimientoAlerta.frecuencia_envio === 'hoy') {
+    // Asegurar que la hora no sea anterior a la actual
+    formSeguimientoAlerta.hora_envio = getCurrentLimaTime();
+    validateTime(); // Validar inmediatamente
+  }
+}
+
+// Mejora la función validateTime
+function validateTime() {
+  if (formSeguimientoAlerta.frecuencia_envio === 'hoy') {
+    const now = new Date();
+    const limaOffset = -5 * 60; // Lima está en GMT-5
+    const localOffset = now.getTimezoneOffset();
+    const limaTime = new Date(now.getTime() + (localOffset - limaOffset) * 60 * 1000);
+
+    const [hours, minutes] = formSeguimientoAlerta.hora_envio.split(':').map(Number);
+    const selectedTime = new Date(limaTime);
+    selectedTime.setHours(hours, minutes, 0, 0);
+
+    if (selectedTime < limaTime) {
+      toast.warning('Para recordatorios hoy, la hora no puede ser anterior a la hora actual en Lima (Hora actual: ' +
+        limaTime.getHours().toString().padStart(2, '0') + ':' +
+        limaTime.getMinutes().toString().padStart(2, '0') + ')',
+        { position: 'top-right', duration: 5000 });
+      formSeguimientoAlerta.hora_envio = getCurrentLimaTime();
+      return false;
+    }
+  }
+  return true;
+}
+// Modificar la computed alertasAgrupadas para usar alertasFiltradas
+const alertasAgrupadas = computed(() => {
+  const agrupadas = {};
+
+  alertasFiltradas.value.forEach(alerta => {
+    const tipo = alerta.tipo || 'Sin Tipo';
+
+    if (!agrupadas[tipo]) {
+      agrupadas[tipo] = {
+        tipo: tipo,
+        alertas: []
+      };
+    }
+
+    agrupadas[tipo].alertas.push(alerta);
+  });
+
+  return Object.values(agrupadas).sort((a, b) => {
+    const orden = { 'Urgente': 1, 'Importante': 2, 'Informativa': 3 };
+    return (orden[a.tipo] || 4) - (orden[b.tipo] || 4);
+  });
+});
+
+// Métodos nuevos para los filtros
+const aplicarFiltros = () => {
+  // La computed property ya se actualiza automáticamente
+  // Podemos agregar aquí lógica adicional si es necesario
+};
+
+const limpiarFiltros = () => {
+  filtros.busqueda = '';
+  filtros.tipo = '';
+  filtros.monitor = '';
+  filtros.fecha = '';
+};
+
+const limpiarFiltroFecha = () => {
+  filtros.fecha = '';
+  aplicarFiltros();
+};
+
+
 
 // Función para formatear fecha y hora
 const formatDateTime = (dateString) => {
@@ -475,11 +714,29 @@ const alertaAEliminar = reactive({
 const formSeguimientoAlerta = reactive({
   estado: 'P',
   analisis_accion: '',
-  enviar_notificacion: false,
-  frecuencia_envio: 'diario',
-  dias_personalizados: null
+  enviar_notificacion: true, // Activado por defecto
+  frecuencia_envio: 'diario', // Diario por defecto
+  dias_personalizados: null,
+  hora_envio: getCurrentLimaTime() // Hora actual en Lima por defecto
 });
+// Agrega estas funciones computadas y métodos:
+const minTime = computed(() => {
+  // Si la frecuencia es "hoy", retornar la hora actual en Lima
+  if (formSeguimientoAlerta.frecuencia_envio === 'hoy') {
+    return getCurrentLimaTime();
+  }
+  return '00:00';
+});
+function getCurrentLimaTime() {
+  // Obtener hora actual en Lima, Perú (GMT-5)
+  const now = new Date();
+  const limaOffset = -5 * 60; // Lima está en GMT-5
+  const localOffset = now.getTimezoneOffset();
+  const limaTime = new Date(now.getTime() + (localOffset - limaOffset) * 60 * 1000);
 
+  // Formatear como HH:MM
+  return `${String(limaTime.getHours()).padStart(2, '0')}:${String(limaTime.getMinutes()).padStart(2, '0')}`;
+}
 const seguimientoAlertaEditando = ref(null);
 
 // Métodos generales
@@ -490,6 +747,10 @@ const getBadgeColor = (tipo) => {
     'Informativa': 'info'
   };
   return colors[tipo] || 'primary';
+};
+
+const truncateText = (text, length) => {
+  return text && text.length > length ? text.substring(0, length) + '...' : text;
 };
 
 // Métodos para estados de seguimiento
@@ -567,7 +828,7 @@ const openEditModal = (alerta) => {
 const actualizarAlerta = async () => {
   isLoading.value = true;
   try {
-    await api.put(`ficha/alertas/${alertaEditada.id}/`, {
+    const response = await api.put(`ficha/alertas/${alertaEditada.id}/`, {
       tipo: alertaEditada.tipo,
       descripcion: alertaEditada.descripcion
     });
@@ -575,7 +836,12 @@ const actualizarAlerta = async () => {
     showEditModal.value = false;
     cargarAlertas();
   } catch (error) {
-    toast.error('Error al actualizar alerta', { position: 'top-right' });
+    if (error.response && error.response.status === 403) {
+      toast.error('No tienes permiso para editar esta alerta', { position: 'top-right', duration: 5000 });
+      showEditModal.value = false;
+    } else {
+      toast.error('Error al actualizar alerta', { position: 'top-right' });
+    }
   } finally {
     isLoading.value = false;
   }
@@ -596,7 +862,11 @@ const eliminarAlerta = async () => {
     showDeleteModal.value = false;
     cargarAlertas();
   } catch (error) {
-    toast.error('Error al eliminar alerta', { position: 'top-right' });
+    if (error.response && error.response.status === 403) {
+      toast.error('No tienes permiso para eliminar esta alerta', { position: 'top-right' });
+    } else {
+      toast.error('Error al eliminar alerta', { position: 'top-right' });
+    }
   } finally {
     isLoading.value = false;
   }
@@ -636,7 +906,7 @@ const verSeguimientos = async (alertaId) => {
 const nuevoSeguimientoAlerta = (alertaId) => {
   fechaPart.value = new Date().toISOString().split('T')[0];
   horaPart.value = '12:00';
-  
+
   Object.assign(formSeguimientoAlerta, {
     estado: 'P',
     analisis_accion: '',
@@ -684,8 +954,11 @@ const editarSeguimientoAlerta = async (seguimientoId) => {
 
 const guardarSeguimientoAlerta = async () => {
   try {
-    loadingSeguimientosAlerta.value = true;
 
+    loadingSeguimientosAlerta.value = true;
+    if (formSeguimientoAlerta.frecuencia_envio === 'hoy' && !validateTime()) {
+      return;
+    }
     if (!seguimientoAlertaEditando.value) {
       throw new Error('No hay seguimiento en edición');
     }
@@ -699,11 +972,14 @@ const guardarSeguimientoAlerta = async () => {
       analisis_accion: formSeguimientoAlerta.analisis_accion,
       enviar_notificacion: formSeguimientoAlerta.enviar_notificacion,
       frecuencia_envio: formSeguimientoAlerta.enviar_notificacion ? formSeguimientoAlerta.frecuencia_envio : null,
-      dias_personalizados: formSeguimientoAlerta.enviar_notificacion && 
-                          formSeguimientoAlerta.frecuencia_envio === 'personalizado' ? 
-                          formSeguimientoAlerta.dias_personalizados : null
+      hora_envio: formSeguimientoAlerta.enviar_notificacion ? formSeguimientoAlerta.hora_envio : null,
+      dias_personalizados: formSeguimientoAlerta.enviar_notificacion &&
+        formSeguimientoAlerta.frecuencia_envio === 'personalizado' ?
+        formSeguimientoAlerta.dias_personalizados : null,
+      enviar_ahora: formSeguimientoAlerta.frecuencia_envio === 'hoy'
     };
 
+    let response;
     if (seguimientoAlertaEditando.value.isNew) {
       if (!seguimientoAlertaEditando.value.alertaId) {
         throw new Error('ID de alerta no definido para nuevo seguimiento');
@@ -711,7 +987,6 @@ const guardarSeguimientoAlerta = async () => {
       payload.alerta_id = seguimientoAlertaEditando.value.alertaId;
     }
 
-    let response;
     if (seguimientoAlertaEditando.value.isNew) {
       response = await api.post('ficha/seguimiento-alertas/', payload);
       toast.success('Seguimiento creado correctamente');
@@ -852,5 +1127,48 @@ textarea.form-control {
 
 .modal-footer {
   border-top: 1px solid #dee2e6;
+}
+
+/* Estilos para las tarjetas de agrupación */
+.card-title.border-bottom {
+  border-bottom: 1px solid #dee2e6 !important;
+}
+
+/* Estilos para la tabla */
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, 0.075);
+}
+
+/* Agregar al section de estilos */
+.filter-section {
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid #dee2e6;
+}
+
+.filter-section .input-group-text {
+  background-color: #e9ecef;
+}
+
+.filter-section .form-select {
+  cursor: pointer;
+}
+
+.filter-actions {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dee2e6;
+}
+
+/* Responsividad para los filtros */
+@media (max-width: 768px) {
+
+  .filter-section .col-md-4,
+  .filter-section .col-md-3,
+  .filter-section .col-md-2 {
+    margin-bottom: 1rem;
+  }
 }
 </style>

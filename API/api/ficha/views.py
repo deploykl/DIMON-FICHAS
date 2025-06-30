@@ -391,14 +391,44 @@ class AlertasViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     
     def get_queryset(self):
-        queryset = Alertas.objects.select_related('usuario').prefetch_related('seguimientos')
-        if not self.request.user.is_superuser:
-            queryset = queryset.filter(usuario=self.request.user)
-        return queryset
-        
+        #queryset = Alertas.objects.select_related('usuario').prefetch_related('seguimientos')
+        #if not self.request.user.is_superuser:
+        #    queryset = queryset.filter(usuario=self.request.user)
+        #return queryset
+        return Alertas.objects.select_related('usuario').prefetch_related('seguimientos').all()
+
     def perform_create(self, serializer):
         serializer.save(usuario=self.request.user)
         
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # Verificar si el usuario actual es el creador de la alerta o es superusuario
+        if instance.usuario != request.user and not request.user.is_superuser:
+            return Response(
+                {"detail": "No tienes permiso para eliminar esta alerta."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        return super().destroy(request, *args, **kwargs)
+        
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # Verificar si el usuario actual es el creador de la alerta o es superusuario
+        if instance.usuario != request.user and not request.user.is_superuser:
+            return Response(
+                {"detail": "No tienes permiso para editar esta alerta."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+            
+        return super().update(request, *args, **kwargs)
+    
+    def partial_update(self, request, *args, **kwargs):
+        # Para PATCH requests, usamos la misma verificación que para PUT
+        return self.update(request, *args, **kwargs)
+
+
 class SeguimientoAlertasViewSet(viewsets.ModelViewSet):
     queryset = SeguimientoAlertas.objects.all()
     serializer_class = SeguimientoAlertasSerializer
