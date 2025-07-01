@@ -2,19 +2,14 @@
   <main id="main" class="main">
     <div class="container">
       <h1 class="title">Ruleta de Decisiones</h1>
-      
+
       <div class="input-section">
-        <input 
-          v-model="newWord" 
-          @keyup.enter="addWord"
-          placeholder="Ingresa una opción"
-          class="input-field"
-        >
+        <input v-model="newWord" @keyup.enter="addWord" placeholder="Ingresa una opción" class="input-field">
         <button @click="addWord" class="add-btn">
           <span>+</span>
         </button>
       </div>
-      
+
       <div class="words-list" v-if="words.length > 0">
         <h3 class="subtitle">Opciones registradas:</h3>
         <ul class="words-grid">
@@ -22,28 +17,19 @@
             <span>{{ word }}</span>
             <button @click="removeWord(index)" class="remove-btn">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
               </svg>
             </button>
           </li>
         </ul>
       </div>
-      
+
       <div class="wheel-section" v-if="words.length > 0">
         <div class="wheel-wrapper">
-          <div 
-            class="wheel" 
-            :style="{ transform: `rotate(${rotation}deg)` }"
-            @click="spinWheel"
-            :class="{ spinning: isSpinning }"
-          >
-            <div 
-              class="wheel-item" 
-              v-for="(word, index) in words" 
-              :key="index"
-              :style="getWheelItemStyle(index)"
-            >
+          <div class="wheel" :style="{ transform: `rotate(${rotation}deg)` }" @click="spinWheel"
+            :class="{ spinning: isSpinning }">
+            <div class="wheel-item" v-for="(word, index) in words" :key="index" :style="getWheelItemStyle(index)">
               <span class="wheel-text">{{ word }}</span>
             </div>
             <div class="wheel-center">
@@ -55,24 +41,24 @@
             <div class="pointer-base"></div>
           </div>
         </div>
-        
-        <button 
-          @click="spinWheel" 
-          :disabled="isSpinning || words.length < 2"
-          class="spin-btn"
-        >
+
+        <button @click="spinWheel" :disabled="isSpinning || words.length < 2" class="spin-btn">
           <span v-if="!isSpinning">Girar Ruleta</span>
           <span v-else class="spinner"></span>
         </button>
       </div>
-      
+
       <div class="result" v-if="selectedWord">
         <div class="result-card">
           <div class="result-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path
+                d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <path d="M12 16V12" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
+              <path d="M12 8H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" />
             </svg>
           </div>
           <div class="result-content">
@@ -81,13 +67,16 @@
           </div>
         </div>
       </div>
-      
+
       <div class="empty-state" v-if="words.length === 0">
         <div class="empty-icon">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 8V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M12 8V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
           </svg>
         </div>
         <h3 class="empty-title">Agrega opciones para comenzar</h3>
@@ -120,17 +109,17 @@ const removeWord = (index) => {
 
 const spinWheel = () => {
   if (words.value.length < 2 || isSpinning.value) return;
-  
+
   isSpinning.value = true;
   selectedWord.value = '';
-  
+
   // Número aleatorio de rotaciones completas (5-10) más un ángulo aleatorio
   const spins = 5 + Math.floor(Math.random() * 5);
   const randomAngle = Math.floor(Math.random() * 360);
   const totalRotation = spins * 360 + randomAngle;
-  
+
   rotation.value += totalRotation;
-  
+
   // Calcular la palabra seleccionada después de que termine la animación
   setTimeout(() => {
     const segmentAngle = 360 / words.value.length;
@@ -138,7 +127,7 @@ const spinWheel = () => {
     // Ajustar para que el apuntador esté en la parte superior
     const effectiveAngle = (360 - normalizedAngle) % 360;
     const selectedIndex = Math.floor(effectiveAngle / segmentAngle);
-    
+
     selectedWord.value = words.value[selectedIndex];
     isSpinning.value = false;
   }, 5000); // Tiempo que dura la animación (5s)
@@ -147,7 +136,7 @@ const spinWheel = () => {
 const getWheelItemStyle = (index) => {
   const segmentAngle = 360 / words.value.length;
   const hue = (index * (360 / words.value.length)) % 360;
-  
+
   return {
     transform: `rotate(${index * segmentAngle}deg) skewY(${90 - segmentAngle}deg)`,
     backgroundColor: `hsl(${hue}, 80%, 80%)`,
@@ -461,7 +450,9 @@ const getWheelItemStyle = (index) => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .result {
@@ -543,16 +534,16 @@ const getWheelItemStyle = (index) => {
   .container {
     padding: 24px;
   }
-  
+
   .title {
     font-size: 1.8rem;
   }
-  
+
   .wheel-wrapper {
     width: 280px;
     height: 280px;
   }
-  
+
   .words-grid {
     grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
