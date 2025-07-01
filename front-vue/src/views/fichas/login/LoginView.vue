@@ -60,8 +60,10 @@
           </button>
         </form>
 <div class="forgot-password">
-    <router-link to="/password-reset">¿Olvidaste tu contraseña?</router-link>
-  </div>
+  <router-link to="/password-reset" class="forgot-link">
+    <i class="fas fa-question-circle"></i> ¿Olvidaste tu contraseña?
+  </router-link>
+</div>
         <!-- Footer -->
         <div class="login-footer">
           <span>OBS Salud V.1</span>
@@ -139,7 +141,29 @@ const handleSubmit = async () => {
   background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+.forgot-password {
+  text-align: center;
+  margin: 15px 0;
+}
 
+.forgot-link {
+  color: #3498db;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.forgot-link:hover {
+  color: #2980b9;
+  text-decoration: underline;
+}
+
+.forgot-link i {
+  font-size: 16px;
+}
 .login-wrapper {
   width: 100%;
   max-width: 420px;

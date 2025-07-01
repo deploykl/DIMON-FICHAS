@@ -129,6 +129,12 @@ const menuItems = ref([
     path: '/urls',
     submenu: null
   },
+   {
+    title: 'Game',
+    icon: 'fa-gamepad',
+    path: '/game',
+    submenu: null
+  },
   {
     title: 'Menu 1',
     icon: 'fa-user-injured',

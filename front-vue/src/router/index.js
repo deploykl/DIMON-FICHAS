@@ -9,6 +9,7 @@ import EvaluarFichaView from "../views/EvaluarFichaView.vue";
 import MatrizCompromisoView from "../views/MatrizCompromisoView.vue";
 import UrlsView from "../views/menu/UrlsView.vue";
 import AlertasView from "../views/AlertasView.vue";
+import GameView from "../views/etc/GameView.vue";
 import SeguimientoMatrizView from "../views/SeguimientoMatriz.vue";
 
 const routes = [
@@ -73,6 +74,16 @@ const routes = [
     props: true,
     meta: {
       title: "Enlaces de información",
+      requiresAuth: true,
+    },
+  },
+    {
+    path: "/game",
+    name: "game",
+    component: GameView,
+    props: true,
+    meta: {
+      title: "GAME",
       requiresAuth: true,
     },
   },
