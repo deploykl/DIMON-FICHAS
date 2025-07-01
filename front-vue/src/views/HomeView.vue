@@ -3,26 +3,83 @@
     <header class="header">
       <div class="header-content">
         <img src="@/assets/img/logo1.png" alt="Logo" class="logo">
-        <a href="/login" class="login-btn">
-          <i class="bi bi-box-arrow-in-right"></i> Ingresar
-        </a>
       </div>
     </header>
 
     <main class="main-content">
-      <div class="presentation-container">
-        <div class="image-container">
-          <img src="@/assets/img/home/portada4.png" alt="Presentación" class="main-image">
-        </div>
-        <div class="text-content">
-          <h1>Plataforma OBS Salud</h1>
-          <p class="description">
-            La Plataforma OBS Salud es un sistema web para gestionar el cumplimiento de
-            procesos estratégicos, misionales y de soporte en una organización de salud.
-          </p>
-          <p class="features">
-            Permite evaluar, registrar y monitorear el estado de cumplimiento mediante fichas de verificación...
-          </p>
+      <div class="container">
+        <div class="row align-items-center justify-content-center"> <!-- Centrado vertical y horizontal -->
+          <!-- Columna de la imagen -->
+          <div class="col-md-6 mb-4 mb-md-0 d-flex justify-content-center">
+            <img src="@/assets/img/home/work.png" alt="Presentación" class="img-fluid rounded mx-auto d-block image-style">
+          </div>
+
+          <!-- Columna del texto - centrada vertical y horizontalmente -->
+          <div class="col-md-6 text-center">
+            <!-- Título principal -->
+            <h1 class="mb-3 text-center text-primary fw-bold">Plataforma OBS Salud</h1>
+            <!-- Descripción -->
+            <p class="mb-3 lead">
+              Sistema integral para la gestión del cumplimiento normativo en organizaciones de salud.
+            </p>
+
+            <!-- Alertas importantes -->
+            <div class="alert alert-info d-flex align-items-center mb-4">
+              <i class="bi bi-exclamation-circle-fill me-2 fs-4"></i>
+              <div>
+                <strong>Novedad:</strong> Lanzamiento de la Versión Demo (v1.0) con módulos esenciales
+              </div>
+            </div>
+
+            <!-- Módulos destacados -->
+            <div class="mb-4">
+              <h5 class="mb-3 text-center"><i class="bi bi-grid-fill me-2"></i>Módulos Principales</h5>
+              <div class="row justify-content-center g-3"> <!-- Centrado y mejor espaciado -->
+                <!-- Módulo de Fichas -->
+                <div class="col-8 col-sm-3 col-md-5 col-lg-3">
+                  <div class="p-3 border rounded bg-light text-center h-100 module-card">
+                    <i class="bi bi-clipboard-check fs-3 text-success mb-2"></i>
+                    <h6 class="fw-bold">Fichas de Verificación</h6>
+                    <p class="small text-muted mb-0">Gestión completa de fichas técnicas</p>
+                  </div>
+                </div>
+
+                <!-- Módulo de Compromisos -->
+                <div class="col-8 col-sm-3 col-md-5 col-lg-3">
+                  <div class="p-3 border rounded bg-light text-center h-100 module-card">
+                    <i class="bi bi-microsoft-teams fs-3 text-primary mb-2"></i>
+                    <h6 class="fw-bold">Compromisos</h6>
+                    <p class="small text-muted mb-0">Seguimiento de acuerdos</p>
+                  </div>
+                </div>
+
+                <!-- Módulo de Alertas -->
+                <div class="col-8 col-sm-3 col-md-5 col-lg-3">
+                  <div class="p-3 border rounded bg-light text-center h-100 module-card">
+                    <i class="bi bi-exclamation-triangle fs-3 text-warning mb-2"></i>
+                    <h6 class="fw-bold">Alertas</h6>
+                    <p class="small text-muted mb-0">Notificaciones importantes</p>
+                  </div>
+                </div>
+
+                <!-- Módulo de Enlaces -->
+                <div class="col-8 col-sm-3 col-md-5 col-lg-3">
+                  <div class="p-3 border rounded bg-light text-center h-100 module-card">
+                    <i class="bi bi-link-45deg fs-3 text-info mb-2"></i>
+                    <h6 class="fw-bold">Enlaces Rápidos</h6>
+                    <p class="small text-muted mb-0">Acceso directo a recursos</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Botón de acceso -->
+            <div class="text-center"> <!-- Centrado en todas las pantallas -->
+              <a href="/login" class="btn btn-primary px-4">
+                <i class="bi bi-box-arrow-in-right me-2"></i> Ingresar al sistema
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </main>
@@ -83,7 +140,7 @@ onMounted(() => {
     quotes[currentIndex].classList.remove('active');
     currentIndex = (currentIndex + 1) % quotes.length;
     quotes[currentIndex].classList.add('active');
-  }, 4000);
+  }, 5000);
 });
 </script>
 
@@ -130,76 +187,24 @@ body {
   width: auto;
 }
 
-.login-btn {
-  color: white;
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border: 1px solid white;
-  border-radius: 5px;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.login-btn:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-}
-
 /* Contenido principal */
 .main-content {
   flex: 1;
-  padding: 4rem 0 0;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  padding: 2rem 0;
+  text-align: center;
+
 }
 
-.presentation-container {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 2rem;
-  width: 90%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-top: 2rem;
-}
+.container {
+  width: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  margin-right: auto;
+  margin-left: auto;
+  text-align: center;
 
-.image-container,
-.text-content {
-  align-self: flex-start;
-  margin-top: 0;
-}
-
-.main-image {
-  max-width: 100%;
-  max-height: 400px;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.text-content {
-  flex: 1;
-  min-width: 300px;
-  max-width: 500px;
-}
-
-.text-content h1 {
-  color: #0b4a7a;
-  margin-bottom: 1rem;
-  font-size: 2rem;
-}
-
-.description {
-  font-size: 1.1rem;
-  margin-bottom: 1rem;
-  color: #555;
-}
-
-.features {
-  color: #666;
 }
 
 /* Footer */
@@ -235,7 +240,6 @@ body {
 .quotes-slider {
   position: relative;
   min-height: 80px;
-  /* Altura reducida */
 }
 
 .quote {
@@ -255,12 +259,10 @@ body {
 
 .quote-icon {
   font-size: 3rem;
-  /* Tamaño reducido */
   color: #3b82f6;
   opacity: 0.2;
   position: absolute;
   top: -1rem;
-  /* Posición ajustada */
   left: 0;
   line-height: 1;
   font-family: Georgia, serif;
@@ -268,7 +270,6 @@ body {
 
 .quote-text {
   font-size: 1.1rem;
-  /* Texto más pequeño */
   line-height: 1.5;
   color: #f8fafc;
   margin-bottom: 1rem;
@@ -292,7 +293,6 @@ body {
 .quote-author span {
   color: #94a3b8;
   font-size: 0.85rem;
-  /* Texto más pequeño */
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-weight: 600;
@@ -332,11 +332,29 @@ body {
   gap: 0.3rem;
 }
 
+/* Estilos para el botón */
+.btn-primary {
+  background-color: #0b4a7a;
+  border-color: #0b4a7a;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #083758;
+  border-color: #083758;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
-  .presentation-container {
-    flex-direction: column;
-    text-align: center;
+  .main-content {
+    padding: 1rem 0;
+  }
+
+  .min-vh-75 {
+    min-height: auto;
+    padding: 2rem 0;
   }
 
   .quotes-container {
@@ -362,5 +380,34 @@ body {
   .technologies {
     justify-content: center;
   }
+
+  .col-md-6 {
+    text-align: center !important;
+  }
+
+  .d-flex.justify-content-center.justify-content-md-start {
+    justify-content: center !important;
+  }
+}
+/* Estilos para la imagen */
+.image-style {
+  border: none !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.25)); /* Efecto hover más notable */
+  transition: all 0.3s ease;
+  max-width: 90%; /* Asegura que la imagen no sea demasiado grande */
+  margin: 0 auto; /* Centrado adicional */
+    transform: translateY(-3px); /* Efecto de elevación sutil */
+
+}
+
+.image-style:hover {
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.25)); /* Efecto hover más notable */
+  transform: translateY(-3px); /* Efecto de elevación sutil */
+}
+
+/* Elimina cualquier sombra preexistente en el contenedor */
+.img-fluid.rounded.shadow {
+  box-shadow: none !important;
 }
 </style>
