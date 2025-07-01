@@ -66,7 +66,7 @@
 </div>
         <!-- Footer -->
         <div class="login-footer">
-          <span>OBS Salud V.1</span>
+          <span>OBS Salud v.1.0</span>
           <div class="footer-decoration"></div>
         </div>
       </div>
