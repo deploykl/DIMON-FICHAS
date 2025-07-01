@@ -6,12 +6,12 @@
       </div>
     </header>
 
-    <main class="main-content">
+    <main class="main-content py-4">
       <div class="container">
         <div class="row align-items-center justify-content-center"> <!-- Centrado vertical y horizontal -->
           <!-- Columna de la imagen -->
           <div class="col-md-6 mb-4 mb-md-0 d-flex justify-content-center">
-            <img src="@/assets/img/home/work.png" alt="Presentación" class="img-fluid rounded mx-auto d-block image-style">
+            <img src="@/assets/img/home/work.png" alt="Presentación" class="img-fluid rounded mx-auto d-block image-style me-5">
           </div>
 
           <!-- Columna del texto - centrada vertical y horizontalmente -->
@@ -192,7 +192,7 @@ body {
   flex: 1;
   display: flex;
   align-items: center;
-  padding: 2rem 0;
+  padding: 3rem 0;
   text-align: center;
 
 }

@@ -59,7 +59,9 @@
             </span>
           </button>
         </form>
-
+<div class="forgot-password">
+    <router-link to="/password-reset">¿Olvidaste tu contraseña?</router-link>
+  </div>
         <!-- Footer -->
         <div class="login-footer">
           <span>OBS Salud V.1</span>

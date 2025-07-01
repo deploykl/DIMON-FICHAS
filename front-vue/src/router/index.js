@@ -3,6 +3,8 @@ import HomeView from "../views/HomeView.vue";
 import FichasView from "../views/FichasView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import LoginView from "../views/fichas/login/LoginView.vue";
+import PasswordResetRequest from '@/views/fichas/login/PasswordResetRequest.vue'
+import PasswordResetConfirm from '@/views/fichas/login/PasswordResetConfirm.vue'
 import EvaluarFichaView from "../views/EvaluarFichaView.vue";
 import MatrizCompromisoView from "../views/MatrizCompromisoView.vue";
 import UrlsView from "../views/menu/UrlsView.vue";
@@ -55,7 +57,7 @@ const routes = [
       requiresAuth: true,
     },
   },
-    {
+  {
     path: "/alertas",
     name: "ALERTAS",
     component: AlertasView,
@@ -84,6 +86,17 @@ const routes = [
     },
   },
   {
+    path: "/password-reset",
+    name: "password-reset",
+    component: PasswordResetRequest,
+  },
+  {
+    path: "/reset-password",
+    name: "reset-password",
+    component: PasswordResetConfirm,
+    props: (route) => ({ token: route.query.token }),
+  },
+  {
     path: "/:catchAll(.*)",
     name: "not-found",
     component: NotFoundView,
@@ -104,6 +117,14 @@ router.beforeEach((to, from, next) => {
 
   // Actualizar título del documento
   document.title = to.meta.title || "DIMON APP";
+
+  // Excepciones para rutas que no requieren autenticación
+  const publicRoutes = ['login', 'password-reset', 'reset-password'];
+  
+  if (publicRoutes.includes(to.name)) {
+    next();
+    return;
+  }
 
   // Redirecciones según autenticación
   if (to.meta.requiresUnauth && isAuthenticated) {
