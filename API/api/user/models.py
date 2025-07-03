@@ -25,3 +25,12 @@ class User(AbstractUser):
     def has_module_perms(self, app_label):
         """Solo los superusuarios pueden ver el módulo 'admin'."""
         return self.is_superuser
+    
+# Create your models here.
+class Directorio(models.Model):
+    name = models.CharField(max_length=500, verbose_name="Nombre")
+    tipo = models.CharField(max_length=500, verbose_name="Tipo")
+
+    def __str__(self):
+        return f"{self.name} - {self.tipo}"
+    
