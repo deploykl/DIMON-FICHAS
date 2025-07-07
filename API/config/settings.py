@@ -42,6 +42,7 @@ OWN_APPS = [
     "api.user",
     "api.ficha",
     "api.enlaces",
+    "api.boletin",
 ]
 
 INSTALLED_APPS = BASE_APPS + THIRD_APPS + OWN_APPS

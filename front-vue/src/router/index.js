@@ -8,6 +8,7 @@ import MatrizCompromisoView from "../views/MatrizCompromisoView.vue";
 import UrlsView from "../views/menu/UrlsView.vue";
 import AlertasView from "../views/AlertasView.vue";
 import SeguimientoMatrizView from "../views/SeguimientoMatriz.vue";
+import BoletinView from "../views/BoletinView.vue";
 
 const routes = [
   {
@@ -80,6 +81,15 @@ const routes = [
     component: LoginView,
     meta: {
       title: "Login",
+      requiresUnauth: true,
+    },
+  },
+    {
+    path: "/boletin",
+    name: "boletin",
+    component: BoletinView,
+    meta: {
+      title: "Boletin",
       requiresUnauth: true,
     },
   },
