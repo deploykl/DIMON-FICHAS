@@ -3,8 +3,8 @@ import HomeView from "../views/HomeView.vue";
 import FichasView from "../views/FichasView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import LoginView from "../views/fichas/login/LoginView.vue";
-import PasswordResetRequest from '@/views/fichas/login/PasswordResetRequest.vue'
-import PasswordResetConfirm from '@/views/fichas/login/PasswordResetConfirm.vue'
+import PasswordResetRequest from "@/views/fichas/login/PasswordResetRequest.vue";
+import PasswordResetConfirm from "@/views/fichas/login/PasswordResetConfirm.vue";
 import EvaluarFichaView from "../views/EvaluarFichaView.vue";
 import MatrizCompromisoView from "../views/MatrizCompromisoView.vue";
 import UrlsView from "../views/menu/UrlsView.vue";
@@ -21,6 +21,7 @@ const routes = [
     component: HomeView,
     meta: {
       title: "DIMON APP",
+      requiresUnauth: false, // Explícitamente permite acceso sin autenticación
     },
   },
   {
@@ -79,7 +80,7 @@ const routes = [
       requiresAuth: true,
     },
   },
-    {
+  {
     path: "/game",
     name: "game",
     component: GameView,
@@ -98,7 +99,7 @@ const routes = [
       requiresUnauth: true,
     },
   },
-    {
+  {
     path: "/boletin",
     name: "boletin",
     component: BoletinView,
@@ -107,7 +108,7 @@ const routes = [
       requiresAuth: true,
     },
   },
-      {
+  {
     path: "/boletin-list",
     name: "boletin-list",
     component: BoletinView_List,
@@ -150,8 +151,8 @@ router.beforeEach((to, from, next) => {
   document.title = to.meta.title || "DIMON APP";
 
   // Excepciones para rutas que no requieren autenticación
-  const publicRoutes = ['login', 'password-reset', 'reset-password'];
-  
+  const publicRoutes = ["login", "password-reset", "reset-password"];
+
   if (publicRoutes.includes(to.name)) {
     next();
     return;
