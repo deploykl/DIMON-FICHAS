@@ -135,6 +135,18 @@ const menuItems = ref([
     path: '/game',
     submenu: null
   },
+    {
+    title: 'Boletin',
+    icon: 'fa-book',
+    path: '/boletin',
+    submenu: null
+  },
+     {
+    title: 'Boletin-list',
+    icon: 'fa-pen',
+    path: '/boletin-list',
+    submenu: null
+  },
   {
     title: 'Menu 1',
     icon: 'fa-user-injured',

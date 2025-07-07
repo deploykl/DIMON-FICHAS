@@ -1,7 +1,10 @@
 from django.urls import path
-from .views import NewsletterListCreateAPIView, NewsletterDetailAPIView
+from rest_framework.routers import DefaultRouter
+from api.boletin.views import *
 
-urlpatterns = [
-    path('newsletters/', NewsletterListCreateAPIView.as_view(), name='newsletter-list'),
-    path('newsletters/<int:pk>/', NewsletterDetailAPIView.as_view(), name='newsletter-detail'),
-]
+router = DefaultRouter()
+
+router.register(r'boletin', BoletinViewSet)
+
+
+urlpatterns = router.urls

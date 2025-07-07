@@ -12,6 +12,7 @@ import AlertasView from "../views/AlertasView.vue";
 import GameView from "../views/etc/GameView.vue";
 import SeguimientoMatrizView from "../views/SeguimientoMatriz.vue";
 import BoletinView from "../views/BoletinView.vue";
+import BoletinView_List from "../views/BoletinView_List.vue";
 
 const routes = [
   {
@@ -103,7 +104,16 @@ const routes = [
     component: BoletinView,
     meta: {
       title: "Boletin",
-      requiresUnauth: true,
+      requiresAuth: true,
+    },
+  },
+      {
+    path: "/boletin-list",
+    name: "boletin-list",
+    component: BoletinView_List,
+    meta: {
+      title: "Boletin",
+      requiresAuth: true,
     },
   },
   {
