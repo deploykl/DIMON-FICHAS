@@ -141,16 +141,6 @@ const menuItems = ref([
     path: '/boletin-list',
     submenu: null
   },
-  {
-    title: 'Menu 1',
-    icon: 'fa-user-injured',
-    path: '/patients',
-    submenu: [
-      { title: 'Registrar', icon: 'fa-user-plus', path: '/patients/register' },
-      { title: 'Listado', icon: 'fa-list', path: '/patients/list' },
-      { title: 'Historial', icon: 'fa-history', path: '/patients/history' }
-    ]
-  }
 ])
 
 const toggleSubmenu = (index) => {

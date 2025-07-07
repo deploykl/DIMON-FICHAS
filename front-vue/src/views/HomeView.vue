@@ -17,10 +17,10 @@
           <!-- Columna del texto - centrada vertical y horizontalmente -->
           <div class="col-md-6 text-center">
             <!-- Título principal -->
-            <h1 class="mb-3 text-center text-primary fw-bold">Plataforma OBS Salud</h1>
+            <h1 class="mb-3 text-center text-primary fw-bold">Dirección de Monitoreo y Evaluación de la Gestión en Salud</h1>
             <!-- Descripción -->
             <p class="mb-3 lead">
-              Sistema integral para la gestión del cumplimiento normativo en organizaciones de salud.
+              Dirección de Monitoreo y Evaluación de la Gestión en Salud.
             </p>
 
             <!-- Alertas importantes -->
