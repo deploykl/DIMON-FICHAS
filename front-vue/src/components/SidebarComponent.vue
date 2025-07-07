@@ -93,7 +93,7 @@ const menuItems = ref([
   {
     title: 'Dashboard',
     icon: 'fa-tachometer-alt',
-    path: '/dashboard',
+    path: '/urls',
     submenu: null
   },
     {
@@ -121,12 +121,6 @@ const menuItems = ref([
     title: 'Alertas',
     icon: 'fa-chart-bar',
     path: '/alertas',
-    submenu: null
-  },
-  {
-    title: 'Enlaces',
-    icon: 'fa-globe',
-    path: '/urls',
     submenu: null
   },
    {

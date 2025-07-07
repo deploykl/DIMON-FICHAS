@@ -3,7 +3,7 @@
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4 header-container">
       <div>
-        <h1 class="mb-0 header-title">Lista de enlaces de información</h1>
+        <h1 class="mb-0 header-title">Dashboard</h1>
         <p class="mb-0 header-subtitle">Acceso rápido a recursos digitales</p>
       </div>
       <router-link to="/fichas" class="btn btn-outline-secondary">

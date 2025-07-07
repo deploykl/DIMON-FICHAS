@@ -104,7 +104,7 @@ const handleSubmit = async () => {
     //  Obtener perfil del usuario
     const perfilResponse = await api.get('user/profile/');
     localStorage.setItem('user', JSON.stringify(perfilResponse.data));
-    router.push('/fichas');
+    router.push('/urls');
 
   } catch (error) {
     if (error.response?.data?.detail) {

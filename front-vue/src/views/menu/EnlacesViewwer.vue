@@ -5,7 +5,7 @@
       <button @click="closeViewer" class="btn btn-outline-light">
         <i class="fas fa-arrow-left me-2"></i> Volver
       </button>
-      <h2>{{ currentEnlace.titulo }}</h2>
+      <h2>Dashboard</h2>
     </div>
     
     <div class="viewer-content">
