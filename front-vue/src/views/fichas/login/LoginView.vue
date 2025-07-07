@@ -22,15 +22,8 @@
             <div class="input-icon">
               <i class="fas fa-user"></i>
             </div>
-            <input
-              type="text"
-              id="username"
-              v-model="username"
-              @input="handleLowerCASE"
-              class="input-field"
-              placeholder="Nombre de usuario"
-              required
-            />
+            <input type="text" id="username" v-model="username" @input="handleLowerCASE" class="input-field"
+              placeholder="Nombre de usuario" required />
           </div>
 
           <!-- Campo Contraseña con toggle -->
@@ -38,14 +31,8 @@
             <div class="input-icon">
               <i class="fas fa-lock"></i>
             </div>
-            <input
-              :type="showPassword ? 'text' : 'password'"
-              id="password"
-              v-model="password"
-              class="input-field"
-              placeholder="Contraseña"
-              required
-            />
+            <input :type="showPassword ? 'text' : 'password'" id="password" v-model="password" class="input-field"
+              placeholder="Contraseña" required />
             <div class="password-toggle" @click="showPassword = !showPassword">
               <i :class="showPassword ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
             </div>
@@ -59,10 +46,14 @@
             </span>
           </button>
         </form>
-
+        <div class="forgot-password">
+          <router-link to="/password-reset" class="forgot-link">
+            <i class="fas fa-question-circle"></i> ¿Olvidaste tu contraseña?
+          </router-link>
+        </div>
         <!-- Footer -->
         <div class="login-footer">
-          <span>OBS Salud V.1</span>
+          <span>OBS Salud v.1.0</span>
           <div class="footer-decoration"></div>
         </div>
       </div>
@@ -114,7 +105,7 @@ const handleSubmit = async () => {
     const perfilResponse = await api.get('user/profile/');
     localStorage.setItem('user', JSON.stringify(perfilResponse.data));
     router.push('/fichas');
-    
+
   } catch (error) {
     if (error.response?.data?.detail) {
       errorMessage.value = error.response.data.detail;
@@ -138,6 +129,30 @@ const handleSubmit = async () => {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.forgot-password {
+  text-align: center;
+  margin: 15px 0;
+}
+
+.forgot-link {
+  color: #3498db;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.forgot-link:hover {
+  color: #2980b9;
+  text-decoration: underline;
+}
+
+.forgot-link i {
+  font-size: 16px;
+}
+
 .login-wrapper {
   width: 100%;
   max-width: 420px;
@@ -156,8 +171,15 @@ const handleSubmit = async () => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Logo */
@@ -186,10 +208,13 @@ const handleSubmit = async () => {
   border-left: 4px solid #c62828;
 }
 
-.fade-enter-active, .fade-leave-active {
+.fade-enter-active,
+.fade-leave-active {
   transition: opacity 0.3s;
 }
-.fade-enter-from, .fade-leave-to {
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
 }
 
@@ -222,7 +247,7 @@ const handleSubmit = async () => {
   border-color: #27038d;
   box-shadow: 0 0 0 3px rgba(110, 69, 226, 0.2);
   outline: none;
-  
+
 }
 
 .password-toggle {
@@ -282,7 +307,9 @@ const handleSubmit = async () => {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Footer */

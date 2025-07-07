@@ -129,6 +129,12 @@ const menuItems = ref([
     path: '/urls',
     submenu: null
   },
+   {
+    title: 'Game',
+    icon: 'fa-gamepad',
+    path: '/game',
+    submenu: null
+  },
   {
     title: 'Menu 1',
     icon: 'fa-user-injured',
@@ -137,25 +143,6 @@ const menuItems = ref([
       { title: 'Registrar', icon: 'fa-user-plus', path: '/patients/register' },
       { title: 'Listado', icon: 'fa-list', path: '/patients/list' },
       { title: 'Historial', icon: 'fa-history', path: '/patients/history' }
-    ]
-  },
-  {
-    title: 'Menu 2',
-    icon: 'fa-calendar-check',
-    path: '/appointments',
-    submenu: [
-      { title: 'Agendar', icon: 'fa-plus-circle', path: '/appointments/schedule' },
-      { title: 'Calendario', icon: 'fa-calendar-alt', path: '/appointments/calendar' }
-    ]
-  },
-
-  {
-    title: 'Configuración',
-    icon: 'fa-cog',
-    path: '/settings',
-    submenu: [
-      { title: 'Usuarios', icon: 'fa-users', path: '/settings/users' },
-      { title: 'Permisos', icon: 'fa-key', path: '/settings/permissions' }
     ]
   }
 ])

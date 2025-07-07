@@ -220,4 +220,5 @@ EMAIL_HOST_USER = 'bot.reporte.dimon@gmail.com'
 EMAIL_HOST_PASSWORD = 'smhp kikf gbsm nhqr'
 EMAIL_FROM = 'bot.reporte.dimon@gmail.com'  # <-- Añade el remitente
 
+FRONTEND_URL = 'http://localhost:8080'  # URL de tu frontend Vue.js en desarrollo
 

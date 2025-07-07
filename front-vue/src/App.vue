@@ -33,7 +33,7 @@ const route = useRoute();
 const isSidebarCollapsed = ref(false);
 
 const shouldShowComponents = computed(
-  () => route.name !== 'HOME' && route.name !== 'login'
+  () => route.name !== 'HOME' && route.name !== 'login' && route.name !== 'password-reset' && route.name !== 'reset-password'
 );
 
 const handleSidebarToggle = (collapsed) => {

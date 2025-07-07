@@ -434,34 +434,32 @@ class SeguimientoAlertasViewSet(viewsets.ModelViewSet):
     serializer_class = SeguimientoAlertasSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['alerta']  # Usar 'alertas' en lugar de 'alerta'
+    filterset_fields = ['alerta']
     ordering_fields = ['fecha_seguimiento', 'fecha_creacion']
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        alerta_id = self.request.query_params.get('alerta')  # Usa 'alerta' aquí también
+        alerta_id = self.request.query_params.get('alerta')
         if alerta_id:
-            queryset = queryset.filter(alerta_id=alerta_id)  # Filtra por 'alerta_id'
+            queryset = queryset.filter(alerta_id=alerta_id)
         return queryset.order_by('-fecha_seguimiento')
 
     def perform_create(self, serializer):
-        # Verificar que alertas está en los datos validados
         if 'alerta' not in serializer.validated_data:
             raise serializers.ValidationError({"alerta_id": "Este campo es requerido."})
-            
         serializer.save(usuario_creacion=self.request.user)
         
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         
-        # Verifica permisos
-        if not request.user.is_superuser and instance.alerta.usuario != request.user:
+        # Verifica que el usuario sea el creador del seguimiento o superusuario
+        if not request.user.is_superuser and instance.usuario_creacion != request.user:
             return Response(
-                {'error': 'No tienes permiso para editar este seguimiento'},
+                {'error': 'Solo puedes editar tus propios seguimientos'},
                 status=status.HTTP_403_FORBIDDEN
             )
             
-        serializer = self.get_serializer(instance, data=request.data, partial=False)
+        serializer = self.get_serializer(instance, data=request.data, partial=True)  # Cambiado a partial=True para permitir actualizaciones parciales
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
         

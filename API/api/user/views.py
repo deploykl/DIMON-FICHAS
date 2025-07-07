@@ -3,11 +3,16 @@ from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import InvalidToken
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
-
+from django.utils import timezone
+from django.utils.crypto import get_random_string
+from datetime import timedelta
+from django.core.mail import send_mail
+from django.conf import settings
 from api.user.serializers import *
 
 User = get_user_model()
@@ -98,3 +103,99 @@ class LogoutView(APIView):
             return Response({"detail": "Invalid refresh token."}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class PasswordResetRequestView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        
+        if not email:
+            return Response(
+                {'detail': 'El correo electrónico es requerido.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response(
+                {'detail': 'Si este correo existe en nuestro sistema, recibirás un enlace de recuperación.'}, 
+                status=status.HTTP_200_OK  # No revelamos si el email existe o no
+            )
+
+        # Generar token
+        reset_token = get_random_string(50)
+        user.password_reset_token = reset_token
+        user.password_reset_token_expires = timezone.now() + timedelta(hours=1)
+        user.save()
+
+        # En desarrollo, muestra el enlace en consola
+        reset_link = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
+        print(f"\n--- Enlace de recuperación para {email}: {reset_link}\n")  # Para ver en consola
+
+        # Enviar correo (en producción)
+        send_mail(
+            'Restablecer contraseña - Plataforma OBS Salud',
+            f'''Hola {user.first_name or 'usuario'},
+
+Para restablecer tu contraseña, haz clic en el siguiente enlace:
+{reset_link}
+
+Este enlace expirará en 1 hora.
+
+Si no solicitaste este cambio, ignora este mensaje.
+
+Atentamente,
+Equipo de Plataforma OBS Salud
+            ''',
+            settings.DEFAULT_FROM_EMAIL,
+            [email],
+            fail_silently=False,
+        )
+
+        return Response(
+            {'detail': 'Si este correo existe en nuestro sistema, recibirás un enlace de recuperación.'}, 
+            status=status.HTTP_200_OK
+        )
+
+class PasswordResetConfirmView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        token = request.data.get('token')
+        password = request.data.get('password')
+        password2 = request.data.get('password2')
+
+        if not token or not password or not password2:
+            return Response(
+                {'detail': 'Todos los campos son requeridos.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if password != password2:
+            return Response(
+                {'detail': 'Las contraseñas no coinciden.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            user = User.objects.get(
+                password_reset_token=token,
+                password_reset_token_expires__gt=timezone.now()
+            )
+        except User.DoesNotExist:
+            return Response(
+                {'detail': 'Token inválido o expirado.'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.set_password(password)
+        user.password_reset_token = None
+        user.password_reset_token_expires = None
+        user.save()
+
+        return Response(
+            {'detail': 'Contraseña restablecida correctamente.'}, 
+            status=status.HTTP_200_OK
+        )
