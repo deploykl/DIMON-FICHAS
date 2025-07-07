@@ -15,9 +15,10 @@ class Evento(models.Model):
         return f"{self.descripcion} - {self.fecha}"
 
 class Persona(models.Model):
+    eventos = models.ManyToManyField(Evento, blank=True, related_name='participantes')  # <--- Añade esta línea
+    dni = models.CharField(max_length=50, unique=True, verbose_name="DNI")    
     nombre = models.CharField(max_length=100)
     apellido = models.CharField(max_length=100)
-    identificacion = models.CharField(max_length=50, unique=True)
     email = models.EmailField(blank=True)
     telefono = models.CharField(max_length=20, blank=True)
     # Campos de la IPRESS (se capturan en la evaluación)
@@ -29,6 +30,7 @@ class Persona(models.Model):
     distrito = models.CharField(max_length=100, verbose_name="Distrito", blank=True, null=True)
     disa = models.CharField(max_length=100, verbose_name="DISA", blank=True, null=True)
     institucion = models.CharField(max_length=100, verbose_name="Institucion", blank=True, null=True)    
+    fecha_registro = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
         return f"{self.nombre} {self.apellido}"

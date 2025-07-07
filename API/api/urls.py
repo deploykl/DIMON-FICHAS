@@ -18,5 +18,6 @@ urlpatterns = [
     path('ficha/', include('api.ficha.urls')),  
     path('enlace/', include('api.enlaces.urls')),  
     path('boletin/', include('api.boletin.urls')),  
+    path('reuniones/', include('api.reuniones.urls')),  
 ]
 
