@@ -13,6 +13,9 @@ import GameView from "../views/etc/GameView.vue";
 import SeguimientoMatrizView from "../views/SeguimientoMatriz.vue";
 import BoletinView from "../views/BoletinView.vue";
 import BoletinView_List from "../views/BoletinView_List.vue";
+import ReunionesView from "../views/ReunionesView.vue";
+import EventosView from "../views/EventosView.vue";
+import EventosAdminView from "../views/EventosAdminView.vue";
 
 const routes = [
   {
@@ -78,6 +81,33 @@ const routes = [
     meta: {
       title: "Enlaces de información",
       requiresAuth: true,
+    },
+  },
+    {
+    path: "/eventos/admin",
+    name: "eventos-admin",
+    component: EventosAdminView,
+    props: true,
+    meta: {
+      title: "Eventos Admin",
+    },
+  },
+  {
+    path: "/eventos",
+    name: "reuniones",
+    component: EventosView,
+    props: true,
+    meta: {
+      title: "Eventos",
+    },
+  },
+    {
+    path: "/eventos/reuniones",
+    name: "eventos",
+    component: ReunionesView,
+    props: true,
+    meta: {
+      title: "Reuniones",
     },
   },
   {
