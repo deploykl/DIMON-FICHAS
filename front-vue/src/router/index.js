@@ -83,13 +83,14 @@ const routes = [
       requiresAuth: true,
     },
   },
-    {
+  {
     path: "/eventos/admin",
     name: "eventos-admin",
     component: EventosAdminView,
     props: true,
     meta: {
       title: "Eventos Admin",
+      requiresAuth: true,
     },
   },
   {
@@ -99,9 +100,10 @@ const routes = [
     props: true,
     meta: {
       title: "Eventos",
+      requiresAuth: false,
     },
   },
-    {
+  {
     path: "/eventos/reuniones",
     name: "eventos",
     component: ReunionesView,
@@ -177,32 +179,21 @@ router.beforeEach((to, from, next) => {
   const isAuthenticated = !!localStorage.getItem("auth_token");
   const isStaff = localStorage.getItem("is_staff") === "true";
 
-  // Actualizar título del documento
   document.title = to.meta.title || "DIMON APP";
 
-  // Excepciones para rutas que no requieren autenticación
-  const publicRoutes = ["login", "password-reset", "reset-password"];
-
-  if (publicRoutes.includes(to.name)) {
-    next();
-    return;
-  }
-
-  // Redirecciones según autenticación
+  // 🚫 Si la ruta requiere NO estar autenticado, pero el usuario sí lo está
   if (to.meta.requiresUnauth && isAuthenticated) {
-    next({ name: "FICHAS" });
-    return;
+    return next({ name: "FICHAS" });
   }
 
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    next({ name: "login" });
-    return;
+  // Solo redirige al login si explícitamente requiere auth
+  if (to.meta.requiresAuth === true && !isAuthenticated) {
+    return next({ name: "login" });
   }
 
-  // Verificación de staff
+  // 🧑‍💼 Si se requiere staff y no lo es
   if (to.meta.requiresStaff && !isStaff) {
-    next({ name: "HOME" });
-    return;
+    return next({ name: "HOME" });
   }
 
   next();

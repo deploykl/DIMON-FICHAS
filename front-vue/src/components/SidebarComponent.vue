@@ -147,6 +147,12 @@ const menuItems = ref([
     path: '/eventos',
     submenu: null
   },
+    {
+    title: 'registro de eventos',
+    icon: 'fa-pen',
+    path: '/eventos/reuniones',
+    submenu: null
+  },
 ])
 
 const toggleSubmenu = (index) => {
