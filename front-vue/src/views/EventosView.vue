@@ -177,7 +177,7 @@
                                                     maxlength="9" @keypress="soloNumeros"
                                                     :class="{ 'is-invalid': telefonoInvalido }"
                                                     placeholder="Número de contacto">
-                                                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                                    
                                                 <div v-if="telefonoInvalido" class="invalid-feedback">
                                                     El teléfono debe tener máximo 9 dígitos numéricos
                                                 </div>
@@ -382,27 +382,11 @@
                                 </div>
                             </div>
 
-                            <!-- Sección de Firma Digital -->
-                            <!-- Sección de Firma Digital -->
-                            <div class="card mb-4 border-0 shadow-sm">
-                                <div class="card-header bg-light">
-                                    <h6 class="mb-0 fw-bold"><i class="bi bi-pen me-2"></i>Firma Digital</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row">
-                                        <div class="col-md-12">
-                                            <signature-pad @save="handleSignatureSave" ref="signaturePad" :width="500"
-                                                :height="200" penColor="#000000" penWidth="2.5" />
-                    
-                                            </div>
-                                    </div>
-                                </div>
-                            </div>
                             <div class="d-flex justify-content-end gap-2">
                                 <button type="button" class="btn btn-outline-secondary" @click="resetearFormulario">
                                     <i class="bi bi-eraser me-1"></i> Limpiar
                                 </button>
-                                <button type="submit" class="btn btn-primary" :disabled="!firmaValida">
+                                <button type="submit" class="btn btn-primary">
                                     <i class="bi bi-save me-1"></i> Guardar Participante
                                 </button>
                             </div>
@@ -415,17 +399,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { api } from '@/components/services/auth_axios'
 import { useToast } from 'vue-toast-notification'
-import { useRouter } from 'vue-router'
 import { debounce } from 'lodash'
-import SignaturePad from '@/components/SignaturePad.vue' // Asegúrate de que la ruta sea correcta
 
 const toast = useToast()
-const router = useRouter()
-// En las refs
-const signaturePad = ref(null)
+
 // Configuración de estados
 const estadosColores = {
     PENDIENTE: 'warning',
@@ -439,17 +419,13 @@ const estadosTexto = {
     FINALIZADO: 'Finalizado'
 }
 
-// Referencias y estado para la firma
-const signatureCanvas = ref(null)
-const signatureContainer = ref(null)
-const isDrawing = ref(false)
-const lastX = ref(0)
-const lastY = ref(0)
-const signatureType = ref('firma') // 'firma' o 'texto'
-const signatureText = ref('')
-const signaturePreview = ref(null)
-const ctx = ref(null)
-const resizeObserver = ref(null)
+const estadoBorderClass = (estado) => {
+    return {
+        'border-start border-5 border-warning': estado === 'PENDIENTE',
+        'border-start border-5 border-primary': estado === 'EN_PROGRESO',
+        'border-start border-5 border-success': estado === 'FINALIZADO'
+    }
+}
 
 // Estado del componente
 const paso = ref(1)
@@ -470,7 +446,7 @@ const isSearchingByName = ref(false)
 const isSearchingByCode = ref(false)
 const camposEditables = ref(false)
 
-// Datos del participante
+// Datos del participante con todos los campos
 const participante = ref({
     dni: '',
     nombre: '',
@@ -487,11 +463,10 @@ const participante = ref({
     distrito: '',
     disa: '',
     institucion: '',
-    eventos: [],
-    firma: null
+    eventos: []
 })
 
-// Computed properties
+// Computed para validaciones
 const dniInvalido = computed(() => {
     return participante.value.dni && !/^\d{8}$/.test(participante.value.dni)
 })
@@ -500,10 +475,7 @@ const telefonoInvalido = computed(() => {
     return participante.value.telefono && !/^\d{0,9}$/.test(participante.value.telefono)
 })
 
-const firmaValida = computed(() => {
-    return signaturePreview.value !== null
-})
-
+// Eventos filtrados y ordenados
 const eventosFiltrados = computed(() => {
     let resultados = [...eventos.value]
 
@@ -513,7 +485,7 @@ const eventosFiltrados = computed(() => {
         resultados = resultados.filter(evento =>
             evento.descripcion.toLowerCase().includes(termino) ||
             (evento.creado_por && evento.creado_por.toLowerCase().includes(termino))
-        ) // ← este paréntesis faltaba
+        ) // <-- este paréntesis faltaba
     }
 
     // Filtrar por estado
@@ -521,27 +493,18 @@ const eventosFiltrados = computed(() => {
         resultados = resultados.filter(evento => evento.estado !== 'FINALIZADO')
     }
 
-    // Ordenar por proximidad (más cercanos primero) y estado
+    // Ordenar por proximidad (más cercanos primero)
     resultados.sort((a, b) => {
         const fechaHoraA = new Date(`${a.fecha}T${a.hora_inicio}`).getTime()
-        const fechaHoraB = new Date(`${b.fecha}T${b.hora_fin}`).getTime()
+        const fechaHoraB = new Date(`${b.fecha}T${b.hora_inicio}`).getTime()
         const ahora = new Date().getTime()
 
         const diffA = Math.abs(fechaHoraA - ahora)
         const diffB = Math.abs(fechaHoraB - ahora)
 
-        // Prioridad por estado
-        const estadoOrden = {
-            'EN_PROGRESO': 1,
-            'PENDIENTE': 2,
-            'FINALIZADO': 3
-        }
+        if (a.estado === 'EN_PROGRESO' && b.estado !== 'EN_PROGRESO') return -1
+        if (b.estado === 'EN_PROGRESO' && a.estado !== 'EN_PROGRESO') return 1
 
-        if (estadoOrden[a.estado] !== estadoOrden[b.estado]) {
-            return estadoOrden[a.estado] - estadoOrden[b.estado]
-        }
-
-        // Luego por proximidad
         return diffA - diffB
     })
 
@@ -549,165 +512,22 @@ const eventosFiltrados = computed(() => {
 })
 
 
-// Métodos para la firma digital
-const initSignatureCanvas = () => {
-    const canvas = signatureCanvas.value
-    if (!canvas) {
-        console.error('Canvas element not found')
-        return
-    }
+// Cargar eventos al montar el componente
+onMounted(async () => {
+    await cargarEventos()
+    iniciarActualizacionAutomatica()
+})
 
-    const container = signatureContainer.value
-    if (!container) {
-        console.error('Signature container not found')
-        return
-    }
+// Iniciar actualización automática de estados
+const iniciarActualizacionAutomatica = () => {
+    if (intervaloActualizacion) clearInterval(intervaloActualizacion)
 
-    const rect = container.getBoundingClientRect()
-    const scale = window.devicePixelRatio || 1
-
-    canvas.width = rect.width * scale
-    canvas.height = rect.height * scale
-    canvas.style.width = `${rect.width}px`
-    canvas.style.height = `${rect.height}px`
-
-    ctx.value = canvas.getContext('2d')
-    if (!ctx.value) {
-        console.error('Could not get canvas context')
-        return
-    }
-
-    ctx.value.scale(scale, scale)
-    ctx.value.lineWidth = 2
-    ctx.value.lineCap = 'round'
-    ctx.value.lineJoin = 'round'
-    ctx.value.strokeStyle = '#000000'
-    ctx.value.fillStyle = '#ffffff'
-    ctx.value.fillRect(0, 0, canvas.width, canvas.height)
+    intervaloActualizacion = setInterval(async () => {
+        await actualizarEstadosEventos()
+    }, 30000) // Actualizar cada 30 segundos
 }
 
-const startDrawing = (e) => {
-    if (signatureType.value !== 'firma' || !ctx.value) return
-
-    isDrawing.value = true
-    const canvas = signatureCanvas.value
-    const rect = canvas.getBoundingClientRect()
-
-    const clientX = e.clientX || (e.touches?.[0]?.clientX)
-    const clientY = e.clientY || (e.touches?.[0]?.clientY)
-
-    if (!clientX || !clientY) return
-
-    lastX.value = (clientX - rect.left) * (canvas.width / rect.width)
-    lastY.value = (clientY - rect.top) * (canvas.height / rect.height)
-
-    ctx.value.beginPath()
-    ctx.value.moveTo(lastX.value, lastY.value)
-}
-
-const draw = (e) => {
-    if (!isDrawing.value || signatureType.value !== 'firma' || !ctx.value) return
-
-    const canvas = signatureCanvas.value
-    const rect = canvas.getBoundingClientRect()
-
-    const clientX = e.clientX || (e.touches?.[0]?.clientX)
-    const clientY = e.clientY || (e.touches?.[0]?.clientY)
-
-    if (!clientX || !clientY) return
-
-    const currentX = (clientX - rect.left) * (canvas.width / rect.width)
-    const currentY = (clientY - rect.top) * (canvas.height / rect.height)
-
-    ctx.value.lineTo(currentX, currentY)
-    ctx.value.stroke()
-
-    lastX.value = currentX
-    lastY.value = currentY
-
-    updateSignaturePreview()
-}
-
-const stopDrawing = () => {
-    if (isDrawing.value) {
-        isDrawing.value = false
-        updateSignaturePreview()
-    }
-}
-
-const handleTouchStart = (e) => {
-    e.preventDefault()
-    startDrawing(e)
-}
-
-const handleTouchMove = (e) => {
-    e.preventDefault()
-    draw(e)
-}
-
-const handleTouchEnd = (e) => {
-    e.preventDefault()
-    stopDrawing()
-}
-
-const limpiarFirma = () => {
-    if (!ctx.value) return
-
-    const canvas = signatureCanvas.value
-    ctx.value.clearRect(0, 0, canvas.width, canvas.height)
-    ctx.value.fillStyle = '#ffffff'
-    ctx.value.fillRect(0, 0, canvas.width, canvas.height)
-
-    signatureText.value = ''
-    signaturePreview.value = null
-    participante.value.firma = null
-}
-
-const toggleSignatureType = () => {
-    signatureType.value = signatureType.value === 'firma' ? 'texto' : 'firma'
-    limpiarFirma()
-}
-
-const actualizarFirmaTexto = debounce(() => {
-    if (signatureType.value !== 'texto' || !signatureText.value.trim()) {
-        signaturePreview.value = null
-        participante.value.firma = null
-        return
-    }
-
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-
-    canvas.width = 400
-    canvas.height = 150
-
-    ctx.font = 'italic 30px "Brush Script MT", cursive'
-    ctx.fillStyle = '#000000'
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillText(signatureText.value, canvas.width / 2, canvas.height / 2)
-
-    signaturePreview.value = canvas.toDataURL('image/png')
-    participante.value.firma = signaturePreview.value
-}, 300)
-
-const updateSignaturePreview = () => {
-    if (signatureType.value !== 'firma' || !signatureCanvas.value) return
-
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')
-    const sourceCanvas = signatureCanvas.value
-
-    canvas.width = sourceCanvas.width / 2
-    canvas.height = sourceCanvas.height / 2
-
-    ctx.drawImage(sourceCanvas, 0, 0, canvas.width, canvas.height)
-
-    signaturePreview.value = canvas.toDataURL('image/png')
-    participante.value.firma = signaturePreview.value
-}
-
-// Métodos del componente
+// Cargar eventos desde la API
 const cargarEventos = async () => {
     try {
         const response = await api.get('reuniones/evento/')
@@ -721,11 +541,16 @@ const cargarEventos = async () => {
     }
 }
 
+// Actualizar estados de todos los eventos
 const actualizarEstadosEventos = async () => {
     try {
+        // Actualizar todos los eventos en el backend
         const response = await api.post('reuniones/evento/actualizar_estados/')
+
+        // Actualizar la lista local con los nuevos estados
         eventos.value = response.data
 
+        // Actualizar también el evento seleccionado si es necesario
         if (eventoSeleccionado.value) {
             const eventoActualizado = response.data.find(e => e.id === eventoSeleccionado.value.id)
             if (eventoActualizado) {
@@ -737,16 +562,22 @@ const actualizarEstadosEventos = async () => {
     }
 }
 
-const iniciarActualizacionAutomatica = () => {
-    if (intervaloActualizacion) clearInterval(intervaloActualizacion)
-    intervaloActualizacion = setInterval(async () => {
-        await actualizarEstadosEventos()
-    }, 30000)
+// Calcular estado de un evento
+const calcularEstadoEvento = (evento) => {
+    const ahora = new Date()
+    const fechaHoraInicio = new Date(`${evento.fecha}T${evento.hora_inicio}`)
+    const fechaHoraFin = new Date(`${evento.fecha}T${evento.hora_fin}`)
+
+    if (ahora > fechaHoraFin) return 'FINALIZADO'
+    if (ahora >= fechaHoraInicio) return 'EN_PROGRESO'
+    return 'PENDIENTE'
 }
 
+// Formatear fecha
 const formatFecha = (fecha) => {
     const [year, month, day] = fecha.split('-')
     const fechaObj = new Date(year, month - 1, day)
+
     return fechaObj.toLocaleDateString('es-PE', {
         weekday: 'long',
         year: 'numeric',
@@ -755,19 +586,23 @@ const formatFecha = (fecha) => {
     })
 }
 
+// Formatear hora
 const formatHora = (hora) => {
     const [hh, mm] = hora.split(':')
     return `${hh}:${mm}`
 }
 
+// Filtrar eventos (se ejecuta automáticamente al cambiar el término de búsqueda)
 const filtrarEventos = () => {
-    // Implementado en computed property
+    // No es necesario hacer nada aquí, ya que eventosFiltrados es computed
 }
 
+// Limpiar búsqueda
 const limpiarBusqueda = () => {
     terminoBusqueda.value = ''
 }
 
+// Seleccionar evento
 const seleccionarEvento = (evento) => {
     if (evento.estado !== 'EN_PROGRESO') {
         toast.warning('Solo se pueden registrar participantes en eventos en progreso')
@@ -775,17 +610,17 @@ const seleccionarEvento = (evento) => {
     }
     eventoSeleccionado.value = { ...evento }
     paso.value = 2
-    resetearFormulario()
 }
 
+// Registrar participante
 const registrarParticipante = async () => {
     try {
-        // Validaciones
+        // Verificar que el evento esté en progreso
         if (eventoSeleccionado.value.estado !== 'EN_PROGRESO') {
             toast.error('Solo se pueden registrar participantes en eventos en progreso')
             return
         }
-
+        // Validar campos requeridos
         if (dniInvalido.value) {
             toast.error('El DNI debe tener exactamente 8 dígitos numéricos')
             return
@@ -797,12 +632,17 @@ const registrarParticipante = async () => {
             return
         }
 
-        if (!firmaValida.value) {
-            toast.error('Por favor proporcione su firma digital')
+        if (telefonoInvalido.value) {
+            toast.error('El teléfono debe tener máximo 9 dígitos numéricos')
             return
         }
 
-        // Verificar DNI
+        if (!participante.value.establecimiento) {
+            toast.error('Por favor ingrese el nombre del establecimiento')
+            return
+        }
+
+        // Verificar si el DNI ya está registrado en este evento
         try {
             const response = await api.get(`reuniones/persona/verificar_dni_evento/?dni=${participante.value.dni}&evento_id=${eventoSeleccionado.value.id}`)
             if (response.data.existe) {
@@ -813,34 +653,10 @@ const registrarParticipante = async () => {
             console.error('Error verificando DNI:', error)
         }
 
-        // Preparar datos
+        // Asignar el evento seleccionado
         participante.value.eventos = [eventoSeleccionado.value.id]
-        const formData = new FormData()
 
-        // Agregar campos al FormData
-        Object.entries(participante.value).forEach(([key, value]) => {
-            if (key !== 'eventos' && key !== 'firma') {
-                formData.append(key, value || '')
-            }
-        })
-
-        participante.value.eventos.forEach(eventoId => {
-            formData.append('eventos', eventoId)
-        })
-
-        // Agregar firma
-        if (participante.value.firma) {
-            const blob = dataURLtoBlob(participante.value.firma)
-            formData.append('firma', blob, 'firma.png')
-        }
-
-        // Enviar datos
-        await api.post('reuniones/persona/', formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data'
-            }
-        })
-
+        await api.post('reuniones/persona/', participante.value)
         toast.success('Participante registrado correctamente')
         resetearFormulario()
         volverAListado()
@@ -849,25 +665,13 @@ const registrarParticipante = async () => {
     }
 }
 
-const dataURLtoBlob = (dataURL) => {
-    const arr = dataURL.split(',')
-    const mime = arr[0].match(/:(.*?);/)[1]
-    const bstr = atob(arr[1])
-    let n = bstr.length
-    const u8arr = new Uint8Array(n)
-
-    while (n--) {
-        u8arr[n] = bstr.charCodeAt(n)
-    }
-
-    return new Blob([u8arr], { type: mime })
-}
-
+// Volver al listado
 const volverAListado = () => {
     paso.value = 1
     resetearFormulario()
 }
 
+// Resetear formulario
 const resetearFormulario = () => {
     participante.value = {
         dni: '',
@@ -885,19 +689,21 @@ const resetearFormulario = () => {
         distrito: '',
         disa: '',
         institucion: '',
-        eventos: [],
-        firma: null
+        eventos: []
     }
     camposEditables.value = false
-    limpiarFirma()
-    signatureText.value = ''
-    signatureType.value = 'firma'
 }
 
+// Mostrar error
 const mostrarError = (mensaje, error) => {
     toast.error(`${mensaje}: ${error.response?.data?.detail || error.message}`)
     console.error(mensaje, error)
 }
+
+// Limpiar intervalo al desmontar
+onBeforeUnmount(() => {
+    if (intervaloActualizacion) clearInterval(intervaloActualizacion)
+})
 
 // Búsqueda de IPRESS
 const searchIpress = async (type, inputValue) => {
@@ -918,8 +724,14 @@ const searchIpress = async (type, inputValue) => {
             params.append('COD_IPRESS', codigo.toString())
         }
 
-        const response = await api.get('ficha/renipress/', { params })
-        return response.data?.result?.records?.map(item => ({
+        const response = await api.get('ficha/renipress/', {
+            params,
+            paramsSerializer: params => params.toString()
+        })
+
+        if (!response.data?.result?.records) return []
+
+        return response.data.result.records.map(item => ({
             ...item,
             COD_IPRESS: item.COD_IPRESS?.toString() || '',
             CATEGORIA: item.CATEGORIA || 'Sin categoría',
@@ -928,7 +740,8 @@ const searchIpress = async (type, inputValue) => {
             DISTRITO: item.DISTRITO || 'Sin distrito',
             DISA: item.DISA || 'Sin DISA',
             INSTITUCION: item.INSTITUCION || 'Sin Institución'
-        })) || []
+        }))
+
     } catch (error) {
         console.error('Error en búsqueda:', error)
         toast.error('Error al buscar IPRESS')
@@ -939,6 +752,7 @@ const searchIpress = async (type, inputValue) => {
     }
 }
 
+// Seleccionar IPRESS
 const selectIpress = (item) => {
     participante.value = {
         ...participante.value,
@@ -956,6 +770,7 @@ const selectIpress = (item) => {
     showCodeSuggestions.value = false
 }
 
+// Manejar búsqueda con debounce
 const handleIpressSearch = debounce(async (type, event) => {
     const inputValue = event.target.value.trim()
 
@@ -969,50 +784,47 @@ const handleIpressSearch = debounce(async (type, event) => {
     }
 
     const results = await searchIpress(type, inputValue)
-    type === 'nombre' ? nameResults.value = results : codeResults.value = results
+
+    if (type === 'nombre') {
+        nameResults.value = results
+    } else {
+        codeResults.value = results
+    }
 }, 300)
 
+// Validar solo números en DNI y teléfono
 const soloNumeros = (event) => {
     const charCode = event.keyCode || event.which
     const charStr = String.fromCharCode(charCode)
+
     if (!/^\d+$/.test(charStr)) {
         event.preventDefault()
     }
 }
 
+// Ocultar sugerencias con retraso
 const hideNameSuggestions = () => {
-    setTimeout(() => showNameSuggestions.value = false, 200)
+    setTimeout(() => {
+        showNameSuggestions.value = false
+    }, 200)
 }
 
 const hideCodeSuggestions = () => {
-    setTimeout(() => showCodeSuggestions.value = false, 200)
+    setTimeout(() => {
+        showCodeSuggestions.value = false
+    }, 200)
 }
 
+// Toggle para edición de campos
 const toggleEdicionCampos = () => {
     camposEditables.value = !camposEditables.value
-    toast[camposEditables.value ? 'warning' : 'info'](
-        camposEditables.value ? 'Modo edición manual activado' : 'Campos bloqueados para edición'
-    )
+
+    if (!camposEditables.value) {
+        toast.info('Campos bloqueados para edición')
+    } else {
+        toast.warning('Modo edición manual activado')
+    }
 }
-
-// Hooks del ciclo de vida
-onMounted(async () => {
-    await cargarEventos()
-    iniciarActualizacionAutomatica()
-
-    nextTick(() => {
-        initSignatureCanvas()
-        resizeObserver.value = new ResizeObserver(() => initSignatureCanvas())
-        if (signatureContainer.value) {
-            resizeObserver.value.observe(signatureContainer.value)
-        }
-    })
-})
-
-onBeforeUnmount(() => {
-    if (intervaloActualizacion) clearInterval(intervaloActualizacion)
-    if (resizeObserver.value) resizeObserver.value.disconnect()
-})
 </script>
 
 <style scoped>
@@ -1073,40 +885,5 @@ input:not(:read-only) {
 
 .border-success {
     border-left-color: #198754 !important;
-}
-
-.signature-container {
-    position: relative;
-    width: 100%;
-    height: 200px;
-    background-color: #f8f9fa;
-}
-
-.signature-canvas {
-    width: 100%;
-    height: 100%;
-    touch-action: none;
-    background-color: white;
-}
-
-.signature-preview-container {
-    height: 200px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
-
-.signature-preview {
-    max-height: 180px;
-    max-width: 100%;
-}
-
-@media (max-width: 768px) {
-
-    .signature-container,
-    .signature-preview-container {
-        height: 150px;
-    }
 }
 </style>
