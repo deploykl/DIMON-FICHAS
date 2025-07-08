@@ -26,7 +26,7 @@
                   <thead>
                     <tr>
                       <th>ID</th>
-                      <th>Imagen</th>
+                      <th>Portada</th>
                       <th>Título</th>
                       <th>Autor</th>
                       <th>Fecha</th>
@@ -39,9 +39,9 @@
                       <td>{{ newsletter.id }}</td>
                       <td>
                         <img 
-                          v-if="newsletter.imagen_url" 
-                          :src="newsletter.imagen_url" 
-                          alt="Imagen del boletín" 
+                          v-if="newsletter.imagen_principal_url" 
+                          :src="newsletter.imagen_principal_url" 
+                          alt="Portada del boletín" 
                           class="img-thumbnail" 
                           style="max-width: 100px;"
                         >
@@ -116,11 +116,44 @@
                 <textarea class="form-control" id="contenido" v-model="formData.contenido" rows="5" required></textarea>
               </div>
               
+              <!-- Sección para múltiples imágenes -->
               <div class="mb-3">
-                <label for="imagen" class="form-label">Imagen</label>
-                <input type="file" class="form-control" id="imagen" @change="handleImageUpload">
-                <small class="text-muted">Tamaño recomendado: 800x400px</small>
-                <img v-if="formData.imagen_url && !formData.imagen" :src="formData.imagen_url" class="img-thumbnail mt-2" style="max-width: 200px;">
+                <label class="form-label">Imágenes</label>
+                <input 
+                  type="file" 
+                  class="form-control mb-2" 
+                  @change="handleImageUpload" 
+                  multiple
+                  accept="image/jpeg, image/png, image/gif"
+                  ref="fileInput"
+                >
+                <small class="text-muted">Formatos aceptados: JPG, PNG, GIF. La primera imagen será la portada.</small>
+                
+                <!-- Vista previa de imágenes nuevas -->
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                  <div v-for="(img, index) in newImages" :key="'new-'+index" class="position-relative">
+                    <img :src="img.preview" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                    <div class="position-absolute top-0 start-0 bg-info text-white px-1 small" v-if="index === 0">
+                      Portada
+                    </div>
+                    <button @click="removeNewImage(index)" class="btn btn-danger btn-sm position-absolute top-0 end-0">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </div>
+                </div>
+                
+                <!-- Imágenes existentes -->
+                <div class="d-flex flex-wrap gap-2 mt-3" v-if="formData.imagenes && formData.imagenes.length">
+                  <div v-for="img in formData.imagenes" :key="img.id" class="position-relative">
+                    <img :src="img.imagen_url" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                    <div class="position-absolute top-0 start-0 bg-info text-white px-1 small" v-if="img.es_portada">
+                      Portada
+                    </div>
+                    <button @click="removeExistingImage(img.id)" class="btn btn-danger btn-sm position-absolute top-0 end-0">
+                      <i class="bi bi-x"></i>
+                    </button>
+                  </div>
+                </div>
               </div>
               
               <div class="mb-3 form-check">
@@ -131,8 +164,14 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="closeModal">Cancelar</button>
-            <button type="button" class="btn btn-primary" @click="submitForm">
-              {{ isEditing ? 'Actualizar' : 'Guardar' }}
+            <button type="button" class="btn btn-primary" @click="submitForm" :disabled="isSubmitting">
+              <span v-if="isSubmitting">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Procesando...
+              </span>
+              <span v-else>
+                {{ isEditing ? 'Actualizar' : 'Guardar' }}
+              </span>
             </button>
           </div>
         </div>
@@ -155,7 +194,13 @@
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" @click="closeDeleteModal">Cancelar</button>
-            <button type="button" class="btn btn-danger" @click="confirmDelete">Eliminar</button>
+            <button type="button" class="btn btn-danger" @click="confirmDelete" :disabled="isDeleting">
+              <span v-if="isDeleting">
+                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                Eliminando...
+              </span>
+              <span v-else>Eliminar</span>
+            </button>
           </div>
         </div>
       </div>
@@ -173,7 +218,11 @@ const newsletters = ref([]);
 const currentPage = ref(1);
 const totalPages = ref(1);
 const isLoading = ref(false);
+const isSubmitting = ref(false);
+const isDeleting = ref(false);
 const error = ref(null);
+const newImages = ref([]);
+const fileInput = ref(null);
 
 // Datos para modales
 const showModal = ref(false);
@@ -185,9 +234,8 @@ const currentNewsletterId = ref(null);
 const formData = ref({
   titulo: '',
   contenido: '',
-  imagen: null,
-  imagen_url: null,
-  is_published: false
+  is_published: false,
+  imagenes: []
 });
 
 // Función para formatear fecha
@@ -232,10 +280,10 @@ const openEditModal = (newsletter) => {
   formData.value = {
     titulo: newsletter.titulo,
     contenido: newsletter.contenido,
-    imagen: null,
-    imagen_url: newsletter.imagen_url,
-    is_published: newsletter.is_published
+    is_published: newsletter.is_published,
+    imagenes: newsletter.imagenes || []
   };
+  newImages.value = [];
   currentNewsletterId.value = newsletter.id;
   isEditing.value = true;
   showModal.value = true;
@@ -246,50 +294,105 @@ const closeModal = () => {
 };
 
 const handleImageUpload = (event) => {
-  formData.value.imagen = event.target.files[0];
-  formData.value.imagen_url = null;
+  const files = event.target.files;
+  if (!files) return;
+  
+  newImages.value = []; // Limpiar imágenes anteriores
+  
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      newImages.value.push({
+        file: file,
+        preview: e.target.result
+      });
+    };
+    
+    reader.readAsDataURL(file);
+  }
+  
+  // Limpiar el input para permitir seleccionar las mismas imágenes otra vez
+  if (fileInput.value) {
+    fileInput.value.value = '';
+  }
+};
+
+const removeNewImage = (index) => {
+  newImages.value.splice(index, 1);
+};
+
+const removeExistingImage = async (imageId) => {
+  try {
+    await api.delete(`boletin/boletin/${currentNewsletterId.value}/delete-image/${imageId}/`);
+    formData.value.imagenes = formData.value.imagenes.filter(img => img.id !== imageId);
+  } catch (err) {
+    error.value = err.response?.data?.message || 'Error al eliminar la imagen';
+    console.error('Error:', err);
+  }
 };
 
 const resetForm = () => {
   formData.value = {
     titulo: '',
     contenido: '',
-    imagen: null,
-    imagen_url: null,
-    is_published: false
+    is_published: false,
+    imagenes: []
   };
+  newImages.value = [];
   currentNewsletterId.value = null;
 };
 
 const submitForm = async () => {
+  isSubmitting.value = true;
+  error.value = null;
+  
   try {
-    const data = new FormData();
-    data.append('titulo', formData.value.titulo);
-    data.append('contenido', formData.value.contenido);
-    data.append('is_published', formData.value.is_published);
-    if (formData.value.imagen) {
-      data.append('imagen', formData.value.imagen);
+    // Primero guardar/actualizar el newsletter
+    const newsletterData = {
+      titulo: formData.value.titulo,
+      contenido: formData.value.contenido,
+      is_published: formData.value.is_published
+    };
+
+    let newsletter;
+    if (isEditing.value) {
+      newsletter = await api.put(`boletin/boletin/${currentNewsletterId.value}/`, newsletterData);
+    } else {
+      newsletter = await api.post('boletin/boletin/', newsletterData);
+      currentNewsletterId.value = newsletter.data.id;
     }
 
-    if (isEditing.value) {
-      await api.put(`boletin/boletin/${currentNewsletterId.value}/`, data, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+    // Luego subir las imágenes si hay nuevas
+    if (newImages.value.length > 0) {
+      const formDataImages = new FormData();
+      newImages.value.forEach((img, index) => {
+        formDataImages.append('imagenes', img.file);
+        // Si es la primera imagen, marcarla como portada
+        if (index === 0) {
+          formDataImages.append('es_portada', 'true');
         }
       });
-    } else {
-      await api.post('boletin/boletin/', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
+
+      await api.post(
+        `boletin/boletin/${currentNewsletterId.value}/upload-image/`,
+        formDataImages,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
         }
-      });
+      );
     }
 
     closeModal();
-    fetchNewsletters(currentPage.value);
+    await fetchNewsletters(currentPage.value);
   } catch (err) {
     error.value = err.response?.data?.message || 'Error al guardar el boletín';
     console.error('Error:', err);
+  } finally {
+    isSubmitting.value = false;
   }
 };
 
@@ -304,13 +407,16 @@ const closeDeleteModal = () => {
 };
 
 const confirmDelete = async () => {
+  isDeleting.value = true;
   try {
     await api.delete(`boletin/boletin/${currentNewsletterId.value}/`);
     closeDeleteModal();
-    fetchNewsletters(currentPage.value);
+    await fetchNewsletters(currentPage.value);
   } catch (err) {
     error.value = err.response?.data?.message || 'Error al eliminar el boletín';
     console.error('Error:', err);
+  } finally {
+    isDeleting.value = false;
   }
 };
 
@@ -323,6 +429,7 @@ onMounted(() => {
 <style scoped>
 .img-thumbnail {
   transition: transform 0.2s;
+  object-fit: cover;
 }
 .img-thumbnail:hover {
   transform: scale(1.05);
@@ -334,5 +441,37 @@ onMounted(() => {
 
 .modal-backdrop {
   opacity: 0.5;
+}
+
+.position-relative {
+  transition: all 0.3s ease;
+}
+
+.position-relative:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.badge {
+  font-size: 0.9em;
+  padding: 0.35em 0.65em;
+}
+
+.btn-outline-primary, .btn-outline-danger {
+  transition: all 0.2s;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--bs-primary);
+  color: white;
+}
+
+.btn-outline-danger:hover {
+  background-color: var(--bs-danger);
+  color: white;
+}
+
+.spinner-border {
+  vertical-align: middle;
 }
 </style>

@@ -47,8 +47,8 @@
             <!-- Imagen destacada -->
             <div class="newsletter-image-container">
               <img 
-                v-if="newsletter.imagen_url" 
-                :src="newsletter.imagen_url" 
+                v-if="newsletter.imagen_principal_url" 
+                :src="newsletter.imagen_principal_url" 
                 class="card-img-top newsletter-image"
                 alt="Imagen del boletín"
               >
@@ -122,13 +122,45 @@
               <button type="button" class="btn-close" @click="closeDetailModal"></button>
             </div>
             <div class="modal-body">
-              <div class="text-center mb-4" v-if="selectedNewsletter?.imagen_url">
-                <img 
-                  :src="selectedNewsletter.imagen_url" 
-                  class="img-fluid rounded"
-                  alt="Imagen del boletín"
+              <!-- Carrusel de imágenes -->
+              <div id="newsletterImagesCarousel" class="carousel slide mb-4" v-if="selectedNewsletter?.imagenes?.length">
+                <div class="carousel-inner rounded">
+                  <div 
+                    v-for="(image, index) in selectedNewsletter.imagenes" 
+                    :key="image.id"
+                    class="carousel-item"
+                    :class="{ active: index === 0 }"
+                  >
+                    <img 
+                      :src="image.imagen_url" 
+                      class="d-block w-100"
+                      :alt="'Imagen ' + (index + 1) + ' del boletín'"
+                    >
+                    <div class="carousel-caption d-none d-md-block" v-if="image.es_portada">
+                      <span class="badge bg-primary">Portada</span>
+                    </div>
+                  </div>
+                </div>
+                <button 
+                  class="carousel-control-prev" 
+                  type="button" 
+                  data-bs-target="#newsletterImagesCarousel" 
+                  data-bs-slide="prev"
                 >
+                  <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                  <span class="visually-hidden">Anterior</span>
+                </button>
+                <button 
+                  class="carousel-control-next" 
+                  type="button" 
+                  data-bs-target="#newsletterImagesCarousel" 
+                  data-bs-slide="next"
+                >
+                  <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                  <span class="visually-hidden">Siguiente</span>
+                </button>
               </div>
+
               <div class="d-flex justify-content-between mb-3">
                 <span class="text-muted">
                   <i class="bi bi-person"></i> {{ selectedNewsletter?.autor_username }}
@@ -334,6 +366,25 @@ onMounted(() => {
   opacity: 0.5;
 }
 
+/* Estilos para el carrusel */
+.carousel {
+  max-height: 400px;
+  overflow: hidden;
+}
+
+.carousel-item img {
+  object-fit: cover;
+  max-height: 400px;
+  width: 100%;
+}
+
+.carousel-caption {
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 5px;
+  padding: 5px 10px;
+}
+
+/* Estilos para el modal en modo impresión */
 @media print {
   body * {
     visibility: hidden;
@@ -352,6 +403,23 @@ onMounted(() => {
   }
   .modal-footer {
     display: none;
+  }
+  
+  .carousel, .carousel-inner, .carousel-item {
+    display: block !important;
+    position: static !important;
+  }
+  
+  .carousel-item {
+    page-break-inside: avoid;
+  }
+  
+  .carousel-item:not(.active) {
+    display: none !important;
+  }
+  
+  .carousel-controls {
+    display: none !important;
   }
 }
 </style>
