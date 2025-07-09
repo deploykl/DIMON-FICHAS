@@ -40,7 +40,6 @@
                                 'pe-none': evento.estado !== 'EN_PROGRESO'
                             }"
                             :title="evento.estado !== 'EN_PROGRESO' ? 'Solo se puede registrar en eventos en progreso' : ''">
-                            <!-- Contenido existente del evento -->
                             <div v-if="evento.estado !== 'EN_PROGRESO'"
                                 class="position-absolute top-50 end-0 translate-middle-y me-3">
                                 <i class="bi bi-lock-fill text-muted"></i>
@@ -94,7 +93,6 @@
 
                     <form @submit.prevent="registrarParticipante" class="needs-validation" novalidate
                         :class="{ 'pe-none': eventoSeleccionado.estado !== 'EN_PROGRESO' }">
-                        <!-- Todos los campos del formulario con :disabled -->
                         <fieldset :disabled="eventoSeleccionado.estado !== 'EN_PROGRESO'">
 
                             <!-- Sección de Datos Personales -->
@@ -177,7 +175,7 @@
                                                     maxlength="9" @keypress="soloNumeros"
                                                     :class="{ 'is-invalid': telefonoInvalido }"
                                                     placeholder="Número de contacto">
-                                                    
+                                                <span class="input-group-text"><i class="bi bi-phone"></i></span>
                                                 <div v-if="telefonoInvalido" class="invalid-feedback">
                                                     El teléfono debe tener máximo 9 dígitos numéricos
                                                 </div>
@@ -382,11 +380,41 @@
                                 </div>
                             </div>
 
+                            <!-- Sección de Firma Digital -->
+                            <div class="card mb-4 border-0 shadow-sm">
+                                <div class="card-header bg-light">
+                                    <h6 class="mb-0 fw-bold"><i class="bi bi-pen me-2"></i>Firma Digital</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-info mb-3">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Por favor, firme en el área designada para validar su asistencia.
+                                    </div>
+
+                                    <SignaturePad ref="signaturePad" @save="handleSignatureSave" class="mb-3" />
+
+                                    <div v-if="firmaGuardada" class="alert alert-success d-flex align-items-center">
+                                        <i class="bi bi-check-circle-fill me-2"></i>
+                                        <span>Firma capturada correctamente</span>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between">
+                                        <!--  <button type="button" class="btn btn-outline-danger" @click="limpiarFirma">
+                                            <i class="bi bi-eraser me-1"></i> Limpiar Firma
+                                        </button>
+
+                                        <button type="button" class="btn btn-outline-primary" @click="guardarFirma">
+                                            <i class="bi bi-save me-1"></i> Guardar Firma
+                                        </button> -->
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="d-flex justify-content-end gap-2">
                                 <button type="button" class="btn btn-outline-secondary" @click="resetearFormulario">
                                     <i class="bi bi-eraser me-1"></i> Limpiar
                                 </button>
-                                <button type="submit" class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary" :disabled="!firmaGuardada">
                                     <i class="bi bi-save me-1"></i> Guardar Participante
                                 </button>
                             </div>
@@ -403,8 +431,14 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { api } from '@/components/services/auth_axios'
 import { useToast } from 'vue-toast-notification'
 import { debounce } from 'lodash'
+import SignaturePad from '@/components/SignaturePad.vue'
 
 const toast = useToast()
+
+// Variables para la firma
+const signaturePad = ref(null)
+const firmaBase64 = ref(null)
+const firmaGuardada = ref(false)
 
 // Configuración de estados
 const estadosColores = {
@@ -417,14 +451,6 @@ const estadosTexto = {
     PENDIENTE: 'Pendiente',
     EN_PROGRESO: 'En Progreso',
     FINALIZADO: 'Finalizado'
-}
-
-const estadoBorderClass = (estado) => {
-    return {
-        'border-start border-5 border-warning': estado === 'PENDIENTE',
-        'border-start border-5 border-primary': estado === 'EN_PROGRESO',
-        'border-start border-5 border-success': estado === 'FINALIZADO'
-    }
 }
 
 // Estado del componente
@@ -446,7 +472,7 @@ const isSearchingByName = ref(false)
 const isSearchingByCode = ref(false)
 const camposEditables = ref(false)
 
-// Datos del participante con todos los campos
+// Datos del participante
 const participante = ref({
     dni: '',
     nombre: '',
@@ -465,6 +491,42 @@ const participante = ref({
     institucion: '',
     eventos: []
 })
+
+// Métodos para manejar la firma
+const handleSignatureSave = (signatureData) => {
+    firmaBase64.value = signatureData
+    firmaGuardada.value = true
+    toast.success('Firma guardada correctamente')
+}
+
+const limpiarFirma = () => {
+    if (signaturePad.value) {
+        signaturePad.value.clear()
+        firmaBase64.value = null
+        firmaGuardada.value = false
+    }
+}
+
+const guardarFirma = () => {
+    if (!signaturePad.value) {
+        toast.warning('No se encontró el componente de firma')
+        return
+    }
+
+    try {
+        // Verificar si el canvas está vacío
+        if (signaturePad.value.isCanvasEmpty()) {
+            toast.warning('Por favor, realice una firma antes de guardar')
+            return
+        }
+
+        // Disparar el evento save del componente hijo
+        signaturePad.value.save()
+    } catch (error) {
+        console.error('Error al guardar firma:', error)
+        toast.error('Error al guardar la firma')
+    }
+}
 
 // Computed para validaciones
 const dniInvalido = computed(() => {
@@ -485,7 +547,7 @@ const eventosFiltrados = computed(() => {
         resultados = resultados.filter(evento =>
             evento.descripcion.toLowerCase().includes(termino) ||
             (evento.creado_por && evento.creado_por.toLowerCase().includes(termino))
-        ) // <-- este paréntesis faltaba
+        )
     }
 
     // Filtrar por estado
@@ -493,7 +555,7 @@ const eventosFiltrados = computed(() => {
         resultados = resultados.filter(evento => evento.estado !== 'FINALIZADO')
     }
 
-    // Ordenar por proximidad (más cercanos primero)
+    // Ordenar por proximidad
     resultados.sort((a, b) => {
         const fechaHoraA = new Date(`${a.fecha}T${a.hora_inicio}`).getTime()
         const fechaHoraB = new Date(`${b.fecha}T${b.hora_inicio}`).getTime()
@@ -510,7 +572,6 @@ const eventosFiltrados = computed(() => {
 
     return resultados
 })
-
 
 // Cargar eventos al montar el componente
 onMounted(async () => {
@@ -544,13 +605,9 @@ const cargarEventos = async () => {
 // Actualizar estados de todos los eventos
 const actualizarEstadosEventos = async () => {
     try {
-        // Actualizar todos los eventos en el backend
         const response = await api.post('reuniones/evento/actualizar_estados/')
-
-        // Actualizar la lista local con los nuevos estados
         eventos.value = response.data
 
-        // Actualizar también el evento seleccionado si es necesario
         if (eventoSeleccionado.value) {
             const eventoActualizado = response.data.find(e => e.id === eventoSeleccionado.value.id)
             if (eventoActualizado) {
@@ -560,17 +617,6 @@ const actualizarEstadosEventos = async () => {
     } catch (error) {
         console.error('Error en actualización de estados:', error)
     }
-}
-
-// Calcular estado de un evento
-const calcularEstadoEvento = (evento) => {
-    const ahora = new Date()
-    const fechaHoraInicio = new Date(`${evento.fecha}T${evento.hora_inicio}`)
-    const fechaHoraFin = new Date(`${evento.fecha}T${evento.hora_fin}`)
-
-    if (ahora > fechaHoraFin) return 'FINALIZADO'
-    if (ahora >= fechaHoraInicio) return 'EN_PROGRESO'
-    return 'PENDIENTE'
 }
 
 // Formatear fecha
@@ -592,16 +638,6 @@ const formatHora = (hora) => {
     return `${hh}:${mm}`
 }
 
-// Filtrar eventos (se ejecuta automáticamente al cambiar el término de búsqueda)
-const filtrarEventos = () => {
-    // No es necesario hacer nada aquí, ya que eventosFiltrados es computed
-}
-
-// Limpiar búsqueda
-const limpiarBusqueda = () => {
-    terminoBusqueda.value = ''
-}
-
 // Seleccionar evento
 const seleccionarEvento = (evento) => {
     if (evento.estado !== 'EN_PROGRESO') {
@@ -615,34 +651,24 @@ const seleccionarEvento = (evento) => {
 // Registrar participante
 const registrarParticipante = async () => {
     try {
-        // Verificar que el evento esté en progreso
+        // Validaciones básicas
         if (eventoSeleccionado.value.estado !== 'EN_PROGRESO') {
             toast.error('Solo se pueden registrar participantes en eventos en progreso')
             return
         }
-        // Validar campos requeridos
-        if (dniInvalido.value) {
-            toast.error('El DNI debe tener exactamente 8 dígitos numéricos')
+
+        if (dniInvalido.value || !participante.value.dni || !participante.value.nombre ||
+            !participante.value.apellido || !participante.value.cargo || !participante.value.establecimiento) {
+            toast.error('Por favor complete todos los campos obligatorios correctamente')
             return
         }
 
-        if (!participante.value.dni || !participante.value.nombre ||
-            !participante.value.apellido || !participante.value.cargo) {
-            toast.error('Por favor complete todos los campos obligatorios (*)')
+        if (!firmaGuardada.value) {
+            toast.error('Por favor proporcione su firma digital')
             return
         }
 
-        if (telefonoInvalido.value) {
-            toast.error('El teléfono debe tener máximo 9 dígitos numéricos')
-            return
-        }
-
-        if (!participante.value.establecimiento) {
-            toast.error('Por favor ingrese el nombre del establecimiento')
-            return
-        }
-
-        // Verificar si el DNI ya está registrado en este evento
+        // Verificar DNI duplicado en el evento
         try {
             const response = await api.get(`reuniones/persona/verificar_dni_evento/?dni=${participante.value.dni}&evento_id=${eventoSeleccionado.value.id}`)
             if (response.data.existe) {
@@ -653,16 +679,53 @@ const registrarParticipante = async () => {
             console.error('Error verificando DNI:', error)
         }
 
-        // Asignar el evento seleccionado
-        participante.value.eventos = [eventoSeleccionado.value.id]
+        // Crear FormData para enviar la firma como archivo
+        const formData = new FormData()
 
-        await api.post('reuniones/persona/', participante.value)
+        // Agregar campos del participante
+        Object.keys(participante.value).forEach(key => {
+            if (key !== 'eventos') {
+                formData.append(key, participante.value[key])
+            }
+        })
+
+        // Agregar evento
+        formData.append('eventos', eventoSeleccionado.value.id)
+
+        // Convertir y agregar la firma
+        if (firmaBase64.value) {
+            const blob = dataURLtoBlob(firmaBase64.value)
+            formData.append('firma', blob, 'firma.png')
+        }
+
+        // Enviar datos
+        await api.post('reuniones/persona/', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
+
         toast.success('Participante registrado correctamente')
         resetearFormulario()
         volverAListado()
     } catch (error) {
         mostrarError('Error al registrar participante', error)
     }
+}
+
+// Convertir DataURL a Blob
+const dataURLtoBlob = (dataURL) => {
+    const arr = dataURL.split(',')
+    const mime = arr[0].match(/:(.*?);/)[1]
+    const bstr = atob(arr[1])
+    let n = bstr.length
+    const u8arr = new Uint8Array(n)
+
+    while (n--) {
+        u8arr[n] = bstr.charCodeAt(n)
+    }
+
+    return new Blob([u8arr], { type: mime })
 }
 
 // Volver al listado
@@ -691,7 +754,13 @@ const resetearFormulario = () => {
         institucion: '',
         eventos: []
     }
+    firmaBase64.value = null
+    firmaGuardada.value = false
     camposEditables.value = false
+
+    if (signaturePad.value) {
+        signaturePad.value.clear()
+    }
 }
 
 // Mostrar error
@@ -828,13 +897,15 @@ const toggleEdicionCampos = () => {
 </script>
 
 <style scoped>
-/* Estilos mínimos necesarios para funcionalidades específicas */
+/* Estilos generales */
 .card {
     max-width: 1200px;
+    margin: 0 auto;
 }
 
 .list-group-item {
     transition: all 0.2s ease;
+    position: relative;
 }
 
 .list-group-item:hover {
@@ -842,23 +913,30 @@ const toggleEdicionCampos = () => {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
+/* Estilos para dropdowns de búsqueda */
 .dropdown-item {
     cursor: pointer;
     white-space: normal;
+    padding: 0.5rem 1rem;
 }
 
 .dropdown-item:hover {
     background-color: #f8f9fa;
 }
 
-/* Estilos para el modo de edición */
+.dropdown-menu {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* Estilos para campos editables */
 input:not(:read-only) {
     background-color: #fff;
     border-color: #86b7fe;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
 }
 
-/* Ajustes para los badges de estado */
+/* Badges y estados */
 .badge {
     font-size: 0.75em;
     letter-spacing: 0.5px;
@@ -870,11 +948,7 @@ input:not(:read-only) {
     cursor: not-allowed;
 }
 
-.list-group-item {
-    position: relative;
-}
-
-/* Estilo para los bordes de estado */
+/* Bordes de estado */
 .border-warning {
     border-left-color: #ffc107 !important;
 }
@@ -885,5 +959,62 @@ input:not(:read-only) {
 
 .border-success {
     border-left-color: #198754 !important;
+}
+
+/* Estilos específicos para el área de firma */
+.signature-container {
+    border: 1px dashed #dee2e6;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.signature-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+}
+
+/* Animación para mensajes */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.5s;
+}
+
+.fade-enter,
+.fade-leave-to {
+    opacity: 0;
+}
+
+/* Responsividad */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1rem;
+    }
+
+    .row.g-3>[class*="col-"] {
+        margin-bottom: 1rem;
+    }
+
+    .signature-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .signature-actions button {
+        width: 100%;
+    }
+}
+
+/* Estilos para el canvas de firma */
+.signature-canvas {
+    width: 100%;
+    height: 200px;
+    background-color: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    touch-action: none;
+    cursor: crosshair;
 }
 </style>

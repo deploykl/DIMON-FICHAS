@@ -87,15 +87,25 @@
                     <div class="accordion-body">
                       <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="mb-0">Participantes registrados: {{ evento.participantes_count || 0 }}</h6>
-                        <button 
-                          class="btn btn-sm btn-outline-primary"
-                          @click="fetchParticipants(evento.id)"
-                          :disabled="loadingParticipants === evento.id"
-                        >
-                          <span v-if="loadingParticipants === evento.id" class="spinner-border spinner-border-sm me-1"></span>
-                          <i v-else class="bi bi-arrow-clockwise"></i> 
-                          Actualizar
-                        </button>
+                        <div>
+                          <button 
+                            class="btn btn-sm btn-outline-primary me-2"
+                            @click="fetchParticipants(evento.id)"
+                            :disabled="loadingParticipants === evento.id"
+                          >
+                            <span v-if="loadingParticipants === evento.id" class="spinner-border spinner-border-sm me-1"></span>
+                            <i v-else class="bi bi-arrow-clockwise"></i> 
+                            Actualizar
+                          </button>
+                          <button 
+                            class="btn btn-sm btn-outline-success"
+                            @click="generateEventPDF(evento)"
+                            :disabled="loadingParticipants === evento.id || !participants[evento.id]?.length"
+                          >
+                            <i class="bi bi-file-earmark-pdf"></i> 
+                            Descargar PDF
+                          </button>
+                        </div>
                       </div>
 
                       <!-- Spinner de carga -->
@@ -129,10 +139,19 @@
                               <td>{{ participante.codigo }}</td>
                               <td>
                                 <button 
-                                  class="btn btn-sm btn-outline-danger"
+                                  class="btn btn-sm btn-outline-danger me-2"
                                   @click="confirmDeleteParticipant(participante)"
+                                  title="Eliminar participante"
                                 >
                                   <i class="bi bi-trash"></i>
+                                </button>
+                                <button 
+                                  v-if="participante.firma"
+                                  class="btn btn-sm btn-outline-primary"
+                                  @click="viewSignature(participante.firma)"
+                                  title="Ver firma"
+                                >
+                                  <i class="bi bi-eye"></i>
                                 </button>
                               </td>
                             </tr>
@@ -185,6 +204,24 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal para visualizar firma -->
+    <div class="modal fade" id="signatureModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Firma del participante</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body text-center">
+            <img :src="selectedSignature" class="img-fluid signature-img" alt="Firma del participante">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 </template>
 
@@ -193,6 +230,8 @@ import { ref, computed, onMounted } from 'vue'
 import { api } from '@/components/services/auth_axios'
 import { useToast } from 'vue-toast-notification'
 import { Modal } from 'bootstrap'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 
 const toast = useToast()
 
@@ -202,9 +241,12 @@ const participants = ref({})
 const searchTerm = ref('')
 const showFinished = ref(false)
 const selectedParticipant = ref(null)
+const selectedSignature = ref(null)
 const deleting = ref(false)
 const loadingParticipants = ref(null)
+const generatingPDF = ref(false)
 let confirmDeleteModal = null
+let signatureModal = null
 
 // Configuración de estados
 const statusColors = {
@@ -225,10 +267,10 @@ const filteredEvents = computed(() => {
   
   if (searchTerm.value) {
     const term = searchTerm.value.toLowerCase()
-    filtered = filtered.filter(evento => 
+    filtered = filtered.filter(evento =>
       evento.descripcion.toLowerCase().includes(term) ||
       (evento.creado_por && evento.creado_por.toLowerCase().includes(term))
-    ) // cierre correcto aquí
+    )
   }
   
   if (!showFinished.value) {
@@ -243,7 +285,6 @@ const filteredEvents = computed(() => {
   
   return filtered
 })
-
 
 // Métodos
 const statusBadgeClass = (status) => `bg-${statusColors[status]}`
@@ -317,6 +358,11 @@ const confirmDeleteParticipant = (participant) => {
   confirmDeleteModal.show()
 }
 
+const viewSignature = (signatureUrl) => {
+  selectedSignature.value = signatureUrl
+  signatureModal.show()
+}
+
 const deleteParticipant = async () => {
   if (!selectedParticipant.value) return
   
@@ -339,9 +385,153 @@ const deleteParticipant = async () => {
   }
 }
 
+const generateEventPDF = async (evento) => {
+  generatingPDF.value = true
+  try {
+    toast.info('Generando PDF, por favor espere...', { timeout: 2000 })
+    
+    // Crear PDF en orientación horizontal para mejor espacio
+    const doc = new jsPDF({
+      orientation: 'landscape',
+      unit: 'mm'
+    })
+    
+    // Configuración inicial
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const pageHeight = doc.internal.pageSize.getHeight()
+    const margin = 10
+    const contentWidth = pageWidth - 2 * margin
+    
+    // Logo (opcional)
+    // const logoUrl = '/path/to/logo.png'
+    // if (logoUrl) {
+    //   const logoData = await loadImage(logoUrl)
+    //   doc.addImage(logoData, 'PNG', margin, margin, 30, 15)
+    // }
+    
+    // Título del documento
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    doc.text(`Reporte de Participantes - Evento: ${evento.descripcion}`, pageWidth / 2, 20, { align: 'center' })
+    
+    // Información del evento
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'normal')
+    doc.text(`Fecha: ${formatDate(evento.fecha)}`, margin, 30)
+    doc.text(`Horario: ${formatTime(evento.hora_inicio)} - ${formatTime(evento.hora_fin)}`, margin + 50, 30)
+    doc.text(`Estado: ${getStatusText(evento.estado)}`, margin + 100, 30)
+    doc.text(`Total participantes: ${evento.participantes_count || 0}`, margin + 150, 30)
+    
+    // Tabla de participantes
+    let yPosition = 40
+    const participantes = participants.value[evento.id]
+    
+    // Encabezados de tabla
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.text('N°', margin, yPosition)
+    doc.text('DNI', margin + 15, yPosition)
+    doc.text('Nombre Completo', margin + 30, yPosition)
+    doc.text('Cargo', margin + 70, yPosition)
+    doc.text('Establecimiento', margin + 110, yPosition)
+    doc.text('Código', margin + 160, yPosition)
+    doc.text('Firma', margin + 190, yPosition)
+    
+    yPosition += 5
+    
+    // Línea divisoria
+    doc.setDrawColor(200, 200, 200)
+    doc.line(margin, yPosition, pageWidth - margin, yPosition)
+    yPosition += 5
+    
+    // Contenido de la tabla
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'normal')
+    
+    for (let i = 0; i < participantes.length; i++) {
+      const p = participantes[i]
+      
+      // Verificar espacio en página
+      if (yPosition > pageHeight - 20) {
+        doc.addPage('landscape')
+        yPosition = 20
+      }
+      
+      // Datos del participante
+      doc.text(`${i + 1}`, margin, yPosition)
+      doc.text(p.dni, margin + 15, yPosition)
+      
+      // Nombre
+      const nombre = `${p.nombre} ${p.apellido}`
+      const nombreLines = doc.splitTextToSize(nombre, 35)
+      doc.text(nombreLines, margin + 30, yPosition)
+      
+      // Cargo
+      const cargoLines = doc.splitTextToSize(p.cargo, 35)
+      doc.text(cargoLines, margin + 70, yPosition)
+      
+      // Establecimiento
+      const establecimientoLines = doc.splitTextToSize(p.establecimiento, 45)
+      doc.text(establecimientoLines, margin + 110, yPosition)
+      
+      // Código
+      doc.text(p.codigo || 'N/A', margin + 160, yPosition)
+      
+      // Agregar firma si existe
+      if (p.firma) {
+        try {
+          const imgData = await loadImage(p.firma)
+          const imgWidth = 30
+          const imgHeight = 15
+          doc.addImage(imgData, 'PNG', margin + 190, yPosition - 10, imgWidth, imgHeight)
+        } catch (error) {
+          doc.text('Firma no disponible', margin + 190, yPosition)
+          console.error('Error al cargar firma:', error)
+        }
+      } else {
+        doc.text('Sin firma', margin + 190, yPosition)
+      }
+      
+      yPosition += 15
+      
+      // Línea divisoria entre participantes
+      if (i < participantes.length - 1) {
+        doc.setDrawColor(240, 240, 240)
+        doc.line(margin, yPosition - 2, pageWidth - margin, yPosition - 2)
+      }
+    }
+    
+    // Pie de página
+    doc.setFontSize(8)
+    doc.setTextColor(150, 150, 150)
+    doc.text(`Generado el: ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}`, pageWidth / 2, pageHeight - 10, { align: 'center' })
+    
+    // Guardar PDF
+    doc.save(`Participantes_${evento.descripcion.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0,10)}.pdf`)
+    
+    toast.success('PDF generado correctamente')
+  } catch (error) {
+    toast.error('Error al generar el PDF')
+    console.error('Error generating PDF:', error)
+  } finally {
+    generatingPDF.value = false
+  }
+}
+
+const loadImage = (url) => {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'Anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = () => resolve(null)
+    img.src = url
+  })
+}
+
 // Ciclo de vida
 onMounted(async () => {
   confirmDeleteModal = new Modal(document.getElementById('confirmDeleteModal'))
+  signatureModal = new Modal(document.getElementById('signatureModal'))
   await fetchEvents()
 })
 </script>
@@ -363,5 +553,32 @@ onMounted(async () => {
 .badge {
   font-size: 0.75em;
   font-weight: 500;
+}
+
+.signature-img {
+  max-width: 100%;
+  max-height: 70vh;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: white;
+  padding: 10px;
+}
+
+.btn-outline-primary {
+  transition: all 0.2s;
+}
+
+.btn-outline-primary:hover {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.btn-outline-success {
+  transition: all 0.2s;
+}
+
+.btn-outline-success:hover {
+  background-color: #198754;
+  color: white;
 }
 </style>

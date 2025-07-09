@@ -129,6 +129,12 @@ const menuItems = ref([
     path: '/game',
     submenu: null
   },
+    {
+    title: 'Archivos',
+    icon: 'fa-file',
+    path: '/archivos',
+    submenu: null
+  },
   {
     title: 'Boletin',
     icon: 'fa-book',
@@ -147,7 +153,7 @@ const menuItems = ref([
     path: '/eventos',
     submenu: null
   },
-    {
+  {
     title: 'registro de eventos',
     icon: 'fa-pen',
     path: '/eventos/reuniones',

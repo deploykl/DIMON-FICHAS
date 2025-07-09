@@ -45,6 +45,11 @@ class PersonaViewSet(viewsets.ModelViewSet):
     serializer_class = PersonaSerializer
     permission_classes = [AllowAny]
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ['eventos']  # <-- Añade este filtro
+    filterset_fields = ['eventos']
     ordering_fields = '__all__'
     ordering = ['apellido', 'nombre']
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context

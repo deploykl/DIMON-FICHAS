@@ -16,6 +16,7 @@ import BoletinView_List from "../views/BoletinView_List.vue";
 import ReunionesView from "../views/ReunionesView.vue";
 import EventosView from "../views/EventosView.vue";
 import EventosAdminView from "../views/EventosAdminView.vue";
+import ArchivosInteresView from "../views/ArchivosInteresView.vue";
 
 const routes = [
   {
@@ -77,6 +78,16 @@ const routes = [
     path: "/urls",
     name: "enlaces",
     component: UrlsView,
+    props: true,
+    meta: {
+      title: "Enlaces de información",
+      requiresAuth: true,
+    },
+  },
+  {
+    path: "/archivos",
+    name: "archivos",
+    component: ArchivosInteresView,
     props: true,
     meta: {
       title: "Enlaces de información",

@@ -50,11 +50,11 @@ import { ref, onMounted, onUnmounted } from 'vue'
 const props = defineProps({
   width: {
     type: Number,
-    default: 400
+    default: 300
   },
   height: {
     type: Number,
-    default: 200
+    default: 400
   },
   penColor: {
     type: String,
@@ -229,6 +229,12 @@ onUnmounted(() => {
     resizeObserver.disconnect()
   }
   removeEventListeners()
+})
+// Exponer métodos públicos al componente padre
+defineExpose({
+  clear,
+  save,
+  isCanvasEmpty
 })
 </script>
 

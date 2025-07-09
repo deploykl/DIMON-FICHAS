@@ -56,9 +56,17 @@ class PersonaSerializer(serializers.ModelSerializer):
         many=True,
         queryset=Evento.objects.all(),
         required=False
-    )    
+    )
+    firma_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Persona
         fields = '__all__'
         read_only_fields = ('fecha_registro',)
+
+    def get_firma_url(self, obj):
+        if obj.firma:
+            request = self.context.get('request')
+            return request.build_absolute_uri(obj.firma.url)
+        return None
     
