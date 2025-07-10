@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Evento, Persona
 
 class EventoSerializer(serializers.ModelSerializer):
-    creado_por = serializers.StringRelatedField()
+    creado_por = serializers.SerializerMethodField()  # Cambia esto de StringRelatedField a SerializerMethodField
     fecha_local = serializers.SerializerMethodField()
     hora_inicio_local = serializers.SerializerMethodField()
     hora_fin_local = serializers.SerializerMethodField()
@@ -51,6 +51,29 @@ class EventoSerializer(serializers.ModelSerializer):
     def get_participantes_count(self, obj):
         return obj.participantes.count()  # <-- Esto ahora es correcto porque estamos en Evento
     
+    def get_creado_por(self, obj):
+        # Obtiene el nombre completo del usuario y lo formatea
+        user = obj.creado_por
+        if not user:
+            return ""
+        
+        # Divide el nombre completo en partes
+        parts = user.get_full_name().split()
+        if not parts:
+            return ""
+        
+        # Formatea el nombre en el formato deseado (Primera palabra + inicial segunda palabra)
+        formatted_name = parts[0]
+        if len(parts) > 1:
+            formatted_name += f" {parts[1][0]}." if parts[1] else ""
+        
+        # Si hay más partes (apellidos), agrega el primer apellido completo y la inicial del segundo si existe
+        if len(parts) > 2:
+            formatted_name += f" {parts[2]}"
+            if len(parts) > 3:
+                formatted_name += f" {parts[3][0]}." if parts[3] else ""
+        
+        return formatted_name    
 class PersonaSerializer(serializers.ModelSerializer):
     eventos = serializers.PrimaryKeyRelatedField(
         many=True,

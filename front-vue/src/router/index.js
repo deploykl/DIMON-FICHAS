@@ -95,8 +95,8 @@ const routes = [
     },
   },
   {
-    path: "/eventos/admin",
-    name: "eventos-admin",
+    path: "/reuniones/admin",
+    name: "reuniones-admin",
     component: EventosAdminView,
     props: true,
     meta: {
@@ -105,7 +105,7 @@ const routes = [
     },
   },
   {
-    path: "/eventos",
+    path: "/reuniones",
     name: "reuniones",
     component: EventosView,
     props: true,
@@ -115,8 +115,8 @@ const routes = [
     },
   },
   {
-    path: "/eventos/reuniones",
-    name: "eventos",
+    path: "/reuniones/asistencia",
+    name: "reunion-asistencia",
     component: ReunionesView,
     props: true,
     meta: {

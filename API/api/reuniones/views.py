@@ -15,7 +15,7 @@ class EventoViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_fields = ['estado']  # Permite filtrar por estado
     ordering_fields = '__all__'
-    ordering = ['-fecha', 'hora_inicio']
+    ordering = ['-fecha', '-hora_inicio']
 
     def perform_create(self, serializer):
         # Actualizar el estado antes de guardar

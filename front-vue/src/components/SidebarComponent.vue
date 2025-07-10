@@ -147,16 +147,16 @@ const menuItems = ref([
     path: '/boletin-list',
     submenu: null
   },
-  {
-    title: 'Eventos',
+    {
+    title: 'Agregar Reunión',
     icon: 'fa-pen',
-    path: '/eventos',
+    path: '/reuniones/admin',
     submenu: null
   },
-  {
-    title: 'registro de eventos',
+    {
+    title: 'Reuniones',
     icon: 'fa-pen',
-    path: '/eventos/reuniones',
+    path: '/reuniones',
     submenu: null
   },
 ])

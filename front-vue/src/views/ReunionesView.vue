@@ -9,14 +9,11 @@
         </ol>
       </nav>
     </div>
-
     <section class="section">
       <div class="row">
         <div class="col-lg-12">
           <div class="card">
             <div class="card-body">
-              <h5 class="card-title">Lista de Eventos</h5>
-              
               <!-- Filtros -->
               <div class="row mb-3">
                 <div class="col-md-6">
@@ -25,7 +22,7 @@
                       v-model="searchTerm"
                       type="text" 
                       class="form-control" 
-                      placeholder="Buscar eventos..."
+                      placeholder="Buscar reunión..."
                     >
                     <button class="btn btn-outline-secondary" type="button" @click="clearSearch">
                       <i class="bi bi-x"></i>

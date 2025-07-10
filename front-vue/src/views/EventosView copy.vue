@@ -419,8 +419,9 @@
                                         Por favor, firme en el área designada para validar su asistencia.
                                     </div>
 
-                                    <SignaturePad ref="signaturePad" @save="handleSignatureSave"   @clear="handleSignatureClear" class="mb-3"
-                                        :disabled="firmaGuardada" :class="{ 'border-danger': !firmaGuardada }" />
+                                    <SignaturePad ref="signaturePad" @save="handleSignatureSave"
+                                        @clear="handleSignatureClear" class="mb-3" :disabled="firmaGuardada"
+                                        :class="{ 'border-danger': !firmaGuardada }" />
 
                                     <div v-if="firmaGuardada" class="alert alert-success d-flex align-items-center">
                                         <i class="bi bi-check-circle-fill me-2"></i>
@@ -554,8 +555,8 @@ const handleSignatureSave = (signatureData) => {
     firmaGuardada.value = true
     toast.success('Firma guardada correctamente')
 
-      // Deshabilitar el canvas después de guardar
-  signaturePad.value?.disable()
+    // Deshabilitar el canvas después de guardar
+    signaturePad.value?.disable()
 }
 
 // Computed para validaciones
@@ -788,7 +789,7 @@ const resetearFormulario = () => {
         eventos: []
     }
     firmaBase64.value = null
-  handleSignatureClear() // Llama directamente al manejador de limpieza
+    handleSignatureClear() // Llama directamente al manejador de limpieza
 
     camposEditables.value = false
 

@@ -4,39 +4,26 @@
       <h4 class="signature-title">Firme aquí</h4>
       <div class="signature-guide">Deslice su dedo o use el mouse</div>
     </div>
-    
+
     <div class="signature-canvas-wrapper">
-      <canvas 
-        ref="canvas" 
-        :width="width" 
-        :height="height" 
-        class="signature-canvas"
-        aria-label="Área para firmar"
-      ></canvas>
+      <canvas ref="canvas" :width="width" :height="height" class="signature-canvas"
+        :class="{ 'disabled-canvas': !isEnabled }" aria-label="Área para firmar"></canvas>
       <div class="signature-watermark">Firma válida</div>
     </div>
-    
+
     <div class="signature-actions">
-      <button 
-        @click="clear" 
-        type="button" 
-        class="btn-clear"
-        aria-label="Limpiar firma"
-      >
+      <button @click="clear" type="button" class="btn-clear" aria-label="Limpiar firma">
         <svg class="icon" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
+          <path fill="currentColor"
+            d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z" />
         </svg>
         <span>Limpiar</span>
       </button>
-      
-      <button 
-        @click="save" 
-        type="button" 
-        class="btn-save"
-        aria-label="Guardar firma"
-      >
+
+      <button @click="save" type="button" class="btn-save" aria-label="Guardar firma">
         <svg class="icon" viewBox="0 0 24 24">
-          <path fill="currentColor" d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" />
+          <path fill="currentColor"
+            d="M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z" />
         </svg>
         <span>Guardar firma</span>
       </button>
@@ -45,7 +32,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 
 const props = defineProps({
   width: {
@@ -63,6 +50,10 @@ const props = defineProps({
   penWidth: {
     type: Number,
     default: 2.5
+  },
+  disabled: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -75,6 +66,7 @@ let lastX = 0
 let lastY = 0
 let signatureData = null
 let resizeObserver = null
+const isEnabled = ref(!props.disabled) // Variable corregida
 
 // Función para agregar event listeners
 const addEventListeners = () => {
@@ -105,6 +97,7 @@ const removeEventListeners = () => {
 }
 
 const startDrawing = (e) => {
+  if (!isEnabled.value) return
   isDrawing = true
   const pos = getPosition(e)
   lastX = pos.x
@@ -112,7 +105,7 @@ const startDrawing = (e) => {
 }
 
 const draw = (e) => {
-  if (!isDrawing) return
+  if (!isDrawing || !isEnabled.value) return
   const pos = getPosition(e)
   
   ctx.beginPath()
@@ -153,6 +146,9 @@ const getPosition = (e) => {
 const clear = () => {
   ctx.clearRect(0, 0, canvas.value.width, canvas.value.height)
   signatureData = null
+  isEnabled.value = true
+  addEventListeners()
+  emit('clear') // Solo emitir el evento, el padre manejará el estado
 }
 
 const save = () => {
@@ -198,7 +194,9 @@ const setupCanvas = () => {
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
   
-  addEventListeners()
+  if (isEnabled.value) {
+    addEventListeners()
+  }
 }
 
 const setupResizeObserver = () => {
@@ -219,6 +217,25 @@ const setupResizeObserver = () => {
   }
 }
 
+const enable = () => {
+  if (props.disabled) return; // Respetar la prop disabled del padre
+  isEnabled.value = true;
+  addEventListeners();
+};
+
+const disable = () => {
+  isEnabled.value = false // Usando la variable correcta
+  removeEventListeners()
+}
+
+watch(() => props.disabled, (newVal) => {
+  if (newVal) {
+    disable()
+  } else {
+    enable()
+  }
+})
+
 onMounted(() => {
   setupCanvas()
   setupResizeObserver()
@@ -230,11 +247,14 @@ onUnmounted(() => {
   }
   removeEventListeners()
 })
+
 // Exponer métodos públicos al componente padre
 defineExpose({
   clear,
   save,
-  isCanvasEmpty
+  isCanvasEmpty,
+  enable,
+  disable
 })
 </script>
 
@@ -285,7 +305,11 @@ defineExpose({
   touch-action: none;
   cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%231a73e8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 19a7 7 0 1 0 0-14 7 7 0 0 0 0 14z'></path></svg>") 8 8, crosshair;
 }
-
+.disabled-canvas {
+  cursor: not-allowed;
+  background-color: #f5f5f5;
+  opacity: 0.7;
+}
 .signature-watermark {
   position: absolute;
   bottom: 30px;
@@ -305,7 +329,8 @@ defineExpose({
   border-top: 1px solid #e9ecef;
 }
 
-.btn-clear, .btn-save {
+.btn-clear,
+.btn-save {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -352,20 +377,20 @@ defineExpose({
   .signature-pad-container {
     border-radius: 0;
   }
-  
+
   .signature-canvas {
     height: 180px;
   }
-  
+
   .signature-actions {
     flex-direction: column;
     gap: 10px;
   }
-  
-  .btn-clear, .btn-save {
+
+  .btn-clear,
+  .btn-save {
     width: 100%;
     margin: 0;
   }
 }
-
 </style>
