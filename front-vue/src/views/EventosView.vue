@@ -476,7 +476,12 @@ const estadosTexto = {
     EN_PROGRESO: 'En Progreso',
     FINALIZADO: 'Finalizado'
 }
-
+const handleSignatureClear = () => {
+  firmaBase64.value = null
+  firmaGuardada.value = false
+  signaturePad.value?.enable() // Habilitar el canvas nuevamente
+  toast.info('Firma eliminada, por favor proporcione su firma nuevamente')
+}
 // Estado del componente
 const paso = ref(1)
 const eventos = ref([])
