@@ -1,4 +1,4 @@
-from .models import User
+from .models import *
 from rest_framework import serializers
 
 # Create your views here.
@@ -51,3 +51,10 @@ class UserSerializer(serializers.ModelSerializer):
             password=validated_data["password"],
         )
         return user
+
+
+class ConsultaExternaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ConsultaExterna
+        fields = '__all__'
+        read_only_fields = ('creado_por', 'fecha_creacion', 'fecha_actualizacion')

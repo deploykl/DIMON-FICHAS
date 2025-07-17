@@ -77,6 +77,11 @@ const props = defineProps({
   }
 })
 
+// Obtener el estado de access_ConsultaExterna del localStorage
+const hasConsultaExternaAccess = computed(() => {
+  return localStorage.getItem('access_ConsultaExterna') === 'true'
+})
+
 // Función para alternar el sidebar
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value
@@ -88,78 +93,95 @@ watch(() => props.isCollapsed, (newVal) => {
   isCollapsed.value = newVal
 })
 
-// Datos de ejemplo del menú
-const menuItems = ref([
-  {
-    title: 'Dashboard',
-    icon: 'fa-tachometer-alt',
-    path: '/urls',
-    submenu: null
-  },
-  {
-    title: 'Emergencia',
-    icon: 'fa-user-injured',
-    path: '/patients',
-    submenu: [
-      { title: 'Fichas de Monitoreo', icon: 'fa-chart-bar', path: '/fichas' },
-      { title: 'Matriz de compromiso', icon: 'fa-book', path: '/matriz-list' },
-    ]
-  },
-  {
-    title: 'Fichas de Monitoreo',
-    icon: 'fa-chart-bar',
-    path: '/fichas',
-    submenu: null
-  },
-  {
-    title: 'Matriz de compromiso',
-    icon: 'fa-book',
-    path: '/matriz-list',
-    submenu: null
-  },
-  {
-    title: 'Alertas',
-    icon: 'fa-chart-bar',
-    path: '/alertas',
-    submenu: null
-  },
-  {
-    title: 'Game',
-    icon: 'fa-gamepad',
-    path: '/game',
-    submenu: null
-  },
+// Datos del menú con filtrado condicional
+const menuItems = computed(() => {
+  const allItems = [
     {
-    title: 'Archivos',
-    icon: 'fa-file',
-    path: '/archivos',
-    submenu: null
-  },
-  {
-    title: 'Boletin',
-    icon: 'fa-book',
-    path: '/boletin',
-    submenu: null
-  },
-  {
-    title: 'Boletin-list',
-    icon: 'fa-pen',
-    path: '/boletin-list',
-    submenu: null
-  },
+      title: 'Dashboard',
+      icon: 'fa-tachometer-alt',
+      path: '/urls',
+      submenu: null
+    },
     {
-    title: 'Agregar Reunión',
-    icon: 'fa-pen',
-    path: '/reuniones/admin',
-    submenu: null
-  },
+      title: 'Emergencia',
+      icon: 'fa-user-injured',
+      path: '/patients',
+      submenu: [
+        { title: 'Fichas de Monitoreo', icon: 'fa-chart-bar', path: '/fichas' },
+        { title: 'Matriz de compromiso', icon: 'fa-book', path: '/matriz-list' },
+      ]
+    },
     {
-    title: 'Reuniones',
-    icon: 'fa-pen',
-    path: '/reuniones',
-    submenu: null
-  },
-])
+      title: 'Fichas de Monitoreo',
+      icon: 'fa-chart-bar',
+      path: '/fichas',
+      submenu: null
+    },
+    {
+      title: 'Matriz de compromiso',
+      icon: 'fa-book',
+      path: '/matriz-list',
+      submenu: null
+    },
+    {
+      title: 'Alertas',
+      icon: 'fa-chart-bar',
+      path: '/alertas',
+      submenu: null
+    },
+    {
+      title: 'Game',
+      icon: 'fa-gamepad',
+      path: '/game',
+      submenu: null
+    },
+    {
+      title: 'Archivos',
+      icon: 'fa-file',
+      path: '/archivos',
+      submenu: null
+    },
+    {
+      title: 'Boletin',
+      icon: 'fa-book',
+      path: '/boletin',
+      submenu: null
+    },
+
+    {
+      title: 'Boletin-list',
+      icon: 'fa-pen',
+      path: '/boletin-list',
+      submenu: null
+    },
+    {
+      title: 'Agregar Reunión',
+      icon: 'fa-pen',
+      path: '/reuniones/admin',
+      submenu: null
+    },
+    {
+      title: 'Reuniones',
+      icon: 'fa-pen',
+      path: '/reuniones',
+      submenu: null
+    },
+       {
+      title: 'Consulta Externa',
+      icon: 'fa-book',
+      path: '/consulta-externa',
+      submenu: null
+    },
+  ]
+  
+  // Si tiene acceso a Consulta Externa, mostrar solo Boletin
+  if (hasConsultaExternaAccess.value) {
+    return allItems.filter(item => item.title === 'Consulta Externa')
+  }
+  
+  // Si no tiene acceso, mostrar todos los items excepto Boletin
+  return allItems.filter(item => item.title !== 'Consulta Externa')
+})
 
 const toggleSubmenu = (index) => {
   if (menuItems.value[index].submenu) {

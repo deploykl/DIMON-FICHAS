@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
-from django.contrib.auth import authenticate
+from rest_framework import status, generics, permissions
+from django.contrib.auth import authenticate, login
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import InvalidToken
 from django.contrib.auth import get_user_model
@@ -10,13 +10,16 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from django.utils import timezone
 from django.utils.crypto import get_random_string
-from datetime import timedelta
+from datetime import datetime, timedelta
 from django.core.mail import send_mail
 from django.conf import settings
 from api.user.serializers import *
+import pandas as pd
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework import viewsets, status
+from rest_framework.pagination import PageNumberPagination
 
 User = get_user_model()
-
 
 class UserProfileView(APIView):
     permission_classes = [IsAuthenticated]
@@ -81,6 +84,7 @@ class LoginView(APIView):
             'refresh': str(refresh),
             'is_superuser': user.is_superuser,
             'is_staff': user.is_staff,
+            'access_ConsultaExterna': user.access_ConsultaExterna,
         }
 
         return Response(user_data, status=status.HTTP_200_OK)
@@ -199,3 +203,142 @@ class PasswordResetConfirmView(APIView):
             {'detail': 'Contraseña restablecida correctamente.'}, 
             status=status.HTTP_200_OK
         )
+        
+
+class LargeResultsSetPagination(PageNumberPagination):
+    page_size = 50  # Puedes ajustar este valor
+    page_size_query_param = 'page_size'
+    max_page_size = 200
+    
+class ConsultaExternaViewSet(viewsets.ModelViewSet):
+    queryset = ConsultaExterna.objects.all()
+    serializer_class = ConsultaExternaSerializer
+    parser_classes = [MultiPartParser, FormParser]
+    pagination_class = LargeResultsSetPagination
+
+    @action(detail=False, methods=['post'], url_path='importar-excel')
+    def importar_excel(self, request):
+        if 'file' not in request.FILES:
+            return Response({'error': 'No se proporcionó archivo'}, status=status.HTTP_400_BAD_REQUEST)
+    
+        file = request.FILES['file']
+        try:
+            df = pd.read_excel(file)
+            column_mapping = {
+                0: 'tipo_seguro',
+                1: 'fecha_nacimiento',
+                2: 'sexo',
+                3: 'lugar_procedencia',
+                4: 'tipo_documento',
+                5: 'documento',
+                6: 'n_hcl',
+                7: 'fecha_hora_cita_otorgada',
+                8: 'fecha_hora_atencion',
+                9: 'diagnostico_medico',
+                10: 'dx_CIE_10_1',
+                11: 'dx_CIE_10_2',
+                12: 'dx_CIE_10_3',
+                13: 'especialidad'
+            }
+            
+            if len(df.columns) < len(column_mapping):
+                return Response(
+                    {'error': f'El archivo Excel debe tener al menos {len(column_mapping)} columnas'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            created_count = 0
+            updated_count = 0
+            errors = []
+            fechas_omitidas = 0
+            fecha_limite = datetime(2025, 3, 1).date()
+            
+            for index, row in df.iterrows():
+                try:
+                    data = {}
+                    for col_index, field_name in column_mapping.items():
+                        if col_index < len(row):
+                            data[field_name] = row[col_index] if not pd.isna(row[col_index]) else None
+                    
+                    # Validar campos requeridos
+                    required_fields = ['tipo_seguro', 'documento', 'fecha_hora_cita_otorgada', 'fecha_hora_atencion']
+                    missing_fields = [field for field in required_fields if field not in data or data[field] is None]
+                    
+                    if missing_fields:
+                        errors.append(f"Fila {index + 2}: Faltan campos requeridos: {', '.join(missing_fields)}")
+                        continue
+                    
+                    # Convertir y validar fechas
+                    try:
+                        fecha_cita = pd.to_datetime(data['fecha_hora_cita_otorgada'])
+                        fecha_atencion = pd.to_datetime(data['fecha_hora_atencion'])
+                        
+                        # Omitir registros con fechas anteriores
+                        if fecha_cita.date() < fecha_limite or fecha_atencion.date() < fecha_limite:
+                            fechas_omitidas += 1
+                            errors.append(
+                                f"Fila {index + 2}: Omitida - Fecha cita: {fecha_cita.date()}, "
+                                f"Fecha atención: {fecha_atencion.date()}"
+                            )
+                            continue
+                        
+                        data['fecha_hora_cita_otorgada'] = fecha_cita
+                        data['fecha_hora_atencion'] = fecha_atencion
+                    except Exception as e:
+                        errors.append(f"Fila {index + 2}: Error en formato de fecha - {str(e)}")
+                        continue
+                    
+                    # Procesar el resto de campos
+                    if 'fecha_nacimiento' in data and data['fecha_nacimiento']:
+                        try:
+                            data['fecha_nacimiento'] = pd.to_datetime(data['fecha_nacimiento']).date()
+                        except:
+                            data['fecha_nacimiento'] = None
+                    
+                    if 'sexo' in data and data['sexo']:
+                        data['sexo'] = str(data['sexo']).strip().upper()[:1]
+                    
+                    for cie_field in ['dx_CIE_10_1', 'dx_CIE_10_2', 'dx_CIE_10_3']:
+                        if cie_field in data and data[cie_field]:
+                            data[cie_field] = str(data[cie_field]).strip()
+                    
+                    # Crear o actualizar registro
+                    consulta, created = ConsultaExterna.objects.update_or_create(
+                        documento=data['documento'],
+                        fecha_hora_cita_otorgada=data['fecha_hora_cita_otorgada'],
+                        defaults={
+                            **data,
+                            'creado_por': request.user
+                        }
+                    )
+                    
+                    if created:
+                        created_count += 1
+                    else:
+                        updated_count += 1
+                        
+                except Exception as e:
+                    errors.append(f"Fila {index + 2}: Error - {str(e)}")
+                    continue
+                
+            # Mensaje resumen
+            message = 'Importación completada'
+            if fechas_omitidas > 0:
+                message = f'Importación completada (omitidas {fechas_omitidas} filas con fechas anteriores a marzo 2025)'
+            
+            return Response({
+                'success': True,
+                'message': message,
+                'total_filas': len(df),
+                'creados': created_count,
+                'actualizados': updated_count,
+                'omitidas': fechas_omitidas,
+                'errores': len(errors),
+                'detalle_errores': errors[:20]  # Mostrar más errores si hay fechas omitidas
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {'success': False, 'error': f"Error al procesar el archivo: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )

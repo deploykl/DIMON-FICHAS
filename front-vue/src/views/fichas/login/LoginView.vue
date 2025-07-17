@@ -90,7 +90,7 @@ const handleSubmit = async () => {
       password: password.value,
     });
 
-    const { access, refresh, is_superuser, is_staff } = response.data;
+    const { access, refresh, is_superuser, is_staff, access_ConsultaExterna } = response.data;
 
     if (!access) {
       errorMessage.value = 'No se recibió token de acceso.';
@@ -101,6 +101,7 @@ const handleSubmit = async () => {
     if (refresh) localStorage.setItem('refreshToken', refresh);
     localStorage.setItem('is_superuser', is_superuser ? 'true' : 'false');
     localStorage.setItem('is_staff', is_staff ? 'true' : 'false');
+    localStorage.setItem('access_ConsultaExterna', access_ConsultaExterna ? 'true' : 'false');
     //  Obtener perfil del usuario
     const perfilResponse = await api.get('user/profile/');
     localStorage.setItem('user', JSON.stringify(perfilResponse.data));

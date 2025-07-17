@@ -17,6 +17,7 @@ import ReunionesView from "../views/ReunionesView.vue";
 import EventosView from "../views/EventosView.vue";
 import EventosAdminView from "../views/EventosAdminView.vue";
 import ArchivosInteresView from "../views/ArchivosInteresView.vue";
+import ConsultaExternaView from "../views/modulos/ConsultaExternaView.vue";
 
 const routes = [
   {
@@ -155,6 +156,15 @@ const routes = [
     path: "/boletin-list",
     name: "boletin-list",
     component: BoletinView_List,
+    meta: {
+      title: "Boletin",
+      requiresAuth: true,
+    },
+  },
+   {
+    path: "/consulta-externa",
+    name: "consulta-externa",
+    component: ConsultaExternaView,
     meta: {
       title: "Boletin",
       requiresAuth: true,

@@ -4,6 +4,8 @@ from rest_framework.authtoken.views import obtain_auth_token
 from api.user.views import *
 
 router = DefaultRouter()
+router.register(r'consultas-externas', ConsultaExternaViewSet, basename='consulta-externa')
+
 
 urlpatterns = [  
     path('profile/', UserProfileView.as_view(), name='profile'),
