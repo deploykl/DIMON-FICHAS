@@ -119,10 +119,37 @@
                     <button class="btn btn-outline-secondary" @click="resetForm" :disabled="loading">
                         Limpiar
                     </button>
-                     <!-- Nuevo botón para exportar a Excel -->
-    <button class="btn btn-success" @click="exportToExcel" :disabled="registros.length === 0 || loading">
-      <i class="bi bi-file-excel"></i> Exportar Excel
-    </button>
+                    <!-- Nuevo botón para exportar a Excel -->
+                    <button class="btn btn-success" @click="exportToExcel"
+                        :disabled="registros.length === 0 || loading">
+                        <i class="bi bi-file-excel"></i> Exportar Excel
+                    </button>
+                    <!-- Agrega esto en la sección de filtros, cerca del buscador -->
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Año</label>
+                            <select class="form-select" v-model="filtroAnio" @change="cargarRegistros">
+                                <option v-for="year in [...new Set(mesesDisponibles.map(item => item.year))]"
+                                    :key="year" :value="year">
+                                    {{ year }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Mes</label>
+                            <select class="form-select" v-model="filtroMes" @change="cargarRegistros">
+                                <option v-for="month in mesesDisponibles.filter(item => item.year === filtroAnio)"
+                                    :key="`${month.year}-${month.month}`" :value="month.month">
+                                    {{ month.month }} - {{ getMonthName(month.month) }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button class="btn btn-outline-secondary" @click="resetFiltros" :disabled="!filtroMes">
+                                Limpiar filtros
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Resultados de importación -->
@@ -328,10 +355,10 @@
                             </div>
                             <div class="col-md-6">
                                 <p><strong>Fecha Cita:</strong> {{ formatDateTime(registroSeleccionado.fecha_hora_cita)
-                                }}</p>
+                                    }}</p>
                                 <p><strong>Fecha Atención:</strong> {{
                                     formatDateTime(registroSeleccionado.fecha_hora_atencion)
-                                }}</p>
+                                    }}</p>
                                 <p><strong>Especialidad:</strong> {{ registroSeleccionado.especialidad || 'N/A' }}</p>
                                 <p><strong>CIE-10 Principal:</strong> {{ registroSeleccionado.dx_cie10_principal ||
                                     'N/A' }}</p>
@@ -369,7 +396,21 @@ const toggleEstructura = () => {
 const toggleErrores = () => {
     mostrarErrores.value = !mostrarErrores.value
 }
+// Método para obtener el nombre del mes
+const getMonthName = (month) => {
+  const months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ]
+  return months[month - 1] || ''
+}
 
+// Método para resetear los filtros
+const resetFiltros = () => {
+  filtroMes.value = null
+  filtroAnio.value = null
+  cargarRegistros()
+}
 // Variables para importación
 const file = ref(null)
 const loading = ref(false)
@@ -381,11 +422,136 @@ const registroSeleccionado = ref(null)
 const busqueda = ref('')
 const itemsPorPagina = ref(25)
 const totalRegistros = ref(0)
+
+// Agrega estas variables al inicio de tu script
+const mesesDisponibles = ref([])
+const filtroMes = ref(null)
+const filtroAnio = ref(null)
+
+
 const paginacion = ref({
     current_page: 1,
     total_pages: 1
 })
 
+// Agrega este método para cargar los meses disponibles
+const cargarMesesDisponibles = async () => {
+    try {
+        const response = await api.get('/user/consultas-externas/meses-disponibles/')
+        mesesDisponibles.value = response.data
+
+        // Si hay datos, establecer el primer mes como seleccionado por defecto
+        if (mesesDisponibles.value.length > 0) {
+            filtroAnio.value = mesesDisponibles.value[0].year
+            filtroMes.value = mesesDisponibles.value[0].month
+        }
+    } catch (error) {
+        console.error('Error cargando meses disponibles:', error)
+    }
+}
+
+// Método para exportar a Excel
+const exportToExcel = async () => {
+    try {
+        loading.value = true
+
+        // Obtener todos los registros del usuario
+        const response = await api.get('/user/consultas-externas/exportar-todos/', {
+            params: {
+                search: busqueda.value // Opcional: mantener el filtro de búsqueda
+            }
+        })
+
+        const data = response.data
+
+        if (data.length === 0) {
+            importResult.value = {
+                success: false,
+                message: 'No hay datos para exportar'
+            }
+            return
+        }
+
+        // Función para formatear fechas
+        const formatDateForExcel = (dateStr) => {
+            if (!dateStr) return 'N/A'
+            const date = new Date(dateStr)
+            return isNaN(date.getTime()) ? 'N/A' : date.toLocaleString('es-ES')
+        }
+
+        // Preparar los datos para Excel
+        const excelData = data.map(item => ({
+            'Tipo Seguro': item.tipo_seguro,
+            'Fecha Nacimiento': formatDateForExcel(item.fecha_nacimiento),
+            'Sexo': item.sexo,
+            'Lugar Procedencia': item.lugar_procedencia,
+            'Tipo Documento': item.tipo_documento,
+            'Documento': item.documento,
+            'N° HCL': item.n_hcl,
+            'Fecha Cita Otorgada': formatDateForExcel(item.fecha_hora_cita_otorgada),
+            'Fecha Atención': formatDateForExcel(item.fecha_hora_atencion),
+            'Diagnóstico Médico': item.diagnostico_medico,
+            'Dx CIE-10 Principal': item.dx_CIE_10_1,
+            'Dx CIE-10 Secundario': item.dx_CIE_10_2,
+            'Dx CIE-10 Terciario': item.dx_CIE_10_3,
+            'Especialidad': item.especialidad,
+            'Creado Por': item.creado_por__username || 'N/A',
+            'Fecha Creación': formatDateForExcel(item.fecha_creacion)
+        }))
+
+        // Crear hoja de trabajo con opciones para grandes conjuntos de datos
+        const worksheet = XLSX.utils.json_to_sheet(excelData, {
+            cellDates: true,
+            dateNF: 'dd/mm/yyyy hh:mm:ss'
+        })
+
+        // Ajustar el ancho de las columnas
+        const wscols = [
+            { wch: 15 }, { wch: 15 }, { wch: 5 },
+            { wch: 20 }, { wch: 15 }, { wch: 15 },
+            { wch: 15 }, { wch: 20 }, { wch: 20 },
+            { wch: 30 }, { wch: 15 }, { wch: 15 },
+            { wch: 15 }, { wch: 20 }, { wch: 15 },
+            { wch: 20 }
+        ]
+        worksheet['!cols'] = wscols
+
+        // Crear libro de trabajo
+        const workbook = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'ConsultasExternas')
+
+        // Generar archivo Excel en formato binario
+        const excelBuffer = XLSX.write(workbook, {
+            bookType: 'xlsx',
+            type: 'array',
+            compression: true
+        })
+
+        // Crear y descargar el blob
+        const blob = new Blob([excelBuffer], {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        })
+
+        // Nombre del archivo con fecha y hora
+        const dateStr = new Date().toISOString().replace(/[:.]/g, '-')
+        saveAs(blob, `consultas_externas_${dateStr}.xlsx`)
+
+    } catch (error) {
+        console.error('Error al exportar a Excel:', error)
+        importResult.value = {
+            success: false,
+            message: 'Error al exportar los datos a Excel: ' +
+                (error.response?.data?.detail || error.message)
+        }
+
+        // Mostrar error detallado en consola para depuración
+        if (error.response) {
+            console.error('Detalles del error:', error.response.data)
+        }
+    } finally {
+        loading.value = false
+    }
+}
 // Modal
 let detalleModal = null
 onMounted(() => {
@@ -516,6 +682,14 @@ const cargarRegistros = async () => {
             search: busqueda.value
         }
 
+        // Agregar filtros de mes y año si están seleccionados
+        if (filtroAnio.value) {
+            params.year = filtroAnio.value
+        }
+        if (filtroMes.value) {
+            params.month = filtroMes.value
+        }
+
         const response = await api.get('/user/consultas-externas/', { params })
         registros.value = response.data.results
         totalRegistros.value = response.data.count
@@ -580,7 +754,8 @@ const verDetalle = (registro) => {
 }
 
 // Cargar datos iniciales
-onMounted(() => {
+onMounted(async () => {
+    await cargarMesesDisponibles()
     cargarRegistros()
 })
 </script>

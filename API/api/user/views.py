@@ -18,6 +18,7 @@ import pandas as pd
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import viewsets, status
 from rest_framework.pagination import PageNumberPagination
+from django.db.models.functions import ExtractYear, ExtractMonth
 
 User = get_user_model()
 
@@ -216,11 +217,33 @@ class ConsultaExternaViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
     pagination_class = LargeResultsSetPagination
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filtro por usuario
+        if not self.request.user.is_superuser:
+            queryset = queryset.filter(creado_por=self.request.user)
+            
+        # Filtros por mes y año
+        month = self.request.query_params.get('month')
+        year = self.request.query_params.get('year')
+        
+        if month and year:
+            queryset = queryset.filter(
+                fecha_hora_cita_otorgada__month=month,
+                fecha_hora_cita_otorgada__year=year
+            )
+        elif year:  # Si solo se filtra por año
+            queryset = queryset.filter(fecha_hora_cita_otorgada__year=year)
+            
+        return queryset
+    
+    
     @action(detail=False, methods=['post'], url_path='importar-excel')
     def importar_excel(self, request):
         if 'file' not in request.FILES:
             return Response({'error': 'No se proporcionó archivo'}, status=status.HTTP_400_BAD_REQUEST)
-    
+
         file = request.FILES['file']
         try:
             df = pd.read_excel(file)
@@ -240,30 +263,30 @@ class ConsultaExternaViewSet(viewsets.ModelViewSet):
                 12: 'dx_CIE_10_3',
                 13: 'especialidad'
             }
-            
+
             if len(df.columns) < len(column_mapping):
                 return Response(
                     {'error': f'El archivo Excel debe tener al menos {len(column_mapping)} columnas'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-            
+
             created_count = 0
             updated_count = 0
             errors = []
             fechas_omitidas = 0
             fecha_limite = datetime(2025, 3, 1).date()
-            
+
             for index, row in df.iterrows():
                 try:
                     data = {}
                     for col_index, field_name in column_mapping.items():
                         if col_index < len(row):
                             data[field_name] = row[col_index] if not pd.isna(row[col_index]) else None
-                    
+
                     # Validar campos requeridos
                     required_fields = ['tipo_seguro', 'documento', 'fecha_hora_cita_otorgada', 'fecha_hora_atencion']
                     missing_fields = [field for field in required_fields if field not in data or data[field] is None]
-                    
+
                     if missing_fields:
                         errors.append(f"Fila {index + 2}: Faltan campos requeridos: {', '.join(missing_fields)}")
                         continue
@@ -272,7 +295,7 @@ class ConsultaExternaViewSet(viewsets.ModelViewSet):
                     try:
                         fecha_cita = pd.to_datetime(data['fecha_hora_cita_otorgada'])
                         fecha_atencion = pd.to_datetime(data['fecha_hora_atencion'])
-                        
+
                         # Omitir registros con fechas anteriores
                         if fecha_cita.date() < fecha_limite or fecha_atencion.date() < fecha_limite:
                             fechas_omitidas += 1
@@ -294,14 +317,14 @@ class ConsultaExternaViewSet(viewsets.ModelViewSet):
                             data['fecha_nacimiento'] = pd.to_datetime(data['fecha_nacimiento']).date()
                         except:
                             data['fecha_nacimiento'] = None
-                    
+
                     if 'sexo' in data and data['sexo']:
                         data['sexo'] = str(data['sexo']).strip().upper()[:1]
-                    
+
                     for cie_field in ['dx_CIE_10_1', 'dx_CIE_10_2', 'dx_CIE_10_3']:
                         if cie_field in data and data[cie_field]:
                             data[cie_field] = str(data[cie_field]).strip()
-                    
+
                     # Crear o actualizar registro
                     consulta, created = ConsultaExterna.objects.update_or_create(
                         documento=data['documento'],
@@ -311,12 +334,12 @@ class ConsultaExternaViewSet(viewsets.ModelViewSet):
                             'creado_por': request.user
                         }
                     )
-                    
+
                     if created:
                         created_count += 1
                     else:
                         updated_count += 1
-                        
+
                 except Exception as e:
                     errors.append(f"Fila {index + 2}: Error - {str(e)}")
                     continue
@@ -325,7 +348,7 @@ class ConsultaExternaViewSet(viewsets.ModelViewSet):
             message = 'Importación completada'
             if fechas_omitidas > 0:
                 message = f'Importación completada (omitidas {fechas_omitidas} filas con fechas anteriores a marzo 2025)'
-            
+
             return Response({
                 'success': True,
                 'message': message,
@@ -336,9 +359,49 @@ class ConsultaExternaViewSet(viewsets.ModelViewSet):
                 'errores': len(errors),
                 'detalle_errores': errors[:20]  # Mostrar más errores si hay fechas omitidas
             }, status=status.HTTP_200_OK)
-            
+
         except Exception as e:
             return Response(
                 {'success': False, 'error': f"Error al procesar el archivo: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
+            
+    @action(detail=False, methods=['get'], url_path='exportar-todos')
+    def exportar_todos(self, request):
+        # Filtra solo los registros del usuario actual
+        queryset = self.filter_queryset(
+            self.get_queryset().filter(creado_por=request.user)
+        )
+        
+        # Usa values() para optimizar la consulta
+        data = queryset.values(
+            'tipo_seguro', 'fecha_nacimiento', 'sexo', 'lugar_procedencia',
+            'tipo_documento', 'documento', 'n_hcl', 'fecha_hora_cita_otorgada',
+            'fecha_hora_atencion', 'diagnostico_medico', 'dx_CIE_10_1',
+            'dx_CIE_10_2', 'dx_CIE_10_3', 'especialidad', 'creado_por__username',
+            'fecha_creacion'
+        )
+        
+        return Response(list(data))
+    
+    @action(detail=False, methods=['get'], url_path='meses-disponibles')
+    def meses_disponibles(self, request):
+        # Obtener los meses/años disponibles en la base de datos
+        queryset = self.filter_queryset(self.get_queryset())
+        
+        # Si no es superusuario, filtrar por usuario
+        if not request.user.is_superuser:
+            queryset = queryset.filter(creado_por=request.user)
+            
+        meses_data = queryset.annotate(
+            year=ExtractYear('fecha_hora_cita_otorgada'),
+            month=ExtractMonth('fecha_hora_cita_otorgada')
+        ).values('year', 'month').distinct().order_by('-year', '-month')
+        
+        # Formatear la respuesta
+        meses_formateados = [
+            {'year': item['year'], 'month': item['month'], 'label': f"{item['month']}/{item['year']}"}
+            for item in meses_data
+        ]
+        
+        return Response(meses_formateados)
