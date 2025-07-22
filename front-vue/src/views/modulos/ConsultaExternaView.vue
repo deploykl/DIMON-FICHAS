@@ -110,24 +110,37 @@
                     <div class="form-text">Formatos soportados: .xlsx, .xls (Máx. 10MB)</div>
                 </div>
 
-                <div class="d-flex flex-wrap gap-2 mb-4">
-                    <button class="btn btn-primary" :disabled="!file || loading" @click="uploadFile">
-                        <span v-if="loading" class="spinner-border spinner-border-sm" role="status"></span>
+                <div class="d-flex flex-wrap gap-2 mb-4 align-items-center">
+                    <!-- Botón Importar Datos -->
+                    <button class="btn btn-primary d-flex align-items-center" :disabled="!file || loading"
+                        @click="uploadFile">
+                        <span v-if="loading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <i v-else class="bi bi-upload me-2"></i>
                         {{ loading ? 'Importando...' : 'Importar Datos' }}
                     </button>
 
-                    <button class="btn btn-outline-secondary" @click="resetForm" :disabled="loading">
+                    <!-- Botón Limpiar -->
+                    <button class="btn btn-outline-secondary d-flex align-items-center" @click="resetForm"
+                        :disabled="loading">
+                        <i class="bi bi-trash me-2"></i>
                         Limpiar
                     </button>
-                    <!-- Nuevo botón para exportar a Excel -->
-                    <button class="btn btn-success" @click="exportToExcel"
+
+                    <!-- Botón Exportar Excel -->
+                    <button class="btn btn-success d-flex align-items-center" @click="exportToExcel"
                         :disabled="registros.length === 0 || loading">
-                        <i class="bi bi-file-excel"></i> Exportar Excel
+                        <i class="bi bi-file-earmark-excel me-2"></i>
+                        Exportar Excel
                     </button>
-                    <!-- Agrega esto en la sección de filtros, cerca del buscador -->
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Año</label>
+                    <!-- NUEVO BOTÓN: Descargar Plantilla -->
+                    <button class="btn btn-info d-flex align-items-center" @click="descargarPlantilla">
+                        <i class="bi bi-download me-2"></i>
+                        Descargar Plantilla
+                    </button>
+                    <!-- Filtros -->
+                    <div class="d-flex flex-wrap gap-2 align-items-center ms-md-auto">
+                        <div class="input-group" style="width: 150px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-calendar"></i></span>
                             <select class="form-select" v-model="filtroAnio" @change="cargarRegistros">
                                 <option v-for="year in [...new Set(mesesDisponibles.map(item => item.year))]"
                                     :key="year" :value="year">
@@ -135,20 +148,22 @@
                                 </option>
                             </select>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Mes</label>
+
+                        <div class="input-group" style="width: 150px;">
+                            <span class="input-group-text bg-white"><i class="bi bi-filter"></i></span>
                             <select class="form-select" v-model="filtroMes" @change="cargarRegistros">
                                 <option v-for="month in mesesDisponibles.filter(item => item.year === filtroAnio)"
                                     :key="`${month.year}-${month.month}`" :value="month.month">
-                                    {{ month.month }} - {{ getMonthName(month.month) }}
+                                    {{ getMonthName(month.month) }}
                                 </option>
                             </select>
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
-                            <button class="btn btn-outline-secondary" @click="resetFiltros" :disabled="!filtroMes">
-                                Limpiar filtros
-                            </button>
-                        </div>
+
+                        <button class="btn btn-outline-danger d-flex align-items-center" @click="resetFiltros"
+                            :disabled="!filtroMes && !filtroAnio">
+                            <i class="bi bi-x-lg me-1"></i>
+                            Filtros
+                        </button>
                     </div>
                 </div>
 
@@ -220,7 +235,7 @@
                             <div class="input-group" style="max-width: 300px;">
                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                                 <input type="text" class="form-control" placeholder="Buscar..." v-model="busqueda"
-                                    @input="debounceBuscar">
+                                    @input="handleSearchInput">
                                 <button class="btn btn-outline-secondary" type="button" @click="resetBusqueda"
                                     :disabled="!busqueda">
                                     <i class="bi bi-x-lg"></i>
@@ -380,7 +395,7 @@
     </main>
 </template>
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { api } from '@/components/services/auth_axios'
 import { debounce } from 'lodash'
 import { Modal } from 'bootstrap'
@@ -398,18 +413,18 @@ const toggleErrores = () => {
 }
 // Método para obtener el nombre del mes
 const getMonthName = (month) => {
-  const months = [
-    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
-    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
-  ]
-  return months[month - 1] || ''
+    const months = [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ]
+    return months[month - 1] || ''
 }
 
 // Método para resetear los filtros
 const resetFiltros = () => {
-  filtroMes.value = null
-  filtroAnio.value = null
-  cargarRegistros()
+    filtroMes.value = null
+    filtroAnio.value = null
+    cargarRegistros()
 }
 // Variables para importación
 const file = ref(null)
@@ -433,7 +448,27 @@ const paginacion = ref({
     current_page: 1,
     total_pages: 1
 })
+// Watcher para la búsqueda con debounce
+watch(busqueda, (newValue) => {
+    if (newValue.trim().length === 0 || newValue.trim().length >= 3) {
+        debouncedSearch()
+    }
+})
+// Función de búsqueda debounceada
+const debouncedSearch = debounce(() => {
+    paginacion.value.current_page = 1
+    cargarRegistros()
+}, 500)
 
+// Función para manejar el input directamente
+const onSearchInput = () => {
+    // Si el campo está vacío, buscar inmediatamente
+    if (busqueda.value.trim() === '') {
+        debouncedSearch.cancel() // Cancela cualquier búsqueda pendiente
+        paginacion.value.current_page = 1
+        cargarRegistros()
+    }
+}
 // Agrega este método para cargar los meses disponibles
 const cargarMesesDisponibles = async () => {
     try {
@@ -679,7 +714,7 @@ const cargarRegistros = async () => {
         const params = {
             page: paginacion.value.current_page,
             page_size: itemsPorPagina.value,
-            search: busqueda.value
+            search: busqueda.value.trim() // Asegurarse de enviar el valor sin espacios
         }
 
         // Agregar filtros de mes y año si están seleccionados
@@ -711,7 +746,6 @@ const debounceBuscar = debounce(() => {
 const resetBusqueda = () => {
     busqueda.value = ''
     paginacion.value.current_page = 1
-    cargarRegistros()
 }
 
 const cambiarPagina = (page) => {
@@ -752,7 +786,36 @@ const verDetalle = (registro) => {
     registroSeleccionado.value = registro
     detalleModal.show()
 }
-
+// Método para descargar la plantilla de ejemplo
+const descargarPlantilla = () => {
+  try {
+    // Ruta al archivo en la carpeta public
+    const url = '/docs/data_masiva.xlsx'
+    
+    // Crear un enlace temporal
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'plantilla_consultas_externas.xlsx' // Nombre del archivo al descargar
+    link.target = '_blank'
+    
+    // Simular click en el enlace
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    // Opcional: Mostrar mensaje de éxito
+    importResult.value = {
+      success: true,
+      message: 'Plantilla descargada correctamente'
+    }
+  } catch (error) {
+    console.error('Error al descargar plantilla:', error)
+    importResult.value = {
+      success: false,
+      message: 'Error al descargar la plantilla'
+    }
+  }
+}
 // Cargar datos iniciales
 onMounted(async () => {
     await cargarMesesDisponibles()
@@ -762,6 +825,17 @@ onMounted(async () => {
 
 <style scoped>
 /* Estilos para el acordeón */
+.btn-info {
+  background-color: #17a2b8;
+  border-color: #17a2b8;
+  color: white;
+}
+
+.btn-info:hover {
+  background-color: #138496;
+  border-color: #117a8b;
+}
+
 .cursor-pointer {
     cursor: pointer;
 }
@@ -801,5 +875,93 @@ onMounted(async () => {
 .table-responsive {
     max-height: 500px;
     overflow-y: auto;
+}
+
+/* Estilos para botones */
+.btn {
+    transition: all 0.2s ease;
+    font-weight: 500;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary {
+    background-color: #4361ee;
+    border-color: #4361ee;
+}
+
+.btn-primary:hover {
+    background-color: #3a56d4;
+    border-color: #3a56d4;
+}
+
+.btn-success {
+    background-color: #2e7d32;
+    border-color: #2e7d32;
+}
+
+.btn-success:hover {
+    background-color: #276a2b;
+    border-color: #276a2b;
+}
+
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #f8f9fa;
+    color: #6c757d;
+}
+
+.btn-outline-danger {
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+    background-color: #fff0f0;
+    color: #dc3545;
+}
+
+/* Estilos para íconos en botones */
+.bi {
+    font-size: 1rem;
+}
+
+/* Estilos para selects */
+.form-select {
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    transition: all 0.2s ease;
+}
+
+.form-select:focus {
+    border-color: #4361ee;
+    box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+}
+
+.input-group-text {
+    border-radius: 6px 0 0 6px;
+    background-color: #f8f9fa;
+}
+
+/* Efecto de deshabilitado */
+.btn:disabled {
+    opacity: 0.65;
+    transform: none !important;
+    box-shadow: none !important;
 }
 </style>
