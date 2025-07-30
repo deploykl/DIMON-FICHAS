@@ -165,21 +165,12 @@
 
                     </div>
 
-                  <DataTable
-  :value="registros"
-  :paginator="true"
-  :rows="itemsPorPagina"
-  :totalRecords="totalRegistros"
-  :loading="loading"
-  :rowsPerPageOptions="[10, 25, 50, 100, 200]"
-  paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-  currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
-  @page="onPageChange"
-  :expandedRows.sync="expandedRows"
-  responsiveLayout="stack"
-  rowHover
-  class="p-datatable-sm"
->
+                    <DataTable :value="registros" :paginator="true" :rows="itemsPorPagina"
+                        :totalRecords="totalRegistros" :loading="loading" :rowsPerPageOptions="[10, 25, 50, 100, 200]"
+                        paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                        currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+                        @page="onPageChange" :expandedRows.sync="expandedRows" responsiveLayout="stack" rowHover
+                        class="p-datatable-sm">
 
                         <!-- Columna enumeradora -->
                         <Column header="N°" headerStyle="width: 1rem">
@@ -204,9 +195,14 @@
                                 {{ data.sexo || 'N/A' }}
                             </template>
                         </Column>
-                          <Column field="lugar_procedencia" header="Lugar Procedencia">
+                        <Column field="lugar_procedencia" header="Lugar Procedencia">
                             <template #body="{ data }">
                                 {{ data.lugar_procedencia || 'N/A' }}
+                            </template>
+                        </Column>
+                        <Column field="n_hcl" header="N° HCL">
+                            <template #body="{ data }">
+                                {{ data.n_hcl || 'N/A' }}
                             </template>
                         </Column>
                         <Column field="fecha_hora_cita_otorgada" header="Cita Otorgada">
@@ -255,7 +251,7 @@
                             </div>
                         </template>
                     </DataTable>
-                    
+
                 </div>
             </div>
         </div>

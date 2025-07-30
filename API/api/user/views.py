@@ -364,7 +364,6 @@ class ConsultaExternaViewSet(viewsets.ModelViewSet):
 
                     # Crear o actualizar registro
                     consulta, created = ConsultaExterna.objects.update_or_create(
-                        documento=data["documento"],
                         fecha_hora_cita_otorgada=data["fecha_hora_cita_otorgada"],
                         defaults={**data, "creado_por": request.user},
                     )
@@ -540,27 +539,29 @@ class CirugiaViewSet(viewsets.ModelViewSet):
                     data = {}
                     for col_index, field_name in column_mapping.items():
                         if col_index < len(row):
-                            data[field_name] = (
-                                row[col_index] if not pd.isna(row[col_index]) else None
-                            )
+                            data[field_name] = row[col_index] if not pd.isna(row[col_index]) else None
 
-                    # Validar campos requeridos básicos
-                    required_fields = [
-                        "tipo_seguro",
-                        "n_hcl",
-                        "fecha_iqx_programada",
-                        "iqx_programada",
-                    ]
-                    missing_fields = [
-                        field
-                        for field in required_fields
-                        if field not in data or data[field] is None
-                    ]
+                    # Validación mejorada de campos requeridos
+                    required_fields = {
+                        'tipo_seguro': "Tipo de seguro es obligatorio",
+                        'fecha_nacimiento': "Fecha de nacimiento es obligatoria",
+                        'sexo': "Sexo es obligatorio",
+                        'lugar_procedencia': "Lugar de procedencia es obligatorio",
+                        'n_hcl': "Número de historia clínica es obligatorio",
+                        'fecha_hora_cita_otorgada': "Fecha/hora de cita es obligatoria",
+                        'fecha_hora_atencion': "Fecha/hora de atención es obligatoria",
+                        'diagnostico_medico': "Diagnóstico médico es obligatorio",
+                        'dx_CIE_10_1': "Diagnóstico CIE-10 principal es obligatorio",
+                        'especialidad': "Especialidad es obligatoria"
+                    }
+
+                    missing_fields = []
+                    for field, error_msg in required_fields.items():
+                        if field not in data or data[field] in [None, ""]:
+                            missing_fields.append(f"{field}: {error_msg}")
 
                     if missing_fields:
-                        errors.append(
-                            f"Fila {index + 2}: Faltan campos requeridos: {', '.join(missing_fields)}"
-                        )
+                        errors.append(f"Fila {index + 2}: Faltan campos - {', '.join(missing_fields)}")
                         continue
 
                     # Procesar fecha programada (manejo simple)
