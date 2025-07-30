@@ -289,7 +289,6 @@
                                     <th>Fecha Creación</th>
                                     <th>Fecha Actualización</th>
                                     <th>Creado por</th>
-                                    <th class="text-end">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -314,11 +313,6 @@
                                     <td>{{ formatDateTime(item.fecha_creacion) }}</td>
                                     <td>{{ formatDateTime(item.fecha_actualizacion) }}</td>
                                     <td>{{ item.creado_por?.username || 'N/A' }}</td>
-                                    <td class="text-end">
-                                        <button class="btn btn-sm btn-outline-primary" @click="verDetalle(item)">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                    </td>
                                 </tr>
                             </tbody>
                         </table>

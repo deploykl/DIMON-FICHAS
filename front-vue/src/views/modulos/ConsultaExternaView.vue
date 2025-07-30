@@ -267,8 +267,6 @@ import { saveAs } from 'file-saver'
 
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
-import ColumnGroup from 'primevue/columngroup';   // optional
-import Row from 'primevue/row';                   // optional
 
 const columnasEstructura = ref([
     { numero: 0, nombre: 'Tipo de seguro', requerido: true, recomendacion: 'Ej: SIS, ESSALUD, Privado' },
@@ -393,8 +391,6 @@ const exportToExcel = async () => {
             'Fecha Nacimiento': formatDateForExcel(item.fecha_nacimiento),
             'Sexo': item.sexo,
             'Lugar Procedencia': item.lugar_procedencia,
-            'Tipo Documento': item.tipo_documento,
-            'Documento': item.documento,
             'N° HCL': item.n_hcl,
             'Fecha Cita Otorgada': formatDateForExcel(item.fecha_hora_cita_otorgada),
             'Fecha Atención': formatDateForExcel(item.fecha_hora_atencion),
@@ -587,7 +583,7 @@ const formatDateTime = (fecha) => {
 const descargarPlantilla = () => {
     try {
         // Ruta al archivo en la carpeta public
-        const url = '/docs/data_masiva.xlsx'
+        const url = '/docs/data_masiva1.xlsx'
 
         // Crear un enlace temporal
         const link = document.createElement('a')
