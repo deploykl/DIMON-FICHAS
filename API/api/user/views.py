@@ -19,6 +19,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import viewsets, status
 from rest_framework.pagination import PageNumberPagination
 from django.db.models.functions import ExtractYear, ExtractMonth
+from dateutil.parser import parse
 
 User = get_user_model()
 
@@ -403,8 +404,7 @@ class ConsultaExternaViewSet(viewsets.ModelViewSet):
         ]
         
         return Response(meses_formateados)
-    
-    
+      
 class CirugiaViewSet(viewsets.ModelViewSet):
     queryset = Cirugia.objects.all()
     serializer_class = CirugiaSerializer
@@ -427,7 +427,7 @@ class CirugiaViewSet(viewsets.ModelViewSet):
                 fecha_iqx_programada__month=month,
                 fecha_iqx_programada__year=year
             )
-        elif year:  # Si solo se filtra por año
+        elif year:
             queryset = queryset.filter(fecha_iqx_programada__year=year)
             
         return queryset
@@ -436,7 +436,7 @@ class CirugiaViewSet(viewsets.ModelViewSet):
     def importar_excel(self, request):
         if 'file' not in request.FILES:
             return Response({'error': 'No se proporcionó archivo'}, status=status.HTTP_400_BAD_REQUEST)
-
+    
         file = request.FILES['file']
         try:
             df = pd.read_excel(file)
@@ -459,86 +459,80 @@ class CirugiaViewSet(viewsets.ModelViewSet):
                 15: 'codigo_iqx_reprogramada',
                 16: 'iqx_reprogramada'
             }
-
+    
             if len(df.columns) < len(column_mapping):
                 return Response(
                     {'error': f'El archivo Excel debe tener al menos {len(column_mapping)} columnas'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
-
+    
             created_count = 0
             updated_count = 0
             errors = []
             fechas_omitidas = 0
             fecha_limite = datetime(2025, 3, 1).date()
-
+    
             for index, row in df.iterrows():
                 try:
                     data = {}
                     for col_index, field_name in column_mapping.items():
                         if col_index < len(row):
                             data[field_name] = row[col_index] if not pd.isna(row[col_index]) else None
-
-                    # Validar campos requeridos
+    
+                    # Validar campos requeridos básicos
                     required_fields = ['tipo_seguro', 'n_hcl', 'fecha_iqx_programada', 'iqx_programada']
                     missing_fields = [field for field in required_fields if field not in data or data[field] is None]
-
+    
                     if missing_fields:
                         errors.append(f"Fila {index + 2}: Faltan campos requeridos: {', '.join(missing_fields)}")
                         continue
                     
-                    # Convertir y validar fechas
+                    # Procesar fecha programada (manejo simple)
                     try:
-                        fecha_programada = pd.to_datetime(data['fecha_iqx_programada'])
-
-                        # Omitir registros con fechas anteriores
-                        if fecha_programada.date() < fecha_limite:
-                            fechas_omitidas += 1
-                            errors.append(
-                                f"Fila {index + 2}: Omitida - Fecha programada: {fecha_programada.date()}"
-                            )
-                            continue
-                        
-                        data['fecha_iqx_programada'] = fecha_programada
-                        
-                        # Procesar otras fechas si existen
-                        for fecha_field in ['fecha_iqx_realizada', 'fecha_iqx_reprogramada', 
-                                           'fecha_realizada_iqx_reprogramada']:
-                            if fecha_field in data and data[fecha_field]:
-                                try:
-                                    data[fecha_field] = pd.to_datetime(data[fecha_field])
-                                    if data[fecha_field].date() < fecha_limite:
-                                        data[fecha_field] = None  # O asignar valor por defecto
-                                except:
-                                    data[fecha_field] = None
-                                    
+                        if isinstance(data['fecha_iqx_programada'], (datetime, pd.Timestamp)):
+                            fecha_programada = data['fecha_iqx_programada'].date()
+                        elif isinstance(data['fecha_iqx_programada'], str):
+                            # Intenta parsear como datetime
+                            fecha_programada = datetime.strptime(data['fecha_iqx_programada'], '%d/%m/%Y').date()
+                        else:
+                            # Asume que es un número de fecha de Excel
+                            fecha_programada = xlrd.xldate.xldate_as_datetime(data['fecha_iqx_programada'], 0).date()
                     except Exception as e:
-                        errors.append(f"Fila {index + 2}: Error en formato de fecha - {str(e)}")
+                        errors.append(f"Fila {index + 2}: Formato de fecha inválido: {data['fecha_iqx_programada']}")
                         continue
                     
+                    # Validar fecha límite
+                    if fecha_programada < fecha_limite:
+                        fechas_omitidas += 1
+                        errors.append(f"Fila {index + 2}: Omitida - Fecha programada anterior a marzo 2025")
+                        continue
+                    
+                    # Asignar la fecha procesada
+                    data['fecha_iqx_programada'] = fecha_programada
+    
                     # Procesar el resto de campos
-                    if 'fecha_nacimiento' in data and data['fecha_nacimiento']:
-                        try:
-                            data['fecha_nacimiento'] = pd.to_datetime(data['fecha_nacimiento']).date()
-                        except:
-                            data['fecha_nacimiento'] = None
-
                     if 'sexo' in data and data['sexo']:
                         data['sexo'] = str(data['sexo']).strip().upper()[:1]
-
+    
+                    # Normalizar campo se_reprogramo
+                    if 'se_reprogramo' in data and data['se_reprogramo']:
+                        data['se_reprogramo'] = str(data['se_reprogramo']).strip().upper()
+    
+                    # Asignar usuario creador
+                    data['creado_por'] = request.user
+    
                     # Crear o actualizar registro
-                    # Aquí deberías definir qué campos usar como clave única para update_or_create
                     cirugia, created = Cirugia.objects.update_or_create(
                         n_hcl=data['n_hcl'],
                         fecha_iqx_programada=data['fecha_iqx_programada'],
                         defaults=data
                     )
-
+    
                     if created:
                         created_count += 1
                     else:
                         updated_count += 1
-
+    
                 except Exception as e:
                     errors.append(f"Fila {index + 2}: Error - {str(e)}")
                     continue
@@ -547,7 +541,7 @@ class CirugiaViewSet(viewsets.ModelViewSet):
             message = 'Importación completada'
             if fechas_omitidas > 0:
                 message = f'Importación completada (omitidas {fechas_omitidas} filas con fechas anteriores a marzo 2025)'
-
+    
             return Response({
                 'success': True,
                 'message': message,
@@ -555,16 +549,16 @@ class CirugiaViewSet(viewsets.ModelViewSet):
                 'creados': created_count,
                 'actualizados': updated_count,
                 'omitidas': fechas_omitidas,
-                'errores': len(errors),
-                'detalle_errores': errors[:20]
+                #'errores': len(errors),
+                'detalle_errores': errors  # Solo detalles completos
             }, status=status.HTTP_200_OK)
-
+    
         except Exception as e:
             return Response(
                 {'success': False, 'error': f"Error al procesar el archivo: {str(e)}"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
+    
     @action(detail=False, methods=['get'], url_path='exportar-todos')
     def exportar_todos(self, request):
         queryset = self.filter_queryset(

@@ -222,12 +222,7 @@
                                 <h6>Resumen de errores:</h6>
 
                                 <!-- Agrupar errores por tipo -->
-                                <div class="mb-3" v-if="erroresPorTipo.length">
-                                    <div v-for="(tipo, index) in erroresPorTipo" :key="index" class="mb-2">
-                                        <span class="badge bg-danger me-1">{{ tipo.count }}</span>
-                                        {{ tipo.message }}
-                                    </div>
-                                </div>
+                              
 
                                 <h6>Detalles completos:</h6>
                                 <ul class="list-unstyled">

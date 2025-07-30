@@ -94,7 +94,7 @@ class Cirugia(models.Model):
     iqx_realizada = models.CharField(max_length=100) 
     se_reprogramo = models.CharField(max_length=100)
     fecha_iqx_reprogramada = models.DateTimeField()
-    motivo_reprogramacion = models.DateTimeField()
+    motivo_reprogramacion = models.CharField(max_length=255, null=True, blank=True)  # <- Correcto
     fecha_realizada_iqx_reprogramada = models.DateTimeField()
     codigo_iqx_reprogramada = models.CharField(max_length=100)
     iqx_reprogramada = models.CharField(max_length=100)
@@ -106,12 +106,26 @@ class Cirugia(models.Model):
         return f"Cirugía {self.id} - {self.iqx_programada} - {self.fecha_iqx_programada.date()}"
  
     def clean(self):
-        fecha_limite = datetime(2025, 3, 1).date()
+        # Validación 1: si se reprogramó
+        if self.se_reprogramo and self.se_reprogramo.upper() == 'SI':
+            required_fields = [
+                'fecha_iqx_reprogramada',
+                'motivo_reprogramacion',
+                'fecha_realizada_iqx_reprogramada',
+                'codigo_iqx_reprogramada',
+                'iqx_reprogramada'
+            ]
+            for field in required_fields:
+                if not getattr(self, field):
+                    raise ValidationError({field: f"El campo '{field}' es requerido cuando se_reprogramo es 'SI'"})
         
-        if self.fecha_iqx_realizada.date() < fecha_limite:
-            raise ValidationError('La fecha de cita debe ser a partir del 1 de marzo de 2025')
-            
+        # Validación 2: fecha mínima
+        if self.fecha_iqx_realizada and self.fecha_iqx_realizada.date() < datetime(2025, 3, 1).date():
+            raise ValidationError({
+                'fecha_iqx_realizada': 'La fecha de cita debe ser a partir del 1 de marzo de 2025.'
+            })
+
     def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)        
+        self.full_clean()  # ejecuta `clean` automáticamente
+        super().save(*args, **kwargs)
         

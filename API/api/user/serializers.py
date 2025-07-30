@@ -61,6 +61,6 @@ class ConsultaExternaSerializer(serializers.ModelSerializer):
         
 class CirugiaSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ConsultaExterna
+        model = Cirugia
         fields = '__all__'
         read_only_fields = ('creado_por', 'fecha_creacion', 'fecha_actualizacion')
