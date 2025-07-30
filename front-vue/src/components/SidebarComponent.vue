@@ -166,19 +166,26 @@ const menuItems = computed(() => {
       path: '/reuniones',
       submenu: null
     },
-       {
+    {
       title: 'Consulta Externa',
       icon: 'fa-book',
       path: '/consulta-externa',
       submenu: null
     },
+      {
+      title: 'Cirugia',
+      icon: 'fa-book',
+      path: '/cirugia',
+      submenu: null
+    },
   ]
-  
-  // Si tiene acceso a Consulta Externa, mostrar solo Boletin
-  if (hasConsultaExternaAccess.value) {
-    return allItems.filter(item => item.title === 'Consulta Externa')
-  }
-  
+
+  // Si tiene acceso a Consulta Externa, mostrar solo Consulta Externa y Cirugia
+if (hasConsultaExternaAccess.value) {
+  return allItems.filter(item => ['Consulta Externa', 'Cirugia'].includes(item.title))
+}
+
+
   // Si no tiene acceso, mostrar todos los items excepto Boletin
   return allItems.filter(item => item.title !== 'Consulta Externa')
 })

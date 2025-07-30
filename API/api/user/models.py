@@ -44,7 +44,6 @@ class Directorio(models.Model):
         return f"{self.name} - {self.tipo}"
     
 class ConsultaExterna(models.Model):
-    
     tipo_seguro = models.CharField(max_length=70)
     fecha_nacimiento = models.DateField()
     sexo = models.CharField(max_length=1, choices=GENDER_CHOICES)
@@ -78,3 +77,41 @@ class ConsultaExterna(models.Model):
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
+        
+        
+
+class Cirugia(models.Model):
+    tipo_seguro = models.CharField(max_length=70)
+    fecha_nacimiento = models.DateField()
+    sexo = models.CharField(max_length=1, choices=GENDER_CHOICES)
+    lugar_procedencia = models.CharField(max_length=100)
+    n_hcl = models.CharField(max_length=20, verbose_name="Número de Historia Clínica")
+    fecha_iqx_programada = models.DateTimeField()
+    codigo_iqx_programada = models.CharField(max_length=100)
+    iqx_programada = models.CharField(max_length=100)
+    fecha_iqx_realizada = models.DateTimeField()
+    codigo_iqx_realizada = models.CharField(max_length=100)
+    iqx_realizada = models.CharField(max_length=100) 
+    se_reprogramo = models.CharField(max_length=100)
+    fecha_iqx_reprogramada = models.DateTimeField()
+    motivo_reprogramacion = models.DateTimeField()
+    fecha_realizada_iqx_reprogramada = models.DateTimeField()
+    codigo_iqx_reprogramada = models.CharField(max_length=100)
+    iqx_reprogramada = models.CharField(max_length=100)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+    creado_por = models.ForeignKey(User, on_delete=models.PROTECT, related_name='cirugias')
+
+    def __str__(self):
+        return f"Cirugía {self.id} - {self.iqx_programada} - {self.fecha_iqx_programada.date()}"
+ 
+    def clean(self):
+        fecha_limite = datetime(2025, 3, 1).date()
+        
+        if self.fecha_iqx_realizada.date() < fecha_limite:
+            raise ValidationError('La fecha de cita debe ser a partir del 1 de marzo de 2025')
+            
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)        
+        

@@ -5,6 +5,7 @@ from api.user.views import *
 
 router = DefaultRouter()
 router.register(r'consultas-externas', ConsultaExternaViewSet, basename='consulta-externa')
+router.register(r'cirugias', CirugiaViewSet, basename='cirugias')
 
 
 urlpatterns = [  

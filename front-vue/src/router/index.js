@@ -18,6 +18,7 @@ import EventosView from "../views/EventosView.vue";
 import EventosAdminView from "../views/EventosAdminView.vue";
 import ArchivosInteresView from "../views/ArchivosInteresView.vue";
 import ConsultaExternaView from "../views/modulos/ConsultaExternaView.vue";
+import CirugiaView from "../views/modulos/CirugiaView.vue";
 
 const routes = [
   {
@@ -165,6 +166,15 @@ const routes = [
     path: "/consulta-externa",
     name: "consulta-externa",
     component: ConsultaExternaView,
+    meta: {
+      title: "Boletin",
+      requiresAuth: true,
+    },
+  },
+     {
+    path: "/cirugia",
+    name: "cirugia",
+    component: CirugiaView,
     meta: {
       title: "Boletin",
       requiresAuth: true,
