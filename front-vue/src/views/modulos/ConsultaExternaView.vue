@@ -14,90 +14,28 @@
                     </div>
 
                     <transition name="slide-fade">
-                        <div v-if="mostrarEstructura" class="overflow-auto">
-                            <table class="table table-sm mt-2">
-                                <thead>
-                                    <tr>
-                                        <th># Columna</th>
-                                        <th>Campo</th>
-                                        <th>Requerido</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>0</td>
-                                        <td>Tipo de seguro</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>1</td>
-                                        <td>Fecha Nacimiento</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>2</td>
-                                        <td>Sexo (M/F)</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>3</td>
-                                        <td>Lugar de procedencia</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>4</td>
-                                        <td>Tipo de documento</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>5</td>
-                                        <td>N° de documento</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>6</td>
-                                        <td>N° HCL</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>7</td>
-                                        <td>Fecha y Hora de Cita Otorgada</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>8</td>
-                                        <td>Fecha y Hora de atención efectiva</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>9</td>
-                                        <td>Diagnóstico Médico</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>10</td>
-                                        <td>Dx CIE-10 Principal</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>11</td>
-                                        <td>Dx CIE-10 Secundario</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>12</td>
-                                        <td>Dx CIE-10 Terciario</td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td>13</td>
-                                        <td>Especialidad</td>
-                                        <td></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                            <small class="text-muted">Las columnas deben estar exactamente en este orden (comenzando
-                                desde 0)</small>
+                        <div v-if="mostrarEstructura" class="estructura-columnas">
+                            <DataTable :value="columnasEstructura" class="p-datatable-sm" :scrollable="true"
+                                scrollHeight="flex">
+                                <Column field="numero" header="#" headerStyle="width: 5%"></Column>
+                                <Column field="nombre" header="Campo"></Column>
+                                <Column field="requerido" header="Requerido" headerStyle="width: 10%">
+                                    <template #body="{ data }">
+                                        <span v-if="data.requerido" class="text-danger">*</span>
+                                    </template>
+                                </Column>
+                                <Column field="recomendacion" header="Recomendaciones"></Column>
+                            </DataTable>
+
+                            <div class="recomendaciones mt-2">
+                                <h6 class="fw-bold">📌 Recomendaciones importantes:</h6>
+                                <ul class="text-muted small">
+                                    <li>Las columnas deben estar exactamente en este orden (comenzando desde 0)</li>
+                                    <li>Formatos de fecha: DD/MM/YYYY o YYYY-MM-DD</li>
+                                    <li>Sexo debe ser 'M' o 'F'</li>
+                                    <li>Campos marcados con * son obligatorios</li>
+                                </ul>
+                            </div>
                         </div>
                     </transition>
                 </div>
@@ -139,9 +77,10 @@
                     </button>
                     <!-- Filtros -->
                     <div class="d-flex flex-wrap gap-2 align-items-center ms-md-auto">
-                        <div class="input-group" style="width: 150px;">
+                        <div class="input-group" style="width: 200px;">
                             <span class="input-group-text bg-white"><i class="bi bi-calendar"></i></span>
                             <select class="form-select" v-model="filtroAnio" @change="cargarRegistros">
+                                <option :value="null">Todos los años</option>
                                 <option v-for="year in [...new Set(mesesDisponibles.map(item => item.year))]"
                                     :key="year" :value="year">
                                     {{ year }}
@@ -151,8 +90,11 @@
 
                         <div class="input-group" style="width: 150px;">
                             <span class="input-group-text bg-white"><i class="bi bi-filter"></i></span>
-                            <select class="form-select" v-model="filtroMes" @change="cargarRegistros">
-                                <option v-for="month in mesesDisponibles.filter(item => item.year === filtroAnio)"
+                            <select class="form-select" v-model="filtroMes" @change="cargarRegistros"
+                                :disabled="!filtroAnio">
+                                <option :value="null">Todos</option>
+                                <option
+                                    v-for="month in mesesDisponibles.filter(item => !filtroAnio || item.year === filtroAnio)"
                                     :key="`${month.year}-${month.month}`" :value="month.month">
                                     {{ getMonthName(month.month) }}
                                 </option>
@@ -202,16 +144,6 @@
 
                         <transition name="slide-fade">
                             <div v-if="mostrarErrores" class="mt-2">
-                                <h6>Resumen de errores:</h6>
-
-                                <!-- Agrupar errores por tipo -->
-                                <div class="mb-3" v-if="erroresPorTipo.length">
-                                    <div v-for="(tipo, index) in erroresPorTipo" :key="index" class="mb-2">
-                                        <span class="badge bg-danger me-1">{{ tipo.count }}</span>
-                                        {{ tipo.message }}
-                                    </div>
-                                </div>
-
                                 <h6>Detalles completos:</h6>
                                 <ul class="list-unstyled">
                                     <li v-for="(error, index) in importResult.detalle_errores" :key="index"
@@ -231,176 +163,131 @@
                         <h5 class="card-title mb-2 mb-md-0">Registros Importados ({{ totalRegistros.toLocaleString() }})
                         </h5>
 
-                        <div class="d-flex flex-column flex-md-row gap-2">
-                            <div class="input-group" style="max-width: 300px;">
-                                <span class="input-group-text"><i class="bi bi-search"></i></span>
-                                <input type="text" class="form-control" placeholder="Buscar..." v-model="busqueda"
-                                    @input="handleSearchInput">
-                                <button class="btn btn-outline-secondary" type="button" @click="resetBusqueda"
-                                    :disabled="!busqueda">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </div>
-
-                            <select class="form-select" v-model="itemsPorPagina" @change="cargarRegistros"
-                                style="max-width: 150px;">
-                                <option value="10">10 por página</option>
-                                <option value="25">25 por página</option>
-                                <option value="50">50 por página</option>
-                                <option value="100">100 por página</option>
-                                <option value="200">200 por página</option>
-                            </select>
-                        </div>
                     </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-striped table-hover table-sm">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Tipo Seguro</th>
-                                    <th>Fecha Nacimiento</th>
-                                    <th>N° Documento</th>
-                                    <th>fecha_hora_cita_otorgada</th>
-                                    <th>Fecha Atención</th>
-                                    <th>Especialidad</th>
-                                    <th>Diagnóstico</th>
-                                    <th class="text-end">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="item in registros" :key="item.id">
-                                    <td>{{ item.tipo_seguro || 'N/A' }}</td>
-                                    <td>{{ formatFecha(item.fecha_nacimiento) }}</td>
+                  <DataTable
+  :value="registros"
+  :paginator="true"
+  :rows="itemsPorPagina"
+  :totalRecords="totalRegistros"
+  :loading="loading"
+  :rowsPerPageOptions="[10, 25, 50, 100, 200]"
+  paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+  currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
+  @page="onPageChange"
+  :expandedRows.sync="expandedRows"
+  responsiveLayout="stack"
+  rowHover
+  class="p-datatable-sm"
+>
 
-                                    <td>{{ item.documento }}</td>
-                                    <td>{{ formatDateTime(item.fecha_hora_cita_otorgada) }}</td>
-                                    <td>{{ formatDateTime(item.fecha_hora_atencion) }}</td>
-                                    <td>{{ item.especialidad || 'N/A' }}</td>
-                                    <td>
-                                        <span v-if="item.diagnostico_medico" :title="item.diagnostico_medico">
-                                            {{ truncateText(item.diagnostico_medico, 30) }}
-                                        </span>
-                                        <span v-else>N/A</span>
-                                    </td>
-                                    <td class="text-end">
-                                        <button class="btn btn-sm btn-outline-primary" @click="verDetalle(item)">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div v-if="registros.length === 0" class="text-center py-4">
-                        <div class="alert alert-info">
-                            No se encontraron registros. Importe un archivo Excel para comenzar.
-                        </div>
-                    </div>
-
-                    <!-- Paginación mejorada -->
-                    <nav aria-label="Paginación" class="mt-3" v-if="paginacion.total_pages > 1">
-                        <ul class="pagination justify-content-center flex-wrap">
-                            <li class="page-item" :class="{ disabled: paginacion.current_page === 1 }">
-                                <button class="page-link" @click="cambiarPagina(1)"
-                                    :disabled="paginacion.current_page === 1">
-                                    <i class="bi bi-chevron-double-left"></i>
-                                </button>
-                            </li>
-                            <li class="page-item" :class="{ disabled: paginacion.current_page === 1 }">
-                                <button class="page-link" @click="cambiarPagina(paginacion.current_page - 1)"
-                                    :disabled="paginacion.current_page === 1">
-                                    <i class="bi bi-chevron-left"></i>
-                                </button>
-                            </li>
-
-                            <!-- Mostrar páginas cercanas a la actual -->
-                            <template v-for="page in paginasVisibles" :key="page">
-                                <li class="page-item" :class="{ active: paginacion.current_page === page }">
-                                    <button class="page-link" @click="cambiarPagina(page)">
-                                        {{ page }}
-                                    </button>
-                                </li>
+                        <!-- Columna enumeradora -->
+                        <Column header="N°" headerStyle="width: 1rem">
+                            <template #body="slotProps">
+                                {{ slotProps.index + 1 }}
                             </template>
+                        </Column>
 
-                            <li class="page-item"
-                                :class="{ disabled: paginacion.current_page === paginacion.total_pages }">
-                                <button class="page-link" @click="cambiarPagina(paginacion.current_page + 1)"
-                                    :disabled="paginacion.current_page === paginacion.total_pages">
-                                    <i class="bi bi-chevron-right"></i>
-                                </button>
-                            </li>
-                            <li class="page-item"
-                                :class="{ disabled: paginacion.current_page === paginacion.total_pages }">
-                                <button class="page-link" @click="cambiarPagina(paginacion.total_pages)"
-                                    :disabled="paginacion.current_page === paginacion.total_pages">
-                                    <i class="bi bi-chevron-double-right"></i>
-                                </button>
-                            </li>
-                        </ul>
+                        <Column field="tipo_seguro" header="Tipo Seguro">
+                            <template #body="{ data }">
+                                {{ data.tipo_seguro || 'N/A' }}
+                            </template>
+                        </Column>
 
-                        <div class="text-center text-muted">
-                            Página {{ paginacion.current_page }} de {{ paginacion.total_pages }}
-                            (Mostrando {{ registros.length }} de {{ totalRegistros.toLocaleString() }} registros)
-                        </div>
-                    </nav>
+                        <Column field="fecha_nacimiento" header="Fecha Nacimiento">
+                            <template #body="{ data }">
+                                {{ formatFecha(data.fecha_nacimiento) }}
+                            </template>
+                        </Column>
+                        <Column field="sexo" header="Sexo">
+                            <template #body="{ data }">
+                                {{ data.sexo || 'N/A' }}
+                            </template>
+                        </Column>
+                          <Column field="lugar_procedencia" header="Lugar Procedencia">
+                            <template #body="{ data }">
+                                {{ data.lugar_procedencia || 'N/A' }}
+                            </template>
+                        </Column>
+                        <Column field="fecha_hora_cita_otorgada" header="Cita Otorgada">
+                            <template #body="{ data }">
+                                {{ formatDateTime(data.fecha_hora_cita_otorgada) }}
+                            </template>
+                        </Column>
+
+                        <Column field="fecha_hora_atencion" header="Fecha Atención">
+                            <template #body="{ data }">
+                                {{ formatDateTime(data.fecha_hora_atencion) }}
+                            </template>
+                        </Column>
+
+                        <Column field="diagnostico_medico" header="Diagnóstico">
+                            <template #body="{ data }">
+                                {{ data.diagnostico_medico || 'N/A' }}
+                            </template>
+                        </Column>
+                        <Column field="dx_CIE_10_1" header="dx_CIE_10_1">
+                            <template #body="{ data }">
+                                {{ data.dx_CIE_10_1 || 'N/A' }}
+                            </template>
+                        </Column>
+                        <Column field="dx_CIE_10_2" header="dx_CIE_10_2">
+                            <template #body="{ data }">
+                                {{ data.dx_CIE_10_2 || 'N/A' }}
+                            </template>
+                        </Column>
+                        <Column field="dx_CIE_10_3" header="dx_CIE_10_3">
+                            <template #body="{ data }">
+                                {{ data.dx_CIE_10_3 || 'N/A' }}
+                            </template>
+                        </Column>
+
+                        <Column field="especialidad" header="Especialidad">
+                            <template #body="{ data }">
+                                {{ data.especialidad || 'N/A' }}
+                            </template>
+                        </Column>
+                        <template #empty>
+                            <div class="text-center py-4">
+                                <Message severity="info">
+                                    No se encontraron registros. Importe un archivo Excel para comenzar.
+                                </Message>
+                            </div>
+                        </template>
+                    </DataTable>
+                    
                 </div>
             </div>
         </div>
 
-        <!-- Modal de detalle -->
-        <div class="modal fade" id="detalleModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Detalle de Consulta Externa</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div v-if="registroSeleccionado" class="row">
-                            <div class="col-md-6">
-                                <p><strong>Documento:</strong> {{ registroSeleccionado.documento }}</p>
-                                <p><strong>Tipo de Seguro:</strong> {{ registroSeleccionado.tipo_seguro || 'N/A' }}</p>
-                                <p><strong>Fecha Nacimiento:</strong> {{
-                                    formatFecha(registroSeleccionado.fecha_nacimiento) }}
-                                </p>
-                                <p><strong>Sexo:</strong> {{ registroSeleccionado.sexo || 'N/A' }}</p>
-                                <p><strong>Procedencia:</strong> {{ registroSeleccionado.lugar_procedencia || 'N/A' }}
-                                </p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Fecha Cita:</strong> {{ formatDateTime(registroSeleccionado.fecha_hora_cita)
-                                    }}</p>
-                                <p><strong>Fecha Atención:</strong> {{
-                                    formatDateTime(registroSeleccionado.fecha_hora_atencion)
-                                    }}</p>
-                                <p><strong>Especialidad:</strong> {{ registroSeleccionado.especialidad || 'N/A' }}</p>
-                                <p><strong>CIE-10 Principal:</strong> {{ registroSeleccionado.dx_cie10_principal ||
-                                    'N/A' }}</p>
-                            </div>
-                            <div class="col-12 mt-3" v-if="registroSeleccionado.diagnostico_medico">
-                                <p class="fw-bold">Diagnóstico Médico:</p>
-                                <div class="border p-2 bg-light">
-                                    {{ registroSeleccionado.diagnostico_medico }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </main>
 </template>
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { api } from '@/components/services/auth_axios'
 import { debounce } from 'lodash'
-import { Modal } from 'bootstrap'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
+
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import ColumnGroup from 'primevue/columngroup';   // optional
+import Row from 'primevue/row';                   // optional
+
+const columnasEstructura = ref([
+    { numero: 0, nombre: 'Tipo de seguro', requerido: true, recomendacion: 'Ej: SIS, ESSALUD, Privado' },
+    { numero: 1, nombre: 'Fecha Nacimiento', requerido: false, recomendacion: 'Formato DD/MM/YYYY' },
+    { numero: 2, nombre: 'Sexo (M/F)', requerido: false, recomendacion: 'Solo "M" o "F"' },
+    { numero: 3, nombre: 'Lugar de procedencia', requerido: false, recomendacion: 'Ej: Lima, Arequipa' },
+    { numero: 4, nombre: 'N° HCL', requerido: false, recomendacion: 'Número de historia clínica' },
+    { numero: 5, nombre: 'Fecha y Hora de Cita Otorgada', requerido: true, recomendacion: 'Formato DD/MM/YYYY HH:MM' },
+    { numero: 6, nombre: 'Fecha y Hora de atención efectiva', requerido: true, recomendacion: 'Formato DD/MM/YYYY HH:MM' },
+    { numero: 7, nombre: 'Diagnóstico Médico', requerido: false, recomendacion: 'Descripción textual' },
+    { numero: 8, nombre: 'Dx CIE-10 Principal', requerido: false, recomendacion: 'Código CIE-10' },
+    { numero: 9, nombre: 'Dx CIE-10 Secundario', requerido: false, recomendacion: 'Opcional' },
+    { numero: 10, nombre: 'Dx CIE-10 Terciario', requerido: false, recomendacion: 'Opcional' },
+    { numero: 11, nombre: 'Especialidad', requerido: false, recomendacion: 'Ej: Cardiología, Pediatría' }
+]);
 
 // Variables para estructura desplegable
 const mostrarEstructura = ref(false)
@@ -433,7 +320,6 @@ const importResult = ref(null)
 
 // Variables para listado
 const registros = ref([])
-const registroSeleccionado = ref(null)
 const busqueda = ref('')
 const itemsPorPagina = ref(25)
 const totalRegistros = ref(0)
@@ -460,26 +346,17 @@ const debouncedSearch = debounce(() => {
     cargarRegistros()
 }, 500)
 
-// Función para manejar el input directamente
-const onSearchInput = () => {
-    // Si el campo está vacío, buscar inmediatamente
-    if (busqueda.value.trim() === '') {
-        debouncedSearch.cancel() // Cancela cualquier búsqueda pendiente
-        paginacion.value.current_page = 1
-        cargarRegistros()
-    }
-}
+
 // Agrega este método para cargar los meses disponibles
 const cargarMesesDisponibles = async () => {
     try {
         const response = await api.get('/user/consultas-externas/meses-disponibles/')
         mesesDisponibles.value = response.data
 
-        // Si hay datos, establecer el primer mes como seleccionado por defecto
-        if (mesesDisponibles.value.length > 0) {
-            filtroAnio.value = mesesDisponibles.value[0].year
-            filtroMes.value = mesesDisponibles.value[0].month
-        }
+        // Elimina la selección automática del primer mes/año
+        filtroAnio.value = null
+        filtroAnio.value = null
+        filtroMes.value = null
     } catch (error) {
         console.error('Error cargando meses disponibles:', error)
     }
@@ -587,51 +464,7 @@ const exportToExcel = async () => {
         loading.value = false
     }
 }
-// Modal
-let detalleModal = null
-onMounted(() => {
-    detalleModal = new Modal(document.getElementById('detalleModal'))
-})
-// Computed para agrupar errores similares
-const erroresPorTipo = computed(() => {
-    if (!importResult.value?.detalle_errores) return []
 
-    const errores = importResult.value.detalle_errores
-    const resumen = {}
-
-    errores.forEach(error => {
-        // Extraer el tipo de error (primera parte del mensaje)
-        const tipo = error.split(':')[0] || 'Error desconocido'
-        resumen[tipo] = (resumen[tipo] || 0) + 1
-    })
-
-    return Object.entries(resumen).map(([message, count]) => ({
-        message,
-        count
-    })).sort((a, b) => b.count - a.count)
-})
-// Computed para paginación inteligente
-const paginasVisibles = computed(() => {
-    const current = paginacion.value.current_page
-    const total = paginacion.value.total_pages
-    const range = 2 // Cuántas páginas mostrar alrededor de la actual
-    let start = Math.max(1, current - range)
-    let end = Math.min(total, current + range)
-
-    // Ajustar si estamos cerca del inicio o final
-    if (current <= range + 1) {
-        end = Math.min(2 * range + 1, total)
-    }
-    if (current >= total - range) {
-        start = Math.max(total - 2 * range, 1)
-    }
-
-    const pages = []
-    for (let i = start; i <= end; i++) {
-        pages.push(i)
-    }
-    return pages
-})
 
 // Métodos para importación
 const handleFileChange = (event) => {
@@ -714,14 +547,12 @@ const cargarRegistros = async () => {
         const params = {
             page: paginacion.value.current_page,
             page_size: itemsPorPagina.value,
-            search: busqueda.value.trim() // Asegurarse de enviar el valor sin espacios
+            search: busqueda.value.trim()
         }
 
-        // Agregar filtros de mes y año si están seleccionados
-        if (filtroAnio.value) {
+        // Solo agregar filtros si están seleccionados explícitamente
+        if (filtroAnio.value && filtroMes.value) {
             params.year = filtroAnio.value
-        }
-        if (filtroMes.value) {
             params.month = filtroMes.value
         }
 
@@ -737,25 +568,6 @@ const cargarRegistros = async () => {
     }
 }
 
-// Debounce para búsqueda
-const debounceBuscar = debounce(() => {
-    paginacion.value.current_page = 1
-    cargarRegistros()
-}, 500)
-
-const resetBusqueda = () => {
-    busqueda.value = ''
-    paginacion.value.current_page = 1
-}
-
-const cambiarPagina = (page) => {
-    if (page >= 1 && page <= paginacion.value.total_pages) {
-        paginacion.value.current_page = page
-        cargarRegistros()
-        // Scroll suave hacia arriba
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-}
 
 // Métodos para formato y utilidades
 const formatFecha = (fecha) => {
@@ -775,46 +587,35 @@ const formatDateTime = (fecha) => {
     return new Date(fecha).toLocaleString('es-ES', options)
 }
 
-const truncateText = (text, maxLength) => {
-    if (!text) return ''
-    return text.length > maxLength
-        ? text.substring(0, maxLength) + '...'
-        : text
-}
-
-const verDetalle = (registro) => {
-    registroSeleccionado.value = registro
-    detalleModal.show()
-}
 // Método para descargar la plantilla de ejemplo
 const descargarPlantilla = () => {
-  try {
-    // Ruta al archivo en la carpeta public
-    const url = '/docs/data_masiva.xlsx'
-    
-    // Crear un enlace temporal
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'plantilla_consultas_externas.xlsx' // Nombre del archivo al descargar
-    link.target = '_blank'
-    
-    // Simular click en el enlace
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
-    // Opcional: Mostrar mensaje de éxito
-    importResult.value = {
-      success: true,
-      message: 'Plantilla descargada correctamente'
+    try {
+        // Ruta al archivo en la carpeta public
+        const url = '/docs/data_masiva.xlsx'
+
+        // Crear un enlace temporal
+        const link = document.createElement('a')
+        link.href = url
+        link.download = 'plantilla_consultas_externas.xlsx' // Nombre del archivo al descargar
+        link.target = '_blank'
+
+        // Simular click en el enlace
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+
+        // Opcional: Mostrar mensaje de éxito
+        importResult.value = {
+            success: true,
+            message: 'Plantilla descargada correctamente'
+        }
+    } catch (error) {
+        console.error('Error al descargar plantilla:', error)
+        importResult.value = {
+            success: false,
+            message: 'Error al descargar la plantilla'
+        }
     }
-  } catch (error) {
-    console.error('Error al descargar plantilla:', error)
-    importResult.value = {
-      success: false,
-      message: 'Error al descargar la plantilla'
-    }
-  }
 }
 // Cargar datos iniciales
 onMounted(async () => {
@@ -826,14 +627,14 @@ onMounted(async () => {
 <style scoped>
 /* Estilos para el acordeón */
 .btn-info {
-  background-color: #17a2b8;
-  border-color: #17a2b8;
-  color: white;
+    background-color: #17a2b8;
+    border-color: #17a2b8;
+    color: white;
 }
 
 .btn-info:hover {
-  background-color: #138496;
-  border-color: #117a8b;
+    background-color: #138496;
+    border-color: #117a8b;
 }
 
 .cursor-pointer {

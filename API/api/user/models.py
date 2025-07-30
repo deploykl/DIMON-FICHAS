@@ -48,8 +48,6 @@ class ConsultaExterna(models.Model):
     fecha_nacimiento = models.DateField()
     sexo = models.CharField(max_length=1, choices=GENDER_CHOICES)
     lugar_procedencia = models.CharField(max_length=100)
-    tipo_documento = models.CharField(max_length=50)
-    documento = models.CharField(max_length=20)
     n_hcl = models.CharField(max_length=20, verbose_name="Número de Historia Clínica")
     fecha_hora_cita_otorgada = models.DateTimeField()
     fecha_hora_atencion = models.DateTimeField()
@@ -79,7 +77,6 @@ class ConsultaExterna(models.Model):
         super().save(*args, **kwargs)
         
         
-
 class Cirugia(models.Model):
     tipo_seguro = models.CharField(max_length=70)
     fecha_nacimiento = models.DateField()
