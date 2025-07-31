@@ -170,7 +170,7 @@
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} registros"
                         @page="onPageChange" :expandedRows.sync="expandedRows" responsiveLayout="stack" rowHover
-                        class="p-datatable-sm">
+                        class="p-datatable-sm small-font-table">
 
                         <!-- Columna enumeradora -->
                         <Column header="N°" headerStyle="width: 1rem">
@@ -617,6 +617,9 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.small-font-table {
+  font-size: 0.85rem; /* Tamaño más pequeño que el estándar */
+}
 /* Estilos para el acordeón */
 .btn-info {
     background-color: #17a2b8;

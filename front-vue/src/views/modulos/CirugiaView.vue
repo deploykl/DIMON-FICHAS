@@ -222,7 +222,12 @@
                                 <h6>Resumen de errores:</h6>
 
                                 <!-- Agrupar errores por tipo -->
-                              
+                                <div class="mb-3" v-if="erroresPorTipo.length">
+                                    <div v-for="(tipo, index) in erroresPorTipo" :key="index" class="mb-2">
+                                        <span class="badge bg-danger me-1">{{ tipo.count }}</span>
+                                        {{ tipo.message }}
+                                    </div>
+                                </div>
 
                                 <h6>Detalles completos:</h6>
                                 <ul class="list-unstyled">
@@ -289,6 +294,7 @@
                                     <th>Fecha Creación</th>
                                     <th>Fecha Actualización</th>
                                     <th>Creado por</th>
+                                    <th class="text-end">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -313,6 +319,11 @@
                                     <td>{{ formatDateTime(item.fecha_creacion) }}</td>
                                     <td>{{ formatDateTime(item.fecha_actualizacion) }}</td>
                                     <td>{{ item.creado_por?.username || 'N/A' }}</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-primary" @click="verDetalle(item)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>

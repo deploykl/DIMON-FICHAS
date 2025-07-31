@@ -231,7 +231,7 @@ class ConsultaExternaViewSet(viewsets.ModelViewSet):
     queryset = ConsultaExterna.objects.all()
     serializer_class = ConsultaExternaSerializer
     parser_classes = [MultiPartParser, FormParser]
-    pagination_class = LargeResultsSetPagination
+    pagination_class = LargeResultsSetPagination  # Esto sobrescribe la configuración global
 
     def get_queryset(self):
         queryset = super().get_queryset()
