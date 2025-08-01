@@ -87,9 +87,10 @@
                     </button>
                     <!-- Filtros -->
                     <div class="d-flex flex-wrap gap-2 align-items-center ms-md-auto">
-                        <div class="input-group" style="width: 150px;">
+                        <div class="input-group" style="width: 200px;">
                             <span class="input-group-text bg-white"><i class="bi bi-calendar"></i></span>
                             <select class="form-select" v-model="filtroAnio" @change="cargarRegistros">
+                                <option :value="null">Todos los años</option>
                                 <option v-for="year in [...new Set(mesesDisponibles.map(item => item.year))]"
                                     :key="year" :value="year">
                                     {{ year }}
@@ -99,8 +100,11 @@
 
                         <div class="input-group" style="width: 150px;">
                             <span class="input-group-text bg-white"><i class="bi bi-filter"></i></span>
-                            <select class="form-select" v-model="filtroMes" @change="cargarRegistros">
-                                <option v-for="month in mesesDisponibles.filter(item => item.year === filtroAnio)"
+                            <select class="form-select" v-model="filtroMes" @change="cargarRegistros"
+                                :disabled="!filtroAnio">
+                                <option :value="null">Todos</option>
+                                <option
+                                    v-for="month in mesesDisponibles.filter(item => !filtroAnio || item.year === filtroAnio)"
                                     :key="`${month.year}-${month.month}`" :value="month.month">
                                     {{ getMonthName(month.month) }}
                                 </option>
@@ -193,9 +197,9 @@
                         :globalFilterFields="camposBusqueda">
 
                         <!-- Columna enumeradora -->
-                        <Column header="N°" headerStyle="width: 3rem">
+                        <Column header="N°" headerStyle="width: 1rem">
                             <template #body="slotProps">
-                                {{ slotProps.index + 1 + (paginacion.current_page - 1) * paginacion.per_page }}
+                                {{ slotProps.index + 1 }}
                             </template>
                         </Column>
 
@@ -585,25 +589,6 @@ const exportToExcel = async () => {
     }
 }
 
-// Computed para agrupar errores similares
-const erroresPorTipo = computed(() => {
-    if (!importResult.value?.detalle_errores) return []
-
-    const errores = importResult.value.detalle_errores
-    const resumen = {}
-
-    errores.forEach(error => {
-        // Extraer el tipo de error (primera parte del mensaje)
-        const tipo = error.split(':')[0] || 'Error desconocido'
-        resumen[tipo] = (resumen[tipo] || 0) + 1
-    })
-
-    return Object.entries(resumen).map(([message, count]) => ({
-        message,
-        count
-    })).sort((a, b) => b.count - a.count)
-})
-// Computed para paginación inteligente
 // Métodos para importación
 const handleFileChange = (event) => {
     file.value = event.target.files[0]
@@ -766,7 +751,9 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Estilos para el acordeón */
+.table {
+    font-size: 0.85rem;
+}
 .btn-info {
     background-color: #17a2b8;
     border-color: #17a2b8;
