@@ -1,7 +1,7 @@
 import qrcode
 
 # Enlace
-url = "http://172.27.0.222:8080/"
+url = "http://172.27.0.200:8081/reuniones"
 
 # Crear el objeto QR
 qr = qrcode.QRCode(
