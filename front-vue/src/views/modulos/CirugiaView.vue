@@ -21,99 +21,30 @@
                                         <th># Columna</th>
                                         <th>Campo</th>
                                         <th>Requerido</th>
+                                        <th>Recomendaciones</th> <!-- Columna añadida -->
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>0</td>
-                                        <td>Tipo de Seguro</td>
-                                        <td><span class="text-danger">*</span></td>
+                                    <tr v-for="columna in columnasEstructura" :key="columna.numero">
+                                        <td>{{ columna.numero }}</td>
+                                        <td>{{ columna.nombre }}</td>
+                                        <td>
+                                            <span v-if="columna.requerido" class="text-danger">*</span>
+                                        </td>
+                                        <td class="small text-muted">{{ columna.recomendacion }}</td>
                                     </tr>
-                                    <tr>
-                                        <td>1</td>
-                                        <td>Fecha de Nacimiento</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>2</td>
-                                        <td>Sexo (M/F)</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>3</td>
-                                        <td>Lugar de Procedencia</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>4</td>
-                                        <td>Número de Historia Clínica</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>5</td>
-                                        <td>Fecha y Hora IQX Programada</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>6</td>
-                                        <td>Código IQX Programada</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>7</td>
-                                        <td>IQX Programada</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>8</td>
-                                        <td>Fecha y Hora IQX Realizada</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>9</td>
-                                        <td>Código IQX Realizada</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>10</td>
-                                        <td>IQX Realizada</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>11</td>
-                                        <td>¿Se Reprogramó? (Sí/No)</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>12</td>
-                                        <td>Fecha y Hora IQX Reprogramada</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>13</td>
-                                        <td>Motivo de Reprogramación (fecha)</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>14</td>
-                                        <td>Fecha Realizada IQX Reprogramada</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>15</td>
-                                        <td>Código IQX Reprogramada</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>16</td>
-                                        <td>IQX Reprogramada</td>
-                                        <td><span class="text-danger">*</span></td>
-                                    </tr>
-
                                 </tbody>
                             </table>
-                            <small class="text-muted">Las columnas deben estar exactamente en este orden (comenzando
-                                desde 0).</small>
+
+                            <div class="recomendaciones mt-2">
+                                <h6 class="fw-bold">📌 Recomendaciones importantes:</h6>
+                                <ul class="text-muted small">
+                                    <li>Las columnas deben estar exactamente en este orden (comenzando desde 0)</li>
+                                    <li>Formatos de fecha: DD/MM/YYYY o YYYY-MM-DD</li>
+                                    <li>Sexo debe ser 'M' o 'F'</li>
+                                    <li>Campos marcados con * son obligatorios</li>
+                                </ul>
+                            </div>
                         </div>
                     </transition>
 
@@ -156,9 +87,10 @@
                     </button>
                     <!-- Filtros -->
                     <div class="d-flex flex-wrap gap-2 align-items-center ms-md-auto">
-                        <div class="input-group" style="width: 150px;">
+                        <div class="input-group" style="width: 200px;">
                             <span class="input-group-text bg-white"><i class="bi bi-calendar"></i></span>
                             <select class="form-select" v-model="filtroAnio" @change="cargarRegistros">
+                                <option :value="null">Todos los años</option>
                                 <option v-for="year in [...new Set(mesesDisponibles.map(item => item.year))]"
                                     :key="year" :value="year">
                                     {{ year }}
@@ -168,8 +100,11 @@
 
                         <div class="input-group" style="width: 150px;">
                             <span class="input-group-text bg-white"><i class="bi bi-filter"></i></span>
-                            <select class="form-select" v-model="filtroMes" @change="cargarRegistros">
-                                <option v-for="month in mesesDisponibles.filter(item => item.year === filtroAnio)"
+                            <select class="form-select" v-model="filtroMes" @change="cargarRegistros"
+                                :disabled="!filtroAnio">
+                                <option :value="null">Todos</option>
+                                <option
+                                    v-for="month in mesesDisponibles.filter(item => !filtroAnio || item.year === filtroAnio)"
                                     :key="`${month.year}-${month.month}`" :value="month.month">
                                     {{ getMonthName(month.month) }}
                                 </option>
@@ -184,6 +119,7 @@
                     </div>
                 </div>
 
+                <!-- Resultados de importación -->
                 <!-- Resultados de importación -->
                 <div v-if="importResult" class="mt-3 alert"
                     :class="importResult.success ? 'alert-success' : 'alert-danger'">
@@ -211,6 +147,7 @@
                             </div>
                         </div>
                     </template>
+                    // En tu template, cambia esto:
                     <div v-if="importResult.detalle_errores && importResult.detalle_errores.length" class="mt-2">
                         <button class="btn btn-sm btn-outline-danger" @click="toggleErrores">
                             {{ mostrarErrores ? 'Ocultar' : 'Mostrar' }} detalles de errores ({{ importResult.errores
@@ -219,6 +156,7 @@
 
                         <transition name="slide-fade">
                             <div v-if="mostrarErrores" class="mt-2">
+<<<<<<< HEAD
                                 <h6>Resumen de errores:</h6>
 
                                 <!-- Agrupar errores por tipo -->
@@ -229,6 +167,8 @@
                                     </div>
                                 </div>
 
+=======
+>>>>>>> 6e8f101d1a5b6c2c722f1feeaf27bbd6f0d4c047
                                 <h6>Detalles completos:</h6>
                                 <ul class="list-unstyled">
                                     <li v-for="(error, index) in importResult.detalle_errores" :key="index"
@@ -241,6 +181,7 @@
                         </transition>
                     </div>
                 </div>
+
 
                 <!-- Listado de registros -->
                 <div class="mt-5">
@@ -258,15 +199,6 @@
                                     <i class="bi bi-x-lg"></i>
                                 </button>
                             </div>
-
-                            <select class="form-select" v-model="itemsPorPagina" @change="cargarRegistros"
-                                style="max-width: 150px;">
-                                <option value="10">10 por página</option>
-                                <option value="25">25 por página</option>
-                                <option value="50">50 por página</option>
-                                <option value="100">100 por página</option>
-                                <option value="200">200 por página</option>
-                            </select>
                         </div>
                     </div>
 
@@ -328,60 +260,141 @@
                             </tbody>
                         </table>
 
-                    </div>
-
-                    <div v-if="registros.length === 0" class="text-center py-4">
-                        <div class="alert alert-info">
-                            No se encontraron registros. Importe un archivo Excel para comenzar.
-                        </div>
-                    </div>
-
-                    <!-- Paginación mejorada -->
-                    <nav aria-label="Paginación" class="mt-3" v-if="paginacion.total_pages > 1">
-                        <ul class="pagination justify-content-center flex-wrap">
-                            <li class="page-item" :class="{ disabled: paginacion.current_page === 1 }">
-                                <button class="page-link" @click="cambiarPagina(1)"
-                                    :disabled="paginacion.current_page === 1">
-                                    <i class="bi bi-chevron-double-left"></i>
-                                </button>
-                            </li>
-                            <li class="page-item" :class="{ disabled: paginacion.current_page === 1 }">
-                                <button class="page-link" @click="cambiarPagina(paginacion.current_page - 1)"
-                                    :disabled="paginacion.current_page === 1">
-                                    <i class="bi bi-chevron-left"></i>
-                                </button>
-                            </li>
-
-                            <!-- Mostrar páginas cercanas a la actual -->
-                            <template v-for="page in paginasVisibles" :key="page">
-                                <li class="page-item" :class="{ active: paginacion.current_page === page }">
-                                    <button class="page-link" @click="cambiarPagina(page)">
-                                        {{ page }}
-                                    </button>
-                                </li>
+                        <!-- Columna enumeradora -->
+                        <Column header="N°" headerStyle="width: 1rem">
+                            <template #body="slotProps">
+                                {{ slotProps.index + 1 }}
                             </template>
+                        </Column>
 
-                            <li class="page-item"
-                                :class="{ disabled: paginacion.current_page === paginacion.total_pages }">
-                                <button class="page-link" @click="cambiarPagina(paginacion.current_page + 1)"
-                                    :disabled="paginacion.current_page === paginacion.total_pages">
-                                    <i class="bi bi-chevron-right"></i>
-                                </button>
-                            </li>
-                            <li class="page-item"
-                                :class="{ disabled: paginacion.current_page === paginacion.total_pages }">
-                                <button class="page-link" @click="cambiarPagina(paginacion.total_pages)"
-                                    :disabled="paginacion.current_page === paginacion.total_pages">
-                                    <i class="bi bi-chevron-double-right"></i>
-                                </button>
-                            </li>
-                        </ul>
+                        <Column field="tipo_seguro" header="Tipo Seguro">
+                            <template #body="{ data }">
+                                {{ data.tipo_seguro || 'N/A' }}
+                            </template>
+                        </Column>
 
-                        <div class="text-center text-muted">
-                            Página {{ paginacion.current_page }} de {{ paginacion.total_pages }}
-                            (Mostrando {{ registros.length }} de {{ totalRegistros.toLocaleString() }} registros)
-                        </div>
-                    </nav>
+                        <Column field="fecha_nacimiento" header="Fecha Nacimiento">
+                            <template #body="{ data }">
+                                {{ formatFecha(data.fecha_nacimiento) }}
+                            </template>
+                        </Column>
+
+                        <Column field="sexo" header="Sexo" headerStyle="width: 5rem">
+                            <template #body="{ data }">
+                                {{ data.sexo || 'N/A' }}
+                            </template>
+                        </Column>
+
+                        <Column field="lugar_procedencia" header="Lugar Procedencia">
+                            <template #body="{ data }">
+                                {{ data.lugar_procedencia || 'N/A' }}
+                            </template>
+                        </Column>
+
+                        <Column field="n_hcl" header="N° HCL" headerStyle="width: 7rem">
+                            <template #body="{ data }">
+                                {{ data.n_hcl || 'N/A' }}
+                            </template>
+                        </Column>
+
+                        <Column field="fecha_iqx_programada" header="Fecha IQX Programada">
+                            <template #body="{ data }">
+                                {{ formatDateTime(data.fecha_iqx_programada) }}
+                            </template>
+                        </Column>
+
+                        <Column field="codigo_iqx_programada" header="Código IQX Prog." headerStyle="width: 8rem">
+                            <template #body="{ data }">
+                                {{ data.codigo_iqx_programada || 'N/A' }}
+                            </template>
+                        </Column>
+
+                        <Column field="iqx_programada" header="IQX Programada">
+                            <template #body="{ data }">
+                                {{ data.iqx_programada || 'N/A' }}
+                            </template>
+                        </Column>
+
+                        <Column field="fecha_iqx_realizada" header="Fecha IQX Realizada">
+                            <template #body="{ data }">
+                                {{ formatDateTime(data.fecha_iqx_realizada) }}
+                            </template>
+                        </Column>
+
+                        <Column field="codigo_iqx_realizada" header="Código IQX Real." headerStyle="width: 8rem">
+                            <template #body="{ data }">
+                                {{ data.codigo_iqx_realizada || 'N/A' }}
+                            </template>
+                        </Column>
+
+                        <Column field="iqx_realizada" header="IQX Realizada">
+                            <template #body="{ data }">
+                                {{ data.iqx_realizada || 'N/A' }}
+                            </template>
+                        </Column>
+
+                        <Column field="se_reprogramo" header="Reprogramó?" headerStyle="width: 6rem">
+                            <template #body="{ data }">
+                                {{ data.se_reprogramo || 'No' }}
+                            </template>
+                        </Column>
+
+                        <Column field="fecha_iqx_reprogramada" header="Fecha IQX Reprogramada">
+                            <template #body="{ data }">
+                                {{ formatDateTime(data.fecha_iqx_reprogramada) }}
+                            </template>
+                        </Column>
+
+                        <Column field="motivo_reprogramacion" header="Motivo Reprogramación">
+                            <template #body="{ data }">
+                                {{ data.motivo_reprogramacion || 'N/A' }}
+                            </template>
+                        </Column>
+
+                        <Column field="fecha_realizada_iqx_reprogramada" header="Fecha Realizada Reprogramada">
+                            <template #body="{ data }">
+                                {{ formatDateTime(data.fecha_realizada_iqx_reprogramada) }}
+                            </template>
+                        </Column>
+
+                        <Column field="codigo_iqx_reprogramada" header="Código IQX Repro." headerStyle="width: 8rem">
+                            <template #body="{ data }">
+                                {{ data.codigo_iqx_reprogramada || 'N/A' }}
+                            </template>
+                        </Column>
+
+                        <Column field="iqx_reprogramada" header="IQX Reprogramada">
+                            <template #body="{ data }">
+                                {{ data.iqx_reprogramada || 'N/A' }}
+                            </template>
+                        </Column>
+
+                        <Column field="fecha_creacion" header="Fecha Creación">
+                            <template #body="{ data }">
+                                {{ formatDateTime(data.fecha_creacion) }}
+                            </template>
+                        </Column>
+
+                        <Column field="fecha_actualizacion" header="Fecha Actualización">
+                            <template #body="{ data }">
+                                {{ formatDateTime(data.fecha_actualizacion) }}
+                            </template>
+                        </Column>
+
+                        <Column field="creado_por.username" header="Creado por" headerStyle="width: 10rem">
+                            <template #body="{ data }">
+                                {{ data.creado_por?.username || 'N/A' }}
+                            </template>
+                        </Column>
+
+                        <template #empty>
+                            <div class="text-center py-4">
+                                <Message severity="info">
+                                    No se encontraron registros. Importe un archivo Excel para comenzar.
+                                </Message>
+                            </div>
+                        </template>
+                    </DataTable>
                 </div>
             </div>
         </div>
@@ -408,10 +421,10 @@
                             </div>
                             <div class="col-md-6">
                                 <p><strong>Fecha Cita:</strong> {{ formatDateTime(registroSeleccionado.fecha_hora_cita)
-                                }}</p>
+                                    }}</p>
                                 <p><strong>Fecha Atención:</strong> {{
                                     formatDateTime(registroSeleccionado.fecha_hora_atencion)
-                                }}</p>
+                                    }}</p>
                                 <p><strong>Especialidad:</strong> {{ registroSeleccionado.especialidad || 'N/A' }}</p>
                                 <p><strong>CIE-10 Principal:</strong> {{ registroSeleccionado.dx_cie10_principal ||
                                     'N/A' }}</p>
@@ -439,7 +452,8 @@ import { debounce } from 'lodash'
 import { Modal } from 'bootstrap'
 import * as XLSX from 'xlsx'
 import { saveAs } from 'file-saver'
-
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
 // Variables para estructura desplegable
 const mostrarEstructura = ref(false)
 const mostrarErrores = ref(false)
@@ -457,7 +471,25 @@ const getMonthName = (month) => {
     ]
     return months[month - 1] || ''
 }
-
+const columnasEstructura = ref([
+    { numero: 0, nombre: 'Tipo de Seguro', requerido: true, recomendacion: 'Ej: SIS, ESSALUD, Privado' },
+    { numero: 1, nombre: 'Fecha de Nacimiento', requerido: true, recomendacion: 'Formato DD/MM/YYYY' },
+    { numero: 2, nombre: 'Sexo (M/F)', requerido: true, recomendacion: 'Solo "M" o "F"' },
+    { numero: 3, nombre: 'Lugar de Procedencia', requerido: true, recomendacion: 'Ej: Lima, Arequipa' },
+    { numero: 4, nombre: 'Número de Historia Clínica', requerido: true, recomendacion: 'Número completo de HCL' },
+    { numero: 5, nombre: 'Fecha de IQX Programada', requerido: true, recomendacion: 'Formato DD/MM/YYYY' },
+    { numero: 6, nombre: 'Código IQX Programada', requerido: true, recomendacion: 'Código de procedimiento' },
+    { numero: 7, nombre: 'IQX Programada', requerido: true, recomendacion: 'Nombre del procedimiento programado' },
+    { numero: 8, nombre: 'Fecha de IQX Realizada', requerido: true, recomendacion: 'Formato DD/MM/YYYY' },
+    { numero: 9, nombre: 'Código de IQX Realizada', requerido: true, recomendacion: 'Código de procedimiento realizado' },
+    { numero: 10, nombre: 'IQX Realizada', requerido: true, recomendacion: 'Nombre del procedimiento realizado' },
+    { numero: 11, nombre: '¿Se Reprogramó? (Sí/No)', requerido: true, recomendacion: 'Indicar "Sí" o "No"' },
+    { numero: 12, nombre: 'Fecha IQX Reprogramada', requerido: true, recomendacion: 'Formato DD/MM/YYYY' },
+    { numero: 13, nombre: 'Motivo de Reprogramación (fecha)', requerido: true, recomendacion: 'Descripción breve del motivo' },
+    { numero: 14, nombre: 'Fecha Realizada IQX Reprogramada', requerido: true, recomendacion: 'Formato DD/MM/YYYY' },
+    { numero: 15, nombre: 'Código IQX Reprogramada', requerido: true, recomendacion: 'Código de procedimiento reprogramado' },
+    { numero: 16, nombre: 'IQX Reprogramada', requerido: true, recomendacion: 'Nombre del procedimiento reprogramado' }
+]);
 // Método para resetear los filtros
 const resetFiltros = () => {
     filtroMes.value = null
@@ -498,26 +530,16 @@ const debouncedSearch = debounce(() => {
     cargarRegistros()
 }, 500)
 
-// Función para manejar el input directamente
-const onSearchInput = () => {
-    // Si el campo está vacío, buscar inmediatamente
-    if (busqueda.value.trim() === '') {
-        debouncedSearch.cancel() // Cancela cualquier búsqueda pendiente
-        paginacion.value.current_page = 1
-        cargarRegistros()
-    }
-}
 // Agrega este método para cargar los meses disponibles
 const cargarMesesDisponibles = async () => {
     try {
         const response = await api.get('/user/cirugias/meses-disponibles/')
         mesesDisponibles.value = response.data
 
-        // Si hay datos, establecer el primer mes como seleccionado por defecto
-        if (mesesDisponibles.value.length > 0) {
-            filtroAnio.value = mesesDisponibles.value[0].year
-            filtroMes.value = mesesDisponibles.value[0].month
-        }
+        // Elimina la selección automática del primer mes/año
+        filtroAnio.value = null
+        filtroAnio.value = null
+        filtroMes.value = null
     } catch (error) {
         console.error('Error cargando meses disponibles:', error)
     }
@@ -630,51 +652,6 @@ const exportToExcel = async () => {
         loading.value = false
     }
 }
-// Modal
-let detalleModal = null
-onMounted(() => {
-    detalleModal = new Modal(document.getElementById('detalleModal'))
-})
-// Computed para agrupar errores similares
-const erroresPorTipo = computed(() => {
-    if (!importResult.value?.detalle_errores) return []
-
-    const errores = importResult.value.detalle_errores
-    const resumen = {}
-
-    errores.forEach(error => {
-        // Extraer el tipo de error (primera parte del mensaje)
-        const tipo = error.split(':')[0] || 'Error desconocido'
-        resumen[tipo] = (resumen[tipo] || 0) + 1
-    })
-
-    return Object.entries(resumen).map(([message, count]) => ({
-        message,
-        count
-    })).sort((a, b) => b.count - a.count)
-})
-// Computed para paginación inteligente
-const paginasVisibles = computed(() => {
-    const current = paginacion.value.current_page
-    const total = paginacion.value.total_pages
-    const range = 2 // Cuántas páginas mostrar alrededor de la actual
-    let start = Math.max(1, current - range)
-    let end = Math.min(total, current + range)
-
-    // Ajustar si estamos cerca del inicio o final
-    if (current <= range + 1) {
-        end = Math.min(2 * range + 1, total)
-    }
-    if (current >= total - range) {
-        start = Math.max(total - 2 * range, 1)
-    }
-
-    const pages = []
-    for (let i = start; i <= end; i++) {
-        pages.push(i)
-    }
-    return pages
-})
 
 // Métodos para importación
 const handleFileChange = (event) => {
@@ -780,25 +757,6 @@ const cargarRegistros = async () => {
     }
 }
 
-// Debounce para búsqueda
-const debounceBuscar = debounce(() => {
-    paginacion.value.current_page = 1
-    cargarRegistros()
-}, 500)
-
-const resetBusqueda = () => {
-    busqueda.value = ''
-    paginacion.value.current_page = 1
-}
-
-const cambiarPagina = (page) => {
-    if (page >= 1 && page <= paginacion.value.total_pages) {
-        paginacion.value.current_page = page
-        cargarRegistros()
-        // Scroll suave hacia arriba
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
-}
 
 // Métodos para formato y utilidades
 const formatFecha = (fecha) => {
@@ -818,17 +776,7 @@ const formatDateTime = (fecha) => {
     return new Date(fecha).toLocaleString('es-ES', options)
 }
 
-const truncateText = (text, maxLength) => {
-    if (!text) return ''
-    return text.length > maxLength
-        ? text.substring(0, maxLength) + '...'
-        : text
-}
 
-const verDetalle = (registro) => {
-    registroSeleccionado.value = registro
-    detalleModal.show()
-}
 // Método para descargar la plantilla de ejemplo
 const descargarPlantilla = () => {
     try {
@@ -867,7 +815,9 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* Estilos para el acordeón */
+.table {
+    font-size: 0.85rem;
+}
 .btn-info {
     background-color: #17a2b8;
     border-color: #17a2b8;

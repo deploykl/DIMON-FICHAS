@@ -668,10 +668,6 @@ onMounted(async () => {
     margin-bottom: 0;
 }
 
-.table-responsive {
-    max-height: 500px;
-    overflow-y: auto;
-}
 
 /* Estilos para botones */
 .btn {
@@ -737,12 +733,6 @@ onMounted(async () => {
     font-size: 1rem;
 }
 
-/* Estilos para selects */
-.form-select {
-    border-radius: 6px;
-    border: 1px solid #ced4da;
-    transition: all 0.2s ease;
-}
 
 .form-select:focus {
     border-color: #4361ee;

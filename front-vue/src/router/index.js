@@ -167,7 +167,7 @@ const routes = [
     name: "consulta-externa",
     component: ConsultaExternaView,
     meta: {
-      title: "Boletin",
+      title: "Consulta Externa",
       requiresAuth: true,
     },
   },
@@ -176,7 +176,7 @@ const routes = [
     name: "cirugia",
     component: CirugiaView,
     meta: {
-      title: "Boletin",
+      title: "Cirugía",
       requiresAuth: true,
     },
   },

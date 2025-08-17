@@ -539,20 +539,22 @@ class CirugiaViewSet(viewsets.ModelViewSet):
                     data = {}
                     for col_index, field_name in column_mapping.items():
                         if col_index < len(row):
-                            data[field_name] = row[col_index] if not pd.isna(row[col_index]) else None
+                            data[field_name] = (
+                                row[col_index] if not pd.isna(row[col_index]) else None
+                            )
 
                     # Validación mejorada de campos requeridos
                     required_fields = {
-                        'tipo_seguro': "Tipo de seguro es obligatorio",
-                        'fecha_nacimiento': "Fecha de nacimiento es obligatoria",
-                        'sexo': "Sexo es obligatorio",
-                        'lugar_procedencia': "Lugar de procedencia es obligatorio",
-                        'n_hcl': "Número de historia clínica es obligatorio",
-                        'fecha_hora_cita_otorgada': "Fecha/hora de cita es obligatoria",
-                        'fecha_hora_atencion': "Fecha/hora de atención es obligatoria",
-                        'diagnostico_medico': "Diagnóstico médico es obligatorio",
-                        'dx_CIE_10_1': "Diagnóstico CIE-10 principal es obligatorio",
-                        'especialidad': "Especialidad es obligatoria"
+                        "tipo_seguro": "Tipo de seguro es obligatorio",
+                        "fecha_nacimiento": "Fecha de nacimiento es obligatoria",
+                        "sexo": "Sexo es obligatorio",
+                        "lugar_procedencia": "Lugar de procedencia es obligatorio",
+                        "n_hcl": "Número de historia clínica es obligatorio",
+                        "fecha_hora_cita_otorgada": "Fecha/hora de cita es obligatoria",
+                        "fecha_hora_atencion": "Fecha/hora de atención es obligatoria",
+                        "diagnostico_medico": "Diagnóstico médico es obligatorio",
+                        "dx_CIE_10_1": "Diagnóstico CIE-10 principal es obligatorio",
+                        "especialidad": "Especialidad es obligatoria",
                     }
 
                     missing_fields = []
@@ -561,7 +563,9 @@ class CirugiaViewSet(viewsets.ModelViewSet):
                             missing_fields.append(f"{field}: {error_msg}")
 
                     if missing_fields:
-                        errors.append(f"Fila {index + 2}: Faltan campos - {', '.join(missing_fields)}")
+                        errors.append(
+                            f"Fila {index + 2}: Faltan campos - {', '.join(missing_fields)}"
+                        )
                         continue
 
                     # Procesar fecha programada (manejo simple)
@@ -639,8 +643,11 @@ class CirugiaViewSet(viewsets.ModelViewSet):
                     "creados": created_count,
                     "actualizados": updated_count,
                     "omitidas": fechas_omitidas,
-                    #'errores': len(errors),
-                    "detalle_errores": errors,  # Solo detalles completos
+                    "errores": len(errors),  # Asegúrate de incluir esto
+                     "detalle_errores": errors[
+                        :20
+                    ],  # Mostrar más errores si hay fechas omitidas
+                    #"detalle_errores": errors,  # Solo detalles completos
                 },
                 status=status.HTTP_200_OK,
             )
