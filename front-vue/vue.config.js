@@ -4,7 +4,7 @@ module.exports = defineConfig({
   transpileDependencies: true,
 
   devServer: {
-    port: 8080, // Configura el puerto a 80
+    port: 8081, // Configura el puerto a 80
     host: '0.0.0.0', // Permite conexiones desde cualquier IP
     https: false, // Cambia a true si necesitas HTTPS
   },

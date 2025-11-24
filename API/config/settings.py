@@ -62,11 +62,11 @@ MIDDLEWARE = [
 
 # agregando q dominios locales para consumir la API
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8080",
+    "http://localhost:8081",
     "http://localhost",
-    "http://127.0.0.1:8080",
+    "http://127.0.0.1:8082",
     "http://127.0.0.1:8081",
-    "http://172.27.0.200:8080",
+    "http://172.27.0.200:8082",
     "http://172.27.0.200:8081",
 ]
 

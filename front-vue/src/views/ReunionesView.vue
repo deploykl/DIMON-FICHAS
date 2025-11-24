@@ -18,12 +18,7 @@
               <div class="row mb-3">
                 <div class="col-md-6">
                   <div class="input-group">
-                    <input 
-                      v-model="searchTerm"
-                      type="text" 
-                      class="form-control" 
-                      placeholder="Buscar reunión..."
-                    >
+                    <input v-model="searchTerm" type="text" class="form-control" placeholder="Buscar reunión...">
                     <button class="btn btn-outline-secondary" type="button" @click="clearSearch">
                       <i class="bi bi-x"></i>
                     </button>
@@ -31,12 +26,7 @@
                 </div>
                 <div class="col-md-6">
                   <div class="form-check form-switch float-md-end">
-                    <input 
-                      class="form-check-input" 
-                      type="checkbox" 
-                      id="showFinished"
-                      v-model="showFinished"
-                    >
+                    <input class="form-check-input" type="checkbox" id="showFinished" v-model="showFinished">
                     <label class="form-check-label" for="showFinished">
                       Mostrar eventos finalizados
                     </label>
@@ -46,20 +36,11 @@
 
               <!-- Lista de eventos -->
               <div class="accordion" id="eventsAccordion">
-                <div 
-                  v-for="evento in filteredEvents" 
-                  :key="evento.id" 
-                  class="accordion-item"
-                >
+                <div v-for="evento in filteredEvents" :key="evento.id" class="accordion-item">
                   <h2 class="accordion-header">
-                    <button 
-                      class="accordion-button collapsed" 
-                      type="button" 
-                      data-bs-toggle="collapse"
-                      :data-bs-target="'#collapse' + evento.id"
-                      :aria-expanded="false"
-                      :aria-controls="'collapse' + evento.id"
-                    >
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                      :data-bs-target="'#collapse' + evento.id" :aria-expanded="false"
+                      :aria-controls="'collapse' + evento.id">
                       <div class="d-flex w-100 justify-content-between align-items-center pe-3">
                         <div>
                           <span class="fw-bold me-2">{{ evento.descripcion }}</span>
@@ -68,45 +49,37 @@
                           </span>
                         </div>
                         <small class="text-muted">
-                          {{ formatDate(evento.fecha) }} | 
+                          {{ formatDate(evento.fecha) }} |
                           {{ formatTime(evento.hora_inicio) }} - {{ formatTime(evento.hora_fin) }}
                         </small>
                       </div>
                     </button>
                   </h2>
-                  <div 
-                    :id="'collapse' + evento.id" 
-                    class="accordion-collapse collapse"
-                    :aria-labelledby="'heading' + evento.id"
-                    data-bs-parent="#eventsAccordion"
-                    @shown.bs.collapse="() => loadEventParticipants(evento.id)"
-                  >
+                  <div :id="'collapse' + evento.id" class="accordion-collapse collapse"
+                    :aria-labelledby="'heading' + evento.id" data-bs-parent="#eventsAccordion"
+                    @shown.bs.collapse="() => loadEventParticipants(evento.id)">
                     <div class="accordion-body">
                       <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="mb-0">Participantes registrados: {{ evento.participantes_count || 0 }}</h6>
                         <div>
-                          <button 
-                            class="btn btn-sm btn-outline-primary me-2"
-                            @click="fetchParticipants(evento.id)"
-                            :disabled="loadingParticipants === evento.id"
-                          >
-                            <span v-if="loadingParticipants === evento.id" class="spinner-border spinner-border-sm me-1"></span>
-                            <i v-else class="bi bi-arrow-clockwise"></i> 
+                          <button class="btn btn-sm btn-outline-primary me-2" @click="fetchParticipants(evento.id)"
+                            :disabled="loadingParticipants === evento.id">
+                            <span v-if="loadingParticipants === evento.id"
+                              class="spinner-border spinner-border-sm me-1"></span>
+                            <i v-else class="bi bi-arrow-clockwise"></i>
                             Actualizar
                           </button>
-                          <button 
-                            class="btn btn-sm btn-outline-success"
-                            @click="generateEventPDF(evento)"
-                            :disabled="loadingParticipants === evento.id || !participants[evento.id]?.length"
-                          >
-                            <i class="bi bi-file-earmark-pdf"></i> 
+                          <button class="btn btn-sm btn-outline-success" @click="generateEventPDF(evento)"
+                            :disabled="loadingParticipants === evento.id || !participants[evento.id]?.length">
+                            <i class="bi bi-file-earmark-pdf"></i>
                             Descargar PDF
                           </button>
                         </div>
                       </div>
 
                       <!-- Spinner de carga -->
-                      <div v-if="loadingParticipants === evento.id && !participants[evento.id]" class="text-center py-3">
+                      <div v-if="loadingParticipants === evento.id && !participants[evento.id]"
+                        class="text-center py-3">
                         <div class="spinner-border text-primary" role="status">
                           <span class="visually-hidden">Cargando...</span>
                         </div>
@@ -135,19 +108,12 @@
                               <td>{{ participante.establecimiento }}</td>
                               <td>{{ participante.codigo }}</td>
                               <td>
-                                <button 
-                                  class="btn btn-sm btn-outline-danger me-2"
-                                  @click="confirmDeleteParticipant(participante)"
-                                  title="Eliminar participante"
-                                >
+                                <button class="btn btn-sm btn-outline-danger me-2"
+                                  @click="confirmDeleteParticipant(participante)" title="Eliminar participante">
                                   <i class="bi bi-trash"></i>
                                 </button>
-                                <button 
-                                  v-if="participante.firma"
-                                  class="btn btn-sm btn-outline-primary"
-                                  @click="viewSignature(participante.firma)"
-                                  title="Ver firma"
-                                >
+                                <button v-if="participante.firma" class="btn btn-sm btn-outline-primary"
+                                  @click="viewSignature(participante.firma)" title="Ver firma">
                                   <i class="bi bi-eye"></i>
                                 </button>
                               </td>
@@ -156,7 +122,9 @@
                         </table>
                       </div>
 
-                      <div v-if="!loadingParticipants && (!participants[evento.id] || participants[evento.id]?.length === 0)" class="alert alert-info mb-0">
+                      <div
+                        v-if="!loadingParticipants && (!participants[evento.id] || participants[evento.id]?.length === 0)"
+                        class="alert alert-info mb-0">
                         <i class="bi bi-info-circle me-2"></i>
                         No hay participantes registrados para este evento.
                       </div>
@@ -184,16 +152,12 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            ¿Estás seguro que deseas eliminar al participante <strong>{{ selectedParticipant?.nombre }} {{ selectedParticipant?.apellido }}</strong> con DNI <strong>{{ selectedParticipant?.dni }}</strong>?
+            ¿Estás seguro que deseas eliminar al participante <strong>{{ selectedParticipant?.nombre }} {{
+              selectedParticipant?.apellido }}</strong> con DNI <strong>{{ selectedParticipant?.dni }}</strong>?
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button 
-              type="button" 
-              class="btn btn-danger"
-              @click="deleteParticipant"
-              :disabled="deleting"
-            >
+            <button type="button" class="btn btn-danger" @click="deleteParticipant" :disabled="deleting">
               <span v-if="deleting" class="spinner-border spinner-border-sm me-1"></span>
               Eliminar
             </button>
@@ -261,7 +225,7 @@ const statusTexts = {
 // Computed
 const filteredEvents = computed(() => {
   let filtered = [...events.value]
-  
+
   if (searchTerm.value) {
     const term = searchTerm.value.toLowerCase()
     filtered = filtered.filter(evento =>
@@ -269,17 +233,17 @@ const filteredEvents = computed(() => {
       (evento.creado_por && evento.creado_por.toLowerCase().includes(term))
     )
   }
-  
+
   if (!showFinished.value) {
     filtered = filtered.filter(evento => evento.estado !== 'FINALIZADO')
   }
-  
+
   filtered.sort((a, b) => {
     const dateA = new Date(`${a.fecha}T${a.hora_inicio}`)
     const dateB = new Date(`${b.fecha}T${b.hora_inicio}`)
     return dateB - dateA
   })
-  
+
   return filtered
 })
 
@@ -291,11 +255,11 @@ const getStatusText = (status) => statusTexts[status] || status
 const formatDate = (dateString) => {
   const [year, month, day] = dateString.split('-')
   const date = new Date(year, month - 1, day)
-  return date.toLocaleDateString('es-PE', { 
-    weekday: 'short', 
-    year: 'numeric', 
-    month: 'short', 
-    day: 'numeric' 
+  return date.toLocaleDateString('es-PE', {
+    weekday: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric'
   })
 }
 
@@ -336,7 +300,7 @@ const fetchParticipants = async (eventId) => {
       ...participants.value,
       [eventId]: response.data
     }
-    
+
     // Actualizar contador en el evento
     const eventIndex = events.value.findIndex(e => e.id === eventId)
     if (eventIndex !== -1) {
@@ -362,17 +326,17 @@ const viewSignature = (signatureUrl) => {
 
 const deleteParticipant = async () => {
   if (!selectedParticipant.value) return
-  
+
   deleting.value = true
   try {
     await api.delete(`reuniones/persona/${selectedParticipant.value.id}/`)
     toast.success('Participante eliminado correctamente')
-    
+
     const eventId = selectedParticipant.value.eventos[0]
     if (eventId) {
       await fetchParticipants(eventId)
     }
-    
+
     confirmDeleteModal.hide()
   } catch (error) {
     toast.error('Error al eliminar participante')
@@ -386,31 +350,31 @@ const generateEventPDF = async (evento) => {
   generatingPDF.value = true
   try {
     toast.info('Generando PDF, por favor espere...', { timeout: 2000 })
-    
+
     // Crear PDF en orientación horizontal para mejor espacio
     const doc = new jsPDF({
       orientation: 'landscape',
       unit: 'mm'
     })
-    
+
     // Configuración inicial
     const pageWidth = doc.internal.pageSize.getWidth()
     const pageHeight = doc.internal.pageSize.getHeight()
     const margin = 10
     const contentWidth = pageWidth - 2 * margin
-    
+
     // Logo (opcional)
     // const logoUrl = '/path/to/logo.png'
     // if (logoUrl) {
     //   const logoData = await loadImage(logoUrl)
     //   doc.addImage(logoData, 'PNG', margin, margin, 30, 15)
     // }
-    
+
     // Título del documento
     doc.setFontSize(16)
     doc.setFont('helvetica', 'bold')
     doc.text(`Reporte de Participantes - Evento: ${evento.descripcion}`, pageWidth / 2, 20, { align: 'center' })
-    
+
     // Información del evento
     doc.setFontSize(10)
     doc.setFont('helvetica', 'normal')
@@ -418,11 +382,11 @@ const generateEventPDF = async (evento) => {
     doc.text(`Horario: ${formatTime(evento.hora_inicio)} - ${formatTime(evento.hora_fin)}`, margin + 50, 30)
     doc.text(`Estado: ${getStatusText(evento.estado)}`, margin + 100, 30)
     doc.text(`Total participantes: ${evento.participantes_count || 0}`, margin + 150, 30)
-    
+
     // Tabla de participantes
     let yPosition = 40
     const participantes = participants.value[evento.id]
-    
+
     // Encabezados de tabla
     doc.setFontSize(10)
     doc.setFont('helvetica', 'bold')
@@ -433,47 +397,47 @@ const generateEventPDF = async (evento) => {
     doc.text('Establecimiento', margin + 110, yPosition)
     doc.text('Código', margin + 160, yPosition)
     doc.text('Firma', margin + 190, yPosition)
-    
+
     yPosition += 5
-    
+
     // Línea divisoria
     doc.setDrawColor(200, 200, 200)
     doc.line(margin, yPosition, pageWidth - margin, yPosition)
     yPosition += 5
-    
+
     // Contenido de la tabla
     doc.setFontSize(9)
     doc.setFont('helvetica', 'normal')
-    
+
     for (let i = 0; i < participantes.length; i++) {
       const p = participantes[i]
-      
+
       // Verificar espacio en página
       if (yPosition > pageHeight - 20) {
         doc.addPage('landscape')
         yPosition = 20
       }
-      
+
       // Datos del participante
       doc.text(`${i + 1}`, margin, yPosition)
       doc.text(p.dni, margin + 15, yPosition)
-      
+
       // Nombre
       const nombre = `${p.nombre} ${p.apellido}`
       const nombreLines = doc.splitTextToSize(nombre, 35)
       doc.text(nombreLines, margin + 30, yPosition)
-      
+
       // Cargo
       const cargoLines = doc.splitTextToSize(p.cargo, 35)
       doc.text(cargoLines, margin + 70, yPosition)
-      
+
       // Establecimiento
       const establecimientoLines = doc.splitTextToSize(p.establecimiento, 45)
       doc.text(establecimientoLines, margin + 110, yPosition)
-      
+
       // Código
       doc.text(p.codigo || 'N/A', margin + 160, yPosition)
-      
+
       // Agregar firma si existe
       if (p.firma) {
         try {
@@ -488,24 +452,24 @@ const generateEventPDF = async (evento) => {
       } else {
         doc.text('Sin firma', margin + 190, yPosition)
       }
-      
+
       yPosition += 15
-      
+
       // Línea divisoria entre participantes
       if (i < participantes.length - 1) {
         doc.setDrawColor(240, 240, 240)
         doc.line(margin, yPosition - 2, pageWidth - margin, yPosition - 2)
       }
     }
-    
+
     // Pie de página
     doc.setFontSize(8)
     doc.setTextColor(150, 150, 150)
     doc.text(`Generado el: ${new Date().toLocaleDateString()} a las ${new Date().toLocaleTimeString()}`, pageWidth / 2, pageHeight - 10, { align: 'center' })
-    
+
     // Guardar PDF
-    doc.save(`Participantes_${evento.descripcion.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0,10)}.pdf`)
-    
+    doc.save(`Participantes_${evento.descripcion.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`)
+
     toast.success('PDF generado correctamente')
   } catch (error) {
     toast.error('Error al generar el PDF')
@@ -543,7 +507,8 @@ onMounted(async () => {
   border-radius: 0.375rem !important;
 }
 
-.table th, .table td {
+.table th,
+.table td {
   vertical-align: middle;
 }
 

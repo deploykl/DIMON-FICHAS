@@ -46,6 +46,7 @@
 import { ref, onMounted } from 'vue';
 import { api } from '@/components/services/auth_axios';
 import FloatingChat from '@/components/widgets/GeminiChatbot.vue';
+
 const categorias = ref([]);
 const procesos = ref([]);
 const loading = ref(true);
@@ -63,6 +64,10 @@ const getCategoryColor = (category) => {
 
 // Filtrar procesos por categoría
 const getProcesosByCategory = (categoryId) => {
+    if (!Array.isArray(procesos.value)) {
+        console.warn('procesos.value no es un array:', procesos.value);
+        return [];
+    }
     return procesos.value.filter(p => p.categoria === categoryId);
 };
 
@@ -74,8 +79,20 @@ onMounted(async () => {
             api.get('ficha/proceso/')
         ]);
 
-        categorias.value = catResponse.data;
-        procesos.value = procResponse.data;
+        console.log('Respuesta categorías:', catResponse.data);
+        console.log('Respuesta procesos:', procResponse.data);
+
+        // EXTRAER LOS RESULTS DE LA RESPUESTA PAGINADA
+        categorias.value = Array.isArray(catResponse.data.results) 
+            ? catResponse.data.results 
+            : [];
+        
+        procesos.value = Array.isArray(procResponse.data.results) 
+            ? procResponse.data.results 
+            : [];
+
+        console.log('Categorías después de procesar:', categorias.value);
+        console.log('Procesos después de procesar:', procesos.value);
 
         // Ordenar categorías
         categorias.value.sort((a, b) => a.name.localeCompare(b.name));
@@ -87,7 +104,6 @@ onMounted(async () => {
     }
 });
 </script>
-
 <style scoped>
 .card {
     transition: all 0.3s ease;
